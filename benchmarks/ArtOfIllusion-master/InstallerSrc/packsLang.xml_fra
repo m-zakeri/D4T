@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF8" standalone="yes" ?>
+
+<!-- The French langpack -->
+
+<izpack:langpack version="5.0" xmlns:izpack="http://izpack.org/schema/langpack">
+    <!-- General installer strings -->
+    <str id="DesktopIntegration" txt="Intégration bureau Gnome/KDE (free desktop)"/>
+    <str id="DesktopIntegration.description" txt="Association de fichiers .aoi et icône"/>
+    <str id="jogl" txt="JOGL 2.4.0"/>
+    <str id="jogl.description" txt="Rendu OpenGL. Cette option améliore les performances d'affichage, mais peux se révéler incompatible avec votre système. Si Art of Illusion ne peut être lancé après l'installation, réinstallez sans cette option."/>
+    <str id="jogl-windows" txt="JOGL 2.4.0"/>
+    <str id="jogl-windows.description" txt="Rendu OpenGL. Cette option améliore les performances d'affichage, mais peux se révéler incompatible avec votre système. Si Art of Illusion ne peut être lancé après l'installation, réinstallez sans cette option."/>
+    <str id="core" txt="Base AoI"/>
+    <str id="core.description" txt="Constituants AoI de base"/>
+</izpack:langpack>
+

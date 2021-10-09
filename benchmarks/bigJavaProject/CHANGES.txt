@@ -1,0 +1,234 @@
+Release 0.5.10 - 2019/10/15
+  IMPROVEMENTS
+    Support AWS S3 Signature v4 when importing data from AWS S3
+
+Release 0.5.9 - 2015/08/04
+  IMPROVEMENTS
+    Improve parsing the URL of s3 source that includes s3 endpoint.
+  BUG FIXED
+    Changes parsing the URL of s3 source on Windows.
+
+Release 0.5.8 - 2015/03/19
+  IMPROVEMENTS
+    Added new '--escape' option to 'import:prepare' command. default=backslash ('\')
+  BUG FIXED
+    Backslash '\' escape did not work for '\': '\\' is no longer parsed as '\\' but '\'.
+
+Release 0.5.7 - 2015/02/26
+  IMPROVEMENTS
+    MySQLTableReader supported MEDIUMINT and MEDIUMINT UNSIGNED.
+    Upgrades aws-java-sdk 1.7.5
+    Added new '--empty-as-null-if-numeric' option to 'import:prepare' command
+
+Release 0.5.6 - 2014/12/02
+  IMPROVEMENTS
+    MySQLTableReader supported the types of UNSIGNED TINYINT, UNSIGNED SMALLINT, UNSIGNED INT: it can translate those values to TreasureData type.
+
+  BUG FIXED
+    Changes the default value of retry-count: 8 to 10.
+
+Release 0.5.5 - 2014/10/28
+  IMPROVEMENTS
+    Added validation for checking the status of perform job to waitPerform.
+
+Release 0.5.4 - 2014/10/14
+  IMPROVEMENTS
+    Changed error-record file format to add line numbers of error records.
+    Improved the behavior of time-value option: time-value should overwrite existing time colume values.
+
+Release 0.5.3 - 2014/09/04
+  BUG FIXED
+    mysql: fixes bug: NPE occurs when Mysql table reader tries to create a sample record
+
+Release 0.5.2 - 2014/07/29
+  IMPROVEMENTS
+    Added '--invalid-columns-handling' option to specify the behavior of the prepare process with regards to invalid
+      column names. The 'warn' option is the default and causes the processor to emit a warning message when an invalid
+      column name is encountered; the 'autofix' option makes the processor automatically fix the invalid column names by 
+      making them lowercase and substituting invalid characters with underscores (_).
+
+  BUG FIXED
+    Fixes CharsetDecoder objects retrival by ThreadLocal: PrepareProcessors sometimes hit IllegalStateException.
+
+Release 0.5.1 - 2014/07/23
+  IMPROVEMENTS
+    Updates td-client 0.5.1.
+
+Release 0.5.0 - 2014/07/08
+  IMPROVEMENTS
+    Changes group ID for the artifact: 'com.treasure_data' to 'com.treasuredata'
+
+Release 0.4.16 - 2014/07/02
+  BUG FIXED
+    When the columns specified with time-format are null or empty string, CSV/TSV reader throws NPE.
+
+Release 0.4.15 - 2014/07/01
+  IMPROVEMENTS
+    Updates td-client 0.4.3.
+    Improves error message by JSON file reader for boolean values.
+    Improves error message by CSV file reader for type convertion failure.
+
+  BUG FIXED
+    Users with import_only access cannot import data by BulkImport.
+
+Release 0.4.14 - 2014/06/17
+  IMPROVEMENTS
+    Updates td-client 0.4.2.
+
+  BUG FIXED
+    Fixes bug: import:auto from S3 doesn't work by causing upgrading td-client 0.4.2-SNAPSHOT.
+    Fixes bug: import:auto runs without messages when no input files are given.
+
+Release 0.4.13 - 2014/06/10
+  IMPROVEMENTS
+    Supports and can read from MySQL DATE, TIMESTAMP, and DATETIME columns.
+
+Release 0.4.12 - 2014/04/23
+  IMPROVEMENTS
+    Changes default directory for outputting error-records: 'out' to 'error-records'
+    Changes apache record reader.
+    Upgrades td-client 0.4.0
+
+  BUG FIXED
+    Fixes bug: OOM error occurs when MySQLTableReader reads large table.
+
+Release 0.4.11 - 2014/04/01
+  IMPROVEMENTS
+    Adds info. of td-client-java and td-import-java versions to log file.
+    Adds time that each step takes to log file.
+
+Release 0.4.10 - 2014/03/11
+  IMPROVEMENTS
+    Improves time-value option. It automatically allows generating and setting time values that are periodically sorted by hours specified by users.
+
+Release 0.4.9 - 2014/03/04
+  IMPROVEMENTS
+    Changes JDK logging with append mode
+    Changes upper limit of prepare-parallel option: 8 to 96
+
+Release 0.4.8 - 2014/02/14
+  IMPROVEMENTS
+    Updates td-client 0.3.5.
+
+Release 0.4.7 - 2014/02/04
+  IMPROVEMENTS
+    Changes behavior of auto-commit option: if a user executes upload command with auto-commit, he waits to finish commit process.
+
+  BUG FIXED
+    Fixes bug: prepare processor stops if it cannot parse invalid records during pre-execution (sampling) time.
+    Fixes bug: JSON file reader cannot read and parse nil values.
+
+Release 0.4.6 - 2013/12/20
+  NEW FEATURES
+    Supports item tables. To use bulk import for item tables, new 'primary-key' option is required.
+    Adds retry-count to upload command.
+
+  BUG FIXED
+    Fixes bug: livelock occurs when upload command receives unexpected combinations of some options.
+    Fixes bug: prepare processor never stops when EOFException occurs.
+
+Release 0.4.5 - 2013/12/17
+  NEW FEATURES
+    Adds feature for outputing error records. Users can specify the directory as 'error-records-output'.
+
+  BUG FIXED
+    Fixes bug: NPE occurs when import:prepare is launched with non-existent file(s).
+
+Release 0.4.4 - 2013/12/12
+  NEW FEATURES
+    Adds automatical type converter to 'mysql' table reader. It allows users to translate values of 'datetime' type into unix times of 'long' type automatically.
+
+  IMPROVEMENTS
+    Adds the feature for showing sample row to JSONFileReader class.
+    Changes default quote character for TSV file reading: DOUBLE to NONE.
+    Changes behavior for handling decoding errors like malformed inputs and unmappable chars. If you specify 'skip' as error-records-handling option, file reader replaces invalid char with '\uFFFD'. If you specify 'abort' as error-records-handling option, it aborts by invalid char.
+
+Release 0.4.3 - 2013/12/06
+  IMPROVEMENTS
+    Implements MsgpackGZIPFileWriter#implemented write(TimeColumnValue, DoubleColumnValue). By the change, prepare command can accept unix time of both of long type and double type.
+
+Release 0.4.2 - 2013/12/05
+  NEW FEATURES
+    Adds 'column-type' option to 'import:prepare' command. It allows users to specify a column type only instead of 'all-string' option.
+
+  BUG FIXED
+    Fixes bug: CSV/TSV file reader cannot parse columns that include '\"'.
+    Fixes bug in 'upload' and 'auto' commands: 'upload' processes cannot be often stopped when some of 'prepare' processes failed.
+
+Release 0.4.1 - 2013/11/20
+  IMPROVEMENTS
+    Updates td-client 0.3.1.
+
+  BUG FIXED
+    Fixes Options class: It cannot parse time-format options that include ',' charactor.
+    Fixes UploadProcessor class: It cannot re-upload data.
+
+Release 0.4.0 - 2013/11/14
+  NEW FEATURES
+    Adds {S3,LocalFile,}Source model class.
+    Adds 'all-string' feature as prepare option.
+
+  IMPROVEMENTS
+    Changes Import and BulkImport APIs for adding 'source' features.
+
+  BUG FIXED
+    Fixes TimeColumnSampling class: NumberFormatException occurs when sample method in CSVFileReader class is executed. SimpleDateFormat objects are used in non synchronized block.
+    Fixes column value classes: fixes incompatibility with bulk_import command regarding 'NULL' string.
+
+Release 0.3.1 - 2013/11/05
+  NEW FEATURES
+    Adds 'regex' file format. It allows users to parse line by regular expression specified as 'regex-pattern' option.
+    Supports 'float' type as types of column values.
+
+  IMPROVEMENTS
+    Defines bulk_import API. It's described in BulkImport and BulkImportCommand classes.
+
+  BUG FIXED
+    Fixes NPE error. It occurs when unknown column type is specified as 'column-types' option.
+
+Release 0.3.0 - 2013/10/04
+  NEW FEATURES
+    Adds feature for parsing 'millseconds' as strftime format.
+
+  IMPROVEMENTS
+    Changes project name: 'td-bulk-import-java' to 'td-import-java'.
+    Changes package name: 'com.treasure_data.bulk_import' to 'com.treasure_data.td_import'.
+    Fixes BulkImportMain class's upload method. Uploading should fail immediately if the session is frozen.
+
+  BUG FIXED
+    Fixes usage, examples, description of 'auto' command
+    Fixes JSON file reader. It allows reading JSON map and array values and recognizing Java based Map and List objects.
+    Fixes {JSON,MessagePack}FileReader classes. caller side of incrementLineNumber method calls is changed.
+    Fixes TimeColumnSampling. It throws NPE when it parses null values.
+
+Release 0.2.3 - 2013/09/13
+  BUG FIXED
+    Fixes 'encoding' option is inefficient when JSON and Apache log files are prepared.
+
+Release 0.2.2 - 2013/09/04
+  NEW FEATURES
+    Adds feature for auto-suggesting 'time-format' of time column.
+
+Release 0.2.1 - 2013/08/21
+  NEW FEATURES
+    Adds 'apache' common log format to 'prepare_parts' as 'format' option
+    Adds 'mysql' to 'prepare_parts' as 'format' option. It allows users to import data from MySQL to Treasure Data directly.
+
+Release 0.2.0 - 2013/07/18
+  NEW FEATURES
+    Adds new API: supports bulk_import:upload_parts
+    Adds configuration of http proxy to bulk_import:upload_parts2 in bin/td-bulk-import; ENV['HTTP_PROXY']=<proxy_host>:<proxy_port>
+    Adds configuration of quote character to bulk_import:prepare_parts2 http proxy to bulk_import:upload_parts2; --quote 'DOUBLE'
+    Adds JSON file reader for translating JSON files to msgpack.gz files; --format 'json'
+    Adds MessagePack file reader for translating JSON files to msgpack.gz files; --format 'msgpack'
+
+  BUG FIXED
+    Fixes the values of file readers/writers' line counters
+    Fixes Cannot recognize user 'time-format'
+
+Release 0.1.1 - 2013/01/22
+  BUG FIXES
+    Fixes Cannot recognize user defined time column
+
+
+Release 0.1.0 - 2013/01/18

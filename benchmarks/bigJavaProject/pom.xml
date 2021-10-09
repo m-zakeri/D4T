@@ -1,0 +1,356 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.treasuredata</groupId>
+  <artifactId>td-import</artifactId>
+  <name>Treasure Data Import Tool in Java</name>
+  <description>Treasure Data Import Tool in Java.</description>
+  <version>0.5.10</version>
+  <packaging>jar</packaging>
+  <url>https://github.com/treasure-data/td-import-java</url>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/treasure-data/td-import-java.git</connection>
+    <developerConnection>scm:git:git@github.com:treasure-data/td-import-java.git</developerConnection>
+    <url>https://github.com/treasure-data/td-import-java.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/treasure-data/td-import-java/issues</url>
+  </issueManagement>
+
+  <developers>
+    <developer>
+      <id>muga</id>
+      <name>Muga Nishizawa</name>
+      <email>muga.nishizawa@gmail.com</email>
+    </developer>
+    <developer>
+      <id>mcaramello</id>
+      <name>Michele Caramello</name>
+      <email>michele.caramello@gmail.com</email>
+    </developer>
+  </developers>
+
+  <properties>
+    <!--  version properties for dependencies -->
+    <jopt-simple.version>4.5</jopt-simple.version>
+    <msgpack.version>0.8.16</msgpack.version>
+    <super-csv.version>2.1.0</super-csv.version>
+    <td-client.version>0.9.0</td-client.version>
+    <aws-java-sdk.version>1.11.578</aws-java-sdk.version>
+    <junit.version>4.8.2</junit.version>
+    <mockito.version>1.9.5</mockito.version>
+
+    <!-- version properties for plugins -->
+    <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+    <maven-source-plugin.version>2.1.2</maven-source-plugin.version>
+    <maven-assembly-plugin.version>2.3</maven-assembly-plugin.version>
+    <maven-eclipse-plugin.version>2.5.1</maven-eclipse-plugin.version>
+    <maven-surefire-plugin.version>2.13</maven-surefire-plugin.version>
+    <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
+    <maven-javadoc-plugin.version>2.8.1</maven-javadoc-plugin.version>
+    <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+    <wagon-webdav-jackrabbit.version>1.0-beta-7</wagon-webdav-jackrabbit.version>
+    <maven-jxr-plugin.version>2.2</maven-jxr-plugin.version>
+    <maven-surefire-report-plugin.version>2.11</maven-surefire-report-plugin.version>
+    <maven-antrun-plugin.version>1.6</maven-antrun-plugin.version>
+    <maven-scm-plugin.version>1.6</maven-scm-plugin.version>
+
+    <!-- other properties -->
+    <javac.encoding>UTF-8</javac.encoding>
+    <javac.source>1.6</javac.source>
+    <javac.target>1.6</javac.target>
+    <javadoc.encoding>UTF-8</javadoc.encoding>
+    <javadoc.locale>en_US</javadoc.locale>
+    <maven-surefire-plugin.threadCount>1</maven-surefire-plugin.threadCount>
+    <maven-surefire-plugin.useSystemCL>false</maven-surefire-plugin.useSystemCL>
+    <maven-surefire-plugin.testFailureIgnore>false</maven-surefire-plugin.testFailureIgnore>
+    <mysql-connector-java.version>5.1.18</mysql-connector-java.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>local-repo</id>
+      <url>file://${basedir}/mvn-local</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>net.sf.jopt-simple</groupId>
+      <artifactId>jopt-simple</artifactId>
+      <version>${jopt-simple.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack-core</artifactId>
+      <version>${msgpack.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.supercsv</groupId>
+      <artifactId>super-csv</artifactId>
+      <version>${super-csv.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.treasuredata.client</groupId>
+      <artifactId>td-client</artifactId>
+      <version>${td-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>${mysql-connector-java.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk</artifactId>
+      <version>${aws-java-sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <source>${javac.source}</source>
+          <target>${javac.target}</target>
+          <encoding>${javac.encoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>${maven-assembly-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals><goal>attached</goal></goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest />
+            <manifestEntries>
+              <TD-Client-Version>${td-client.version}</TD-Client-Version>
+              <TD-Import-Version>${project.version}</TD-Import-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifest>
+            </manifest>
+            <manifestEntries>
+              <TD-Client-Version>${td-client.version}</TD-Client-Version>
+              <TD-Import-Version>${project.version}</TD-Import-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>${maven-eclipse-plugin.version}</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <!-- the option cannot be used because we use multi-threads
+               task queues as static fields. -->
+          <!--
+          <parallel>methods</parallel>
+          <threadCount>${maven-surefire-plugin.threadCount}</threadCount>
+           -->
+          <useSystemClassLoader>${maven-surefire-plugin.useSystemCL}</useSystemClassLoader>
+          <testFailureIgnore>${maven-surefire-plugin.testFailureIgnore}</testFailureIgnore>
+          <argLine>${jacocoSurefireArgLine}</argLine>
+          <!-- by default, test cases are included. -->
+          <includes>
+            <include>**/Test*.class</include>
+          </includes>
+          <!--
+          <excludes>
+            <exclude>**/integration/**/IntegrationTest*.class</exclude>
+          </excludes>
+           -->
+        </configuration>
+
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>net.sf.supercsv</include>
+                  <include>com.googlecode.json-simple:json-simple</include>
+                  <include>com.treasure_data:td-client</include>
+                  <include>org.msgpack</include>
+                  <include>org.javassist:javassist</include>
+                  <include>net.sf.jopt-simple:jopt-simple</include>
+                  <include>mysql:mysql-connector-java</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.7.2.201409121644</version>
+        <executions>
+          <execution>
+            <id>pre-unit-test</id>
+            <goals><goal>prepare-agent</goal></goals>
+            <configuration>
+              <propertyName>jacocoSurefireArgLine</propertyName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>post-unit-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <!-- Generating JavaDoc -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <doctitle>${project.name} ${project.version} API</doctitle>
+          <aggregate>true</aggregate>
+          <locale>${javadoc.locale}</locale>
+          <encoding>${javadoc.encoding}</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>${maven-jxr-plugin.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>${maven-surefire-report-plugin.version}</version>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

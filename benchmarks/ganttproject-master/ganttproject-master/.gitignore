@@ -1,0 +1,6 @@
+build
+dist-bin
+.idea
+.eclipse
+.gradle
+**/*.class
