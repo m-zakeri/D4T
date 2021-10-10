@@ -17,10 +17,12 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.imports = []
         self.imports_star = []
         self.current_relationship = None
+        self.no_implements = 0
+        self.has_extends = False
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.currentClass = ctx.IDENTIFIER().getText()
-        self.class_dic[self.currentClass] = []
+        self.class_dic[self.currentClass] = {}
 
     def enterImportDeclaration(self, ctx:JavaParserLabeled.ImportDeclarationContext):
         if '*' in ctx.getText():
@@ -33,23 +35,34 @@ class ClassDiagramListener(JavaParserLabeledListener):
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
-            self.class_dic[self.currentClass].append(text[:-1])
-            print(self.current_relationship, text)
-            self.current_relationship = None
+
+            if self.has_extends:
+                self.current_relationship = 'extends'
+                self.has_extends = False
+            elif self.no_implements > 0:
+                self.no_implements -= 1
+                self.current_relationship = 'implements'
+            else:
+                self.current_relationship = 'use'
+
+            self.class_dic[self.currentClass][text[:-1]] = self.current_relationship
+            #print(self.current_relationship, text[:-1])
+
 
     # this method is for detecting interface relationships
     def enterTypeDeclaration(self, ctx:JavaParserLabeled.TypeDeclarationContext):
         if ctx.classDeclaration() != None:
             if ctx.classDeclaration().IMPLEMENTS() != None:
-                self.current_relationship = ctx.classDeclaration().IMPLEMENTS().getText()
+                self.no_implements = len(ctx.classDeclaration().typeList().typeType())
+            if ctx.classDeclaration().EXTENDS() != None:
+                self.has_extends = True
 
-    def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
-        self.current_relationship = 'use'
 
 
 class ClassDiagram:
     def __init__(self):
         self.class_diagram_graph = nx.DiGraph()
+        self.relationship_names = ['implements', 'extends', 'use']
 
     def make(self, java_project_address, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
@@ -77,9 +90,11 @@ class ClassDiagram:
             for c in graph['classes']:
                 for i in graph['classes'][c]:
                     n1 = index_dic[graph['path'] + '\\' + c]
-                    n2 = index_dic[i + '\\' + Path.get_class_name_from_path(i)]
-                    self.class_diagram_graph.add_edge(n1, n2, weight=1)
-                    self.class_diagram_graph[n1][n2]['weight'] = 3
+                    n2_class_name = Path.get_class_name_from_path(i)
+                    n2 = index_dic[i + '\\' + n2_class_name]
+                    weight = self.relationship_names.index(listener.class_dic[c][n2_class_name])
+                    self.class_diagram_graph.add_edge(n1, n2, weight=weight)
+                    self.class_diagram_graph[n1][n2]['weight'] = weight
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -93,9 +108,8 @@ class ClassDiagram:
         pos = nx.spring_layout(self.class_diagram_graph)  # pos = nx.nx_agraph.graphviz_layout(G)
         nx.draw_networkx(self.class_diagram_graph, pos)
         labels = nx.get_edge_attributes(self.class_diagram_graph, 'weight')
-        print(labels)
         for i in labels.keys():
-            labels[i] = 'test'
+            labels[i] = self.relationship_names[labels[i]]
         nx.draw_networkx_edge_labels(self.class_diagram_graph, pos, edge_labels=labels)
         plt.show()
 
@@ -122,9 +136,10 @@ class ClassDiagram:
 
 if __name__ == "__main__":
     #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\javaproject'
-    java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\refactored\\java_projects\\javaproject'
+    #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\refactored\\java_projects\\javaproject'
+    java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\java_projects\\bigJavaProject\\src\\main\\java'
     cd = ClassDiagram()
     cd.make(java_project_address)
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
-    #cd.show()
+    cd.show()
