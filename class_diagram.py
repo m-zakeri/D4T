@@ -6,23 +6,39 @@ from gen.JavaLexer import JavaLexer
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from Utils import File, Path
+from utils import File, Path
 
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
     def __init__(self):
-        self.currentClass = ''
+        self.current_class = None
+        self.current_method = None
         self.class_dic = {}
         self.imports = []
         self.imports_star = []
         self.current_relationship = None
         self.no_implements = 0
         self.has_extends = False
+        self.variables_dic = {'methods':{}, 'fields':{}}
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.currentClass = ctx.IDENTIFIER().getText()
-        self.class_dic[self.currentClass] = {}
+        self.current_class = ctx.IDENTIFIER().getText()
+        self.class_dic[self.current_class] = {}
+
+    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        print(self.current_class)
+        print(self.variables_dic)
+        self.variables_dic = {'methods':{}, 'fields':{}}
+        self.current_class = None
+
+    def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        self.current_method = ctx.IDENTIFIER().getText()
+        self.variables_dic['methods'][self.current_method] = {}
+
+    def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        self.current_method = None
+
 
     def enterImportDeclaration(self, ctx:JavaParserLabeled.ImportDeclarationContext):
         if '*' in ctx.getText():
@@ -31,7 +47,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
             self.imports.append(ctx.qualifiedName().getText())
 
     def enterClassOrInterfaceType(self, ctx:JavaParserLabeled.ClassOrInterfaceTypeContext):
-        if len(ctx.IDENTIFIER()) > 0 and self.currentClass != '':
+        if len(ctx.IDENTIFIER()) > 0 and self.current_class != None:
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
@@ -45,8 +61,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
             else:
                 self.current_relationship = 'use'
 
-            self.class_dic[self.currentClass][text[:-1]] = self.current_relationship
-            #print(self.current_relationship, text[:-1])
+            self.class_dic[self.current_class][text[:-1]] = self.current_relationship
 
 
     # this method is for detecting interface relationships
@@ -57,16 +72,35 @@ class ClassDiagramListener(JavaParserLabeledListener):
             if ctx.classDeclaration().EXTENDS() != None:
                 self.has_extends = True
 
+    def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
+        _type = ctx.typeType().getText()
+        identifier = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
+        self.variables_dic['fields'][identifier] = _type
+
+        if ctx.variableDeclarators().variableDeclarator()[0].variableInitializer() != None:
+            self.class_dic[self.current_class][_type] = 'create'
+
+    def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
+        _type = ctx.typeType().getText()
+        identifier = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
+        self.variables_dic['methods'][self.current_method][identifier] = _type
+
+        if ctx.variableDeclarators().variableDeclarator()[0].variableInitializer() != None:
+            self.class_dic[self.current_class][_type] = 'create'
+            print(self.class_dic)
+
+
+
 
 
 class ClassDiagram:
     def __init__(self):
         self.class_diagram_graph = nx.DiGraph()
-        self.relationship_names = ['implements', 'extends', 'use']
+        self.relationship_names = ['implements', 'extends', 'use', 'create']
 
     def make(self, java_project_address, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
-        edges_label = {}
+        #edges_label = {}
         if index_dic == None:
             index_dic = File.indexing_files_directory(files, 'class_index.json')
         for f in files:
@@ -103,8 +137,6 @@ class ClassDiagram:
         self.class_diagram_graph = nx.read_gml(address)
 
     def show(self):
-        #nx.draw(self.class_diagram_graph, with_labels=True)
-        #plt.show()
         pos = nx.spring_layout(self.class_diagram_graph)  # pos = nx.nx_agraph.graphviz_layout(G)
         nx.draw_networkx(self.class_diagram_graph, pos)
         labels = nx.get_edge_attributes(self.class_diagram_graph, 'weight')
@@ -136,8 +168,8 @@ class ClassDiagram:
 
 if __name__ == "__main__":
     #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\javaproject'
-    #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\refactored\\java_projects\\javaproject'
-    java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\java_projects\\bigJavaProject\\src\\main\\java'
+    java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\refactored\\java_projects\\javaproject'
+    #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\java_projects\\bigJavaProject\\src\\main\\java'
     cd = ClassDiagram()
     cd.make(java_project_address)
     #cd.save('class_diagram.gml')
