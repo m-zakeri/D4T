@@ -20,21 +20,16 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.current_relationship = None
         self.no_implements = 0
         self.has_extends = False
-        self.variables_dic = {'methods':{}, 'fields':{}}
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.current_class = ctx.IDENTIFIER().getText()
         self.class_dic[self.current_class] = {}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        print(self.current_class)
-        print(self.variables_dic)
-        self.variables_dic = {'methods':{}, 'fields':{}}
         self.current_class = None
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = ctx.IDENTIFIER().getText()
-        self.variables_dic['methods'][self.current_method] = {}
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = None
@@ -59,7 +54,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.no_implements -= 1
                 self.current_relationship = 'implements'
             else:
-                self.current_relationship = 'use'
+                self.current_relationship = 'associated'
 
             self.class_dic[self.current_class][text[:-1]] = self.current_relationship
 
@@ -72,31 +67,54 @@ class ClassDiagramListener(JavaParserLabeledListener):
             if ctx.classDeclaration().EXTENDS() != None:
                 self.has_extends = True
 
-    def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
-        _type = ctx.typeType().getText()
-        identifier = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
-        self.variables_dic['fields'][identifier] = _type
+class StereotypeListener(JavaParserLabeledListener):
+    file_info = {}
+    def __init__(self):
+        self.current_class = None
+        self.current_method = None
+        self.field_info = {}
+        self.variable_info = {}
 
-        if ctx.variableDeclarators().variableDeclarator()[0].variableInitializer() != None:
-            self.class_dic[self.current_class][_type] = 'create'
+    def get_file_info(self):
+        return self.file_info
+
+    def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        self.current_class = ctx.IDENTIFIER().getText()
+        self.file_info[self.current_class] = {}
+
+    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        self.current_class = None
+        print('fields :', self.field_info)
+        self.field_info = {}
+
+    def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        self.current_method = ctx.IDENTIFIER().getText()
+        self.file_info[self.current_class][self.current_method] = {}
+
+    def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        self.current_method = None
+        print('local variable :', self.variable_info)
+        self.variable_info = {}
+
+    def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
+        for vd in ctx.variableDeclarators().variableDeclarator():
+            _type = ctx.typeType().getText()
+            identifier = vd.variableDeclaratorId().IDENTIFIER().getText()
+            self.field_info[identifier] = _type
+
 
     def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
-        _type = ctx.typeType().getText()
-        identifier = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
-        self.variables_dic['methods'][self.current_method][identifier] = _type
-
-        if ctx.variableDeclarators().variableDeclarator()[0].variableInitializer() != None:
-            self.class_dic[self.current_class][_type] = 'create'
-            print(self.class_dic)
-
-
-
+        for vd in ctx.variableDeclarators().variableDeclarator():
+            _type = ctx.typeType().getText()
+            identifier = vd.variableDeclaratorId().IDENTIFIER().getText()
+            self.variable_info[identifier] = _type
 
 
 class ClassDiagram:
     def __init__(self):
         self.class_diagram_graph = nx.DiGraph()
-        self.relationship_names = ['implements', 'extends', 'use', 'create']
+        self.relationship_names = ['implements', 'extends', 'associated']
+        self.stereotype_names = ['create', 'use_consult', 'use_def', 'use']
 
     def make(self, java_project_address, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
@@ -129,6 +147,23 @@ class ClassDiagram:
                     weight = self.relationship_names.index(listener.class_dic[c][n2_class_name])
                     self.class_diagram_graph.add_edge(n1, n2, weight=weight)
                     self.class_diagram_graph[n1][n2]['weight'] = weight
+
+            # test Stereotype listener
+            try:
+                stream = FileStream(f)
+            except:
+                print(f, 'can not read')
+                continue
+            lexer = JavaLexer(stream)
+            tokens = CommonTokenStream(lexer)
+            parser = JavaParserLabeled(tokens)
+            tree = parser.compilationUnit()
+            stereotype_listener = StereotypeListener()
+            walker = ParseTreeWalker()
+            walker.walk(
+                listener=stereotype_listener,
+                t=tree
+            )
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -174,4 +209,4 @@ if __name__ == "__main__":
     cd.make(java_project_address)
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
-    cd.show()
+    #cd.show()
