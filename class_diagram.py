@@ -68,15 +68,15 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.has_extends = True
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
-    file_info = {}
+    #file_info = {}
     def __init__(self, classes_method_info=None):
+        self.file_info = {}
         self.current_class = None
         self.current_method = None
         self.attributes = {}
         self.local_variables = {}
         self.parameters = {}
-        self.is_use_def = None
-        self.is_use_consult = None
+        self.is_modify_itself = False
 
     def get_file_info(self):
         return self.file_info
@@ -84,27 +84,27 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = ctx.IDENTIFIER().getText()
         self.file_info[self.current_class] = {}
-        print('class :', self.current_class)
+        #print('class :', self.current_class)
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = None
-        print('attributes :', self.attributes)
+        #print('attributes :', self.attributes)
         self.attributes = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = ctx.IDENTIFIER().getText()
         self.file_info[self.current_class][self.current_method] = {}
-        print('method :', self.current_method)
+        #print('method :', self.current_method)
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        #print('local variable :', self.local_variables)
+        #print('parameters :', self.parameters)
+        #print('is use_def :', self.is_modify_itself)
+        self.file_info[self.current_class][self.current_method]['Modify_itself'] = self.is_modify_itself
         self.current_method = None
-        print('local variable :', self.local_variables)
-        print('parameters :', self.parameters)
-        print('is use_def :', self.is_use_def)
         self.local_variables = {}
         self.parameters = {}
-        self.is_use_def = None
-        self.is_use_consult = None
+        self.is_modify_itself = False
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
         for vd in ctx.variableDeclarators().variableDeclarator():
@@ -129,11 +129,11 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             variable = ctx.expression(0).expression().getText()
             #print('type1:', variable)
             if variable == 'this' or self.is_class_attribute(variable):
-                self.is_use_def = True
+                self.is_modify_itself = True
         else:
             variable = ctx.expression(0).getText()
             if self.is_class_attribute(variable):
-                self.is_use_def = True
+                self.is_modify_itself = True
             #print('type2:', variable)
 
 
@@ -210,6 +210,7 @@ class ClassDiagram:
         #edges_label = {}
         if index_dic == None:
             index_dic = File.indexing_files_directory(files, 'class_index.json')
+        print(self.__find_methods_information(files, index_dic))
         for f in files:
             print(f)
             try:
@@ -238,21 +239,7 @@ class ClassDiagram:
                     self.class_diagram_graph[n1][n2]['weight'] = weight
 
             # test Stereotype listener
-            try:
-                stream = FileStream(f)
-            except:
-                print(f, 'can not read')
-                continue
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
-            tree = parser.compilationUnit()
-            stereotype_listener = MethodModificationTypeListener()
-            walker = ParseTreeWalker()
-            walker.walk(
-                listener=stereotype_listener,
-                t=tree
-            )
+
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -292,6 +279,34 @@ class ClassDiagram:
                         break
             result['classes'][c] = data
         return result
+
+    def __find_methods_information(self, files, index_dic):
+        #print("start find methods information . . .")
+        methods_info = {}
+        for file in files:
+            #print(file)
+            try:
+                stream = FileStream(file)
+            except:
+                print(file, 'can not read')
+                continue
+            lexer = JavaLexer(stream)
+            tokens = CommonTokenStream(lexer)
+            parser = JavaParserLabeled(tokens)
+            tree = parser.compilationUnit()
+            listener = MethodModificationTypeListener()
+            walker = ParseTreeWalker()
+            walker.walk(
+                listener=listener,
+                t=tree
+            )
+            #print(listener.get_file_info())
+            file_info = listener.get_file_info()
+            for c in file_info:
+                class_index = index_dic[file + '\\' + c]
+                methods_info[class_index] = file_info[c]
+        #print("finish finding methods information . . .")
+        return methods_info
 
 if __name__ == "__main__":
     #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\javaproject'
