@@ -11,12 +11,19 @@ class ClassDiagramListener(JavaParserLabeledListener):
     def __init__(self):
         self.__classes = []
         self.__interfaces = []
+        self.__package = None
 
     def get_classes(self):
         return self.__classes
 
     def get_interfaces(self):
         return self.__interfaces
+
+    def get_package(self):
+        return self.__package
+
+    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
+        self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.__classes.append(ctx.IDENTIFIER().getText())
@@ -35,7 +42,7 @@ class File:
         return all_files
 
     @staticmethod
-    def indexing_files_directory(files, save_dir):
+    def indexing_files_directory(files, save_dir, base_java_dirs):
         index = 0
         index_dic = {}
         for f in files:
@@ -55,7 +62,17 @@ class File:
                 t=tree
             )
             for c in listener.get_classes() + listener.get_interfaces():
-                index_dic[f + '\\' + c] = index
+                if listener.get_package() == None:
+                    package = None
+                    for base_dir in base_java_dirs:
+                        if base_dir == f[:len(base_dir)]:
+                            target_dir = f[len(base_dir):]
+                            splitted_targer_dir = target_dir.split("\\")
+                            package = '.'.join(splitted_targer_dir[:-1])
+                            class_name = splitted_targer_dir[-1][:-5]
+                            index_dic[package + '-' + class_name] = index
+                else:
+                    index_dic[listener.get_package() + "-" + c] = index
                 index += 1
 
         with open(save_dir, "w") as write_file:
@@ -63,6 +80,13 @@ class File:
         return index_dic
 
 class Path:
+    @staticmethod
+    def get_default_package(base_dir, file_path):
+        package = file_path[len(base_dir):]
+        package = package.split('\\')
+        package = '.'.join(package[:-1])
+        return package
+
     @staticmethod
     def get_path_and_className_from_nodeName(nodeName):
         nodeName = nodeName.split('\\')

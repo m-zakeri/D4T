@@ -7,11 +7,13 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from utils import File, Path
+import config
 
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
-    def __init__(self):
+    def __init__(self, methods_information, base_dirs, index_dic):
+        self.methods_information = methods_information
         self.current_class = None
         self.current_method = None
         self.class_dic = {}
@@ -20,9 +22,37 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.current_relationship = None
         self.no_implements = 0
         self.has_extends = False
+        self.base_dirs = base_dirs
+        self.__package = None
+        self.index_dic = index_dic
+
+    def get_package(self):
+        return self.__package
+
+    def __find_package_of_dependee(self, dependee):
+        splitted_dependee = dependee.split('.')
+        # for normal import
+        for i in self.imports:
+            splitted_import = i.split('.')
+            if splitted_dependee[0] == splitted_import[-1]:
+                return '.'.join(i.split('.')[:-1])
+
+        # for import star
+        class_name = splitted_dependee[-1]
+        for i in self.imports_star:
+            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name
+            if index_dic_dependee in self.index_dic.keys():
+                print(i)
+                return i
+
+        return None
+
+
+    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
+        self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = ctx.IDENTIFIER().getText()
+        self.current_class = self.__package + '-' + ctx.IDENTIFIER().getText()
         self.class_dic[self.current_class] = {}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
@@ -56,7 +86,12 @@ class ClassDiagramListener(JavaParserLabeledListener):
             else:
                 self.current_relationship = 'associated'
 
-            self.class_dic[self.current_class][text[:-1]] = self.current_relationship
+            dependee = text[:-1]
+            dependee_package = self.__find_package_of_dependee(dependee)
+            if dependee_package != None:
+                self.class_dic[self.current_class][dependee_package + '-' + dependee] = self.current_relationship
+            else:
+                self.class_dic[self.current_class][self.__package + '-' + dependee] = self.current_relationship
 
 
     # this method is for detecting interface relationships
@@ -69,7 +104,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
     #file_info = {}
-    def __init__(self, classes_method_info=None):
+    def __init__(self):
         self.file_info = {}
         self.current_class = None
         self.current_method = None
@@ -77,9 +112,16 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.local_variables = {}
         self.parameters = {}
         self.is_modify_itself = False
+        self.__package = None
 
     def get_file_info(self):
         return self.file_info
+
+    def get_package(self):
+        return self.__package
+
+    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
+        self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = ctx.IDENTIFIER().getText()
@@ -97,10 +139,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         #print('method :', self.current_method)
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        #print('local variable :', self.local_variables)
-        #print('parameters :', self.parameters)
-        #print('is use_def :', self.is_modify_itself)
-        self.file_info[self.current_class][self.current_method]['Modify_itself'] = self.is_modify_itself
+        self.file_info[self.current_class][self.current_method]['is_modify_itself'] = self.is_modify_itself
         self.current_method = None
         self.local_variables = {}
         self.parameters = {}
@@ -205,12 +244,14 @@ class ClassDiagram:
         self.relationship_names = ['implements', 'extends', 'associated']
         self.stereotype_names = ['create', 'use_consult', 'use_def', 'use']
 
-    def make(self, java_project_address, index_dic=None):
+    def make(self, java_project_address, base_dir, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
         #edges_label = {}
         if index_dic == None:
-            index_dic = File.indexing_files_directory(files, 'class_index.json')
-        print(self.__find_methods_information(files, index_dic))
+            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dir)
+        #methods_information = self.__find_methods_information(files, index_dic)
+        #print(methods_information)
+        methods_information = None
         for f in files:
             print(f)
             try:
@@ -222,24 +263,22 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = ClassDiagramListener()
+            listener = ClassDiagramListener(methods_information, base_dir, index_dic)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
                 t=tree
             )
-            graph = self.__make_class_dependency(listener.class_dic, listener.imports, listener.imports_star, f)
-            for c in graph['classes']:
-                for i in graph['classes'][c]:
-                    n1 = index_dic[graph['path'] + '\\' + c]
-                    n2_class_name = Path.get_class_name_from_path(i)
-                    n2 = index_dic[i + '\\' + n2_class_name]
-                    weight = self.relationship_names.index(listener.class_dic[c][n2_class_name])
-                    self.class_diagram_graph.add_edge(n1, n2, weight=weight)
-                    self.class_diagram_graph[n1][n2]['weight'] = weight
-
-            # test Stereotype listener
-
+            graph = listener.class_dic
+            print(graph)
+            for c in graph:
+                for i in graph[c]:
+                    if i in index_dic.keys():
+                        n1 = index_dic[c]
+                        n2 = index_dic[i]
+                        weight = self.relationship_names.index(listener.class_dic[c][i])
+                        self.class_diagram_graph.add_edge(n1, n2, weight=weight)
+                        self.class_diagram_graph[n1][n2]['weight'] = weight
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -259,32 +298,10 @@ class ClassDiagram:
     def dfs(self):
         return nx.dfs_postorder_nodes(self.class_diagram_graph)
 
-    def __make_class_dependency(self, class_dic, imports, imports_star, path):
-        result = {'path': path, 'classes': {}}
-
-        for c in class_dic.keys():
-            data = []
-            for i in class_dic[c]:
-                path_of_class_in_type_of_import = Path.find_path_of_class_in_type_of_import(imports, i)
-                if path_of_class_in_type_of_import != None:
-                    path_of_import = Path.find_path_of_import(path, Path.find_path_of_class_in_type_of_import(imports, i))
-                    if path_of_import != None:
-                        if not path_of_import in data:
-                            data.append(path_of_import)
-            import_star_paths = Path.find_all_path_of_import_star(path, imports_star)
-            for i in class_dic[c]:
-                for pp in import_star_paths:
-                    if Path.get_class_name_from_path(pp) == i:
-                        data.append(pp)
-                        break
-            result['classes'][c] = data
-        return result
-
     def __find_methods_information(self, files, index_dic):
         #print("start find methods information . . .")
         methods_info = {}
         for file in files:
-            #print(file)
             try:
                 stream = FileStream(file)
             except:
@@ -303,19 +320,24 @@ class ClassDiagram:
             #print(listener.get_file_info())
             file_info = listener.get_file_info()
             for c in file_info:
-                class_index = index_dic[file + '\\' + c]
+                if listener.get_package() == None:
+                    package = Path.get_default_package(base_dirs, file)
+                else:
+                    package = listener.get_package()
+                class_index = index_dic[package + '-' + c]
                 methods_info[class_index] = file_info[c]
         #print("finish finding methods information . . .")
         return methods_info
 
 if __name__ == "__main__":
-    #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\javaproject'
-    java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\refactored\\java_projects\\javaproject'
-    #java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\compiler-factory-method\\java_projects\\bigJavaProject\\src\\main\\java'
+    java_project_address = config.projects_info['bigJavaProject']['path']
+    base_dirs = config.projects_info['bigJavaProject']['base_dirs']
     cd = ClassDiagram()
-    cd.make(java_project_address)
+    cd.make(java_project_address, base_dirs)
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
     #print(list(cd.dfs()))
-    #cd.show()
-
+    cd.show()
+    graphs = []
+    g = cd.class_diagram_graph
+    print(len(list(nx.weakly_connected_components(g))))
