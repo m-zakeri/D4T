@@ -107,7 +107,7 @@ def fix_product(product_path, interface_import_text, interface_name, creator_ide
 
 
 def _detect_procducts_and_creator():
-    percentage = float(input('please input your minimum percentage for factory method : ')) / 100
+    percentage = float(input('please input your minimum percentage for factory_dir method : ')) / 100
     with open("class_name_index.json", "r") as file:
         class_name_index = json.load(file)
     g = nx.read_gml('dependency_graph.gml')
@@ -145,15 +145,15 @@ def _detect_procducts_and_creator():
                 #print(percentage)
                 print('--------------------------------------------------')
                 print(result)
-                interface_name = 'Interface' + str(result['factory'])
+                interface_name = 'Interface' + str(result['factory_dir'])
                 result = find_path_from_id(result)
                 print(result)
-                #print(result['factory'])
+                #print(result['factory_dir'])
                 # make interface for
                 interface_creator = InterfaceCreator()
                 interface_creator.save(result, interface_name, package)
                 #print(interface_creator.get_import_text())
-                creator_path, creator_className = get_path_and_className_from_nodeName(result['factory'])
+                creator_path, creator_className = get_path_and_className_from_nodeName(result['factory_dir'])
                 products_path = []
                 products_className = []
                 for i in result['products']['classes']:

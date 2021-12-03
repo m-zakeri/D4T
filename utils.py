@@ -12,6 +12,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.__classes = []
         self.__interfaces = []
         self.__package = None
+        self.__current_class = None
 
     def get_classes(self):
         return self.__classes
@@ -26,7 +27,12 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.__classes.append(ctx.IDENTIFIER().getText())
+        if self.__current_class == None:
+            self.__current_class = ctx.IDENTIFIER().getText()
+            self.__classes.append(ctx.IDENTIFIER().getText())
+
+    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        self.__current_class = None
 
     def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
         self.__interfaces.append(ctx.IDENTIFIER().getText())
@@ -46,6 +52,7 @@ class File:
         index = 0
         index_dic = {}
         for f in files:
+            file_name = Path.get_file_name_from_path(f)
             try:
                 stream = FileStream(f)
             except:
@@ -62,17 +69,29 @@ class File:
                 t=tree
             )
             for c in listener.get_classes() + listener.get_interfaces():
+                package = None
                 if listener.get_package() == None:
-                    package = None
                     for base_dir in base_java_dirs:
                         if base_dir == f[:len(base_dir)]:
                             target_dir = f[len(base_dir):]
                             splitted_targer_dir = target_dir.split("\\")
                             package = '.'.join(splitted_targer_dir[:-1])
-                            class_name = splitted_targer_dir[-1][:-5]
-                            index_dic[package + '-' + class_name] = index
+                            break
                 else:
-                    index_dic[listener.get_package() + "-" + c] = index
+                    package = listener.get_package()
+                if index == 107:
+                    print('index 107: ',f)
+                    print(listener.get_package())
+                    print(c)
+                if index == 106:
+                    print('index 106:', f)
+                    print(listener.get_package())
+                    print(c)
+                if index == 104:
+                    print('index 104:', f)
+                    print(listener.get_package())
+                    print(c)
+                index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
                 index += 1
 
         with open(save_dir, "w") as write_file:
@@ -139,22 +158,12 @@ class Path:
                     return result
 
     @staticmethod
-    def get_class_name_from_path(path):
+    def get_file_name_from_path(path):
         path = path.split('\\')
         class_name = path[-1]
         class_name = class_name.split('.')
         class_name = class_name[0]
         return class_name
-
-    @staticmethod
-    def find_path_from_id(result, index_dic):
-        json_list = list(index_dic.keys())
-        result['factory'] = json_list[int(result['factory'])]
-        products_class_list = []
-        for product_class in result['products']['classes']:
-            products_class_list.append(json_list[int(product_class)])
-        result['products']['classes'] = products_class_list
-        return result
 
 class List:
     @staticmethod

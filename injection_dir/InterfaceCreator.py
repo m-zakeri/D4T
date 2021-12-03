@@ -34,7 +34,7 @@ class InterfaceCreator:
         return listpathlist
 
     def save(self, result, name, package):
-        all_paths = [result['factory']] + result['products']['classes']
+        all_paths = [result['factory_dir']] + result['products']['classes']
         path = self.detect_path(self.convert_strpath_to_listpath(all_paths))
         # detect import text
         path_list = path.split("\\")

@@ -13,7 +13,7 @@ def compare_similarity_of_two_list(list1, list2):
 
 
 def find_products(parent_class, method_class_dic, percentage):
-    result = {'factory': int(parent_class), 'products':{'classes':[], 'methods':[]}}
+    result = {'factory_dir': int(parent_class), 'products':{'classes':[], 'methods':[]}}
 
     for c1 in method_class_dic.keys():
         class_list = []
@@ -120,7 +120,7 @@ def find_path_from_id(result):
     with open('class_name_index.json', 'r') as file:
         json_list = json.load(file)
         json_list = list(json_list.keys())
-    result['factory'] = json_list[int(result['factory'])]
+    result['factory_dir'] = json_list[int(result['factory_dir'])]
     products_class_list = []
     for product_class in result['products']['classes']:
         products_class_list.append(json_list[int(product_class)])

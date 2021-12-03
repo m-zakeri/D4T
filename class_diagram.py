@@ -12,7 +12,7 @@ import config
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
-    def __init__(self, methods_information, base_dirs, index_dic):
+    def __init__(self, methods_information, base_dirs, index_dic, file_name):
         self.methods_information = methods_information
         self.current_class = None
         self.current_method = None
@@ -25,6 +25,8 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.base_dirs = base_dirs
         self.__package = None
         self.index_dic = index_dic
+        self.file_name = file_name
+        self.class_list = []
 
     def get_package(self):
         return self.__package
@@ -40,9 +42,8 @@ class ClassDiagramListener(JavaParserLabeledListener):
         # for import star
         class_name = splitted_dependee[-1]
         for i in self.imports_star:
-            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name
+            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
             if index_dic_dependee in self.index_dic.keys():
-                print(i)
                 return i
 
         return None
@@ -52,7 +53,8 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = self.__package + '-' + ctx.IDENTIFIER().getText()
+        self.class_list.append(ctx.IDENTIFIER().getText())
+        self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
         self.class_dic[self.current_class] = {}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
@@ -87,11 +89,15 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.current_relationship = 'associated'
 
             dependee = text[:-1]
-            dependee_package = self.__find_package_of_dependee(dependee)
-            if dependee_package != None:
-                self.class_dic[self.current_class][dependee_package + '-' + dependee] = self.current_relationship
+            if dependee in self.class_list:
+                file_name = self.file_name
+                package = self.__package
             else:
-                self.class_dic[self.current_class][self.__package + '-' + dependee] = self.current_relationship
+                file_name = dependee
+                package = self.__find_package_of_dependee(dependee)
+
+            if package != None:
+                self.class_dic[self.current_class][package + '-' + file_name + '-' + dependee] = self.current_relationship
 
 
     # this method is for detecting interface relationships
@@ -244,15 +250,15 @@ class ClassDiagram:
         self.relationship_names = ['implements', 'extends', 'associated']
         self.stereotype_names = ['create', 'use_consult', 'use_def', 'use']
 
-    def make(self, java_project_address, base_dir, index_dic=None):
+    def make(self, java_project_address, base_dirs, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
-        #edges_label = {}
         if index_dic == None:
-            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dir)
+            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
         #methods_information = self.__find_methods_information(files, index_dic)
         #print(methods_information)
         methods_information = None
         for f in files:
+            file_name = Path.get_file_name_from_path(f)
             print(f)
             try:
                 stream = FileStream(f)
@@ -263,7 +269,7 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = ClassDiagramListener(methods_information, base_dir, index_dic)
+            listener = ClassDiagramListener(methods_information, base_dirs, index_dic, file_name)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
@@ -274,8 +280,8 @@ class ClassDiagram:
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
-                        n1 = index_dic[c]
-                        n2 = index_dic[i]
+                        n1 = index_dic[c]['index']
+                        n2 = index_dic[i]['index']
                         weight = self.relationship_names.index(listener.class_dic[c][i])
                         self.class_diagram_graph.add_edge(n1, n2, weight=weight)
                         self.class_diagram_graph[n1][n2]['weight'] = weight
@@ -330,14 +336,13 @@ class ClassDiagram:
         return methods_info
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['bigJavaProject']['path']
-    base_dirs = config.projects_info['bigJavaProject']['base_dirs']
+    java_project_address = config.projects_info['javaproject_refactored']['path']
+    base_dirs = config.projects_info['javaproject_refactored']['base_dirs']
     cd = ClassDiagram()
     cd.make(java_project_address, base_dirs)
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
     #print(list(cd.dfs()))
     cd.show()
-    graphs = []
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))

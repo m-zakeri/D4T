@@ -138,14 +138,14 @@ def _detect_procducts_and_creator(sensivity):
                 print('--------------------------------------------------')
                 print(result)
                 no_detection += 1
-                interface_name = 'Interface' + str(result['factory'])
+                interface_name = 'Interface' + str(result['factory_dir'])
                 result = find_path_from_id(result)
-                #print(result['factory'])
+                #print(result['factory_dir'])
                 # make interface for
                 interface_creator = InterfaceCreator()
                 interface_creator.save(result, interface_name, package)
                 #print(interface_creator.get_import_text())
-                creator_path, creator_className = get_path_and_className_from_nodeName(result['factory'])
+                creator_path, creator_className = get_path_and_className_from_nodeName(result['factory_dir'])
                 products_path = []
                 products_className = []
                 for i in result['products']['classes']:
