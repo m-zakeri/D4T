@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="IntelliJDeodorant-master:jar">
+    <output-path>$USER_HOME$/Desktop</output-path>
+    <root id="archive" name="IntelliJDeodorant-master.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="archive" name="archive.jar" />
+    </root>
+  </artifact>
+</component>

@@ -1,8 +1,0 @@
-Make Dependency Graph :
-Inputs : java_project_directory
-
-Process :
-    files = find_all_file(java_project_directory)
-    for file in files :
-        listener = GraphMakerListener()
-        graph = make_graph(listener.class_dic, listener.imports,listener.imports_star, file)

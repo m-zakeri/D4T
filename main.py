@@ -1,16 +1,34 @@
-# This is a sample Python script.
+from class_diagram import ClassDiagram
+from factory import Factory
+from utils import File
+import config
+import networkx as nx
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+if __name__ == "__main__":
+    java_project_address = config.projects_info['bigJavaProject_refactored']['path']
+    base_dirs = config.projects_info['bigJavaProject_refactored']['base_dirs']
+    files = File.find_all_file(java_project_address, 'java')
+    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    cd = ClassDiagram()
+    cd.make(java_project_address, base_dirs, index_dic)
+    #cd.save('class_diagram.gml')
+    #cd.load('class_diagram.gml')
+    cd.show()
+    g = cd.class_diagram_graph
+    print(len(list(nx.weakly_connected_components(g))))
+    for i in nx.weakly_connected_components(g):
+        print(i)
+    #g = cd.class_diagram_graph
+    #print(len(list(nx.weakly_connected_components(g))))
+    f = Factory()
+    f.detect_and_fix(0.1, index_dic, cd.class_diagram_graph)
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    files = File.find_all_file(java_project_address, 'java')
+    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    cd2 = ClassDiagram()
+    cd2.make(java_project_address, base_dirs, index_dic)
+    cd2.show()
+    g = cd2.class_diagram_graph
+    print(len(list(nx.weakly_connected_components(g))))
+    for i in nx.weakly_connected_components(g):
+        print(i)
