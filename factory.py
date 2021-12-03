@@ -1,3 +1,4 @@
+import json
 import time
 
 import networkx as nx
@@ -68,7 +69,6 @@ class FixCreatorListener(JavaParserLabeledListener):
                                                       ctx.stop.tokenIndex])
             except:
                 pass
-                #print(ctx.getText())
 
     def exitPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -123,10 +123,8 @@ class FixProductsListener(JavaParserLabeledListener):
         if ctx.IDENTIFIER().getText() in self.products_identifier:
             self.inProducts = True
             try:
-                #print(ctx.typeType().classOrInterfaceType().getText())
                 self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
             except Exception as e:
-                #print(e)
                 self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
             self.currentClass = ctx.IDENTIFIER().symbol.text
 
@@ -169,7 +167,6 @@ class FixProductsListener(JavaParserLabeledListener):
                 self.productConstructorMethod.append(Method)
             except:
                 pass
-                #print(ctx.getText())
 
 
     def exitPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
@@ -235,12 +232,12 @@ class InterfaceCreator:
     def make_body(self, name, products):
         interfaceText = "public interface " + name + "{"
         for method in products['methods']:
-            interfaceText += "dir\n\t" + 'public ' + method['returnType'] + ' ' + method['name'] + '('
+            interfaceText += "\n\t" + 'public ' + method['returnType'] + ' ' + method['name'] + '('
             for formalParameter in method['formalParameter']:
                 interfaceText += formalParameter[0] + ' ' + formalParameter[1] + ', '
             if method['formalParameter'] != []:
                 interfaceText = interfaceText[:-2]
-            interfaceText += ')'
+            interfaceText += ');'
         interfaceText += "\n}\n\n"
         return interfaceText
 
@@ -283,7 +280,6 @@ class InterfaceCreator:
 
 class Factory:
     def __fix_creator(self, creator_path, interface_import_text, interface_name, creator_identifier, products_identifier):
-        # print(creator_path)
         stream = FileStream(creator_path, encoding='utf8')
         lexer = JavaLexer(stream)
         token_stream = CommonTokenStream(lexer)
@@ -373,7 +369,6 @@ class Factory:
 
     def detect_and_fix(self, sensitivity, index_dic, class_diagram):
         index_dic_keys = list(index_dic.keys())
-        print(len(index_dic_keys))
         roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
         for r in roots:
             root_dfs = list(nx.bfs_edges(class_diagram, source=r, depth_limit=1))
@@ -381,11 +376,7 @@ class Factory:
                 method_class_dic = {}
                 package = None
                 for child_index in root_dfs:
-                    try:
-                        child = index_dic_keys[int(child_index[1])]
-                    except:
-                        print(len(index_dic_keys))
-                        print(int(child_index[1]))
+                    child = index_dic_keys[int(child_index[1])]
                     child_path = index_dic[child]['path']
                     child_class_name = child.split('-')[1]
                     try:
@@ -409,15 +400,12 @@ class Factory:
                 result = self.__find_products(root_dfs[0][0], method_class_dic, sensitivity)
                 if len(result['products']['classes']) > 1:
                     print('--------------------------------------------------')
-                    print(result)
+                    print(json.dumps(result, indent=4))
                     interface_name = 'Interface' + str(result['factory'])
                     result = self.__find_class_info_from_id(result, index_dic)
-                    print(result)
-                    # print(result['factory_dir'])
                     # make interface for
                     interface_creator = InterfaceCreator()
                     interface_creator.save(result, interface_name, package)
-                    # print(interface_creator.get_import_text())
                     creator_path = result['factory']['path']
                     creator_className = result['factory']['class_name']
                     products_path = []

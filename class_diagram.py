@@ -53,9 +53,10 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.class_list.append(ctx.IDENTIFIER().getText())
-        self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
-        self.class_dic[self.current_class] = {}
+        if self.current_class == None:
+            self.class_list.append(ctx.IDENTIFIER().getText())
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            self.class_dic[self.current_class] = {}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = None
@@ -227,7 +228,6 @@ class StereotypeListener(JavaParserLabeledListener):
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = None
-        print('local variable :', self.variable_info)
         self.variable_info = {}
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
@@ -276,7 +276,6 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            print(graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -305,7 +304,6 @@ class ClassDiagram:
         return nx.dfs_postorder_nodes(self.class_diagram_graph)
 
     def __find_methods_information(self, files, index_dic):
-        #print("start find methods information . . .")
         methods_info = {}
         for file in files:
             try:
@@ -336,13 +334,18 @@ class ClassDiagram:
         return methods_info
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject_refactored']['path']
-    base_dirs = config.projects_info['javaproject_refactored']['base_dirs']
+    java_project_address = config.projects_info['bigJavaProject']['path']
+    base_dirs = config.projects_info['bigJavaProject']['base_dirs']
+    files = File.find_all_file(java_project_address, 'java')
+    index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
     cd = ClassDiagram()
-    cd.make(java_project_address, base_dirs)
+    cd.make(java_project_address, base_dirs, index_dic)
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
     #print(list(cd.dfs()))
     cd.show()
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
+    for i in nx.weakly_connected_components(g):
+        print(i)
+

@@ -79,18 +79,6 @@ class File:
                             break
                 else:
                     package = listener.get_package()
-                if index == 107:
-                    print('index 107: ',f)
-                    print(listener.get_package())
-                    print(c)
-                if index == 106:
-                    print('index 106:', f)
-                    print(listener.get_package())
-                    print(c)
-                if index == 104:
-                    print('index 104:', f)
-                    print(listener.get_package())
-                    print(c)
                 index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
                 index += 1
 
