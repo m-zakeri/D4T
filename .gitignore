@@ -1,4 +1,4 @@
 *.pyc
 *.gml
 *.json
-refactored_project\*
+refactored_project/*
