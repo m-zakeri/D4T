@@ -1,9 +1,5 @@
 import json
-import time
-
 import networkx as nx
-from distutils.dir_util import copy_tree
-from shutil import rmtree
 
 from antlr4 import *
 from gen.JavaLexer import JavaLexer

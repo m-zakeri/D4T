@@ -12,7 +12,7 @@ import config
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
-    def __init__(self, methods_information, base_dirs, index_dic, file_name):
+    def __init__(self, methods_information, base_dirs, index_dic, file_name, file):
         self.methods_information = methods_information
         self.current_class = None
         self.current_method = None
@@ -27,6 +27,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.index_dic = index_dic
         self.file_name = file_name
         self.class_list = []
+        self.file = file
 
     def get_package(self):
         return self.__package
@@ -53,6 +54,11 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.__package == None:
+            #print(self.base_dirs)
+            #print(self.file)
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+            #print("self.__package:", self.__package)
         if self.current_class == None:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
@@ -269,7 +275,7 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = ClassDiagramListener(methods_information, base_dirs, index_dic, file_name)
+            listener = ClassDiagramListener(methods_information, base_dirs, index_dic, file_name, f)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
@@ -279,6 +285,7 @@ class ClassDiagram:
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
+                        print(c)
                         n1 = index_dic[c]['index']
                         n2 = index_dic[i]['index']
                         weight = self.relationship_names.index(listener.class_dic[c][i])

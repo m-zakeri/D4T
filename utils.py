@@ -69,14 +69,8 @@ class File:
                 t=tree
             )
             for c in listener.get_classes() + listener.get_interfaces():
-                package = None
                 if listener.get_package() == None:
-                    for base_dir in base_java_dirs:
-                        if base_dir == f[:len(base_dir)]:
-                            target_dir = f[len(base_dir):]
-                            splitted_targer_dir = target_dir.split("\\")
-                            package = '.'.join(splitted_targer_dir[:-1])
-                            break
+                    package = Path.get_default_package(base_java_dirs, f)
                 else:
                     package = listener.get_package()
                 index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
@@ -88,11 +82,13 @@ class File:
 
 class Path:
     @staticmethod
-    def get_default_package(base_dir, file_path):
-        package = file_path[len(base_dir):]
-        package = package.split('\\')
-        package = '.'.join(package[:-1])
-        return package
+    def get_default_package(base_dirs, file_path):
+        for base_dir in base_dirs:
+            if base_dir == file_path[:len(base_dir)]:
+                target_dir = file_path[len(base_dir):]
+                splitted_targer_dir = target_dir.split("\\")
+                package = '.'.join(splitted_targer_dir[:-1])
+                return package
 
     @staticmethod
     def get_file_name_from_path(path):
