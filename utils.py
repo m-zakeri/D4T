@@ -95,57 +95,6 @@ class Path:
         return package
 
     @staticmethod
-    def get_path_and_className_from_nodeName(nodeName):
-        nodeName = nodeName.split('\\')
-        className = nodeName[-1]
-        path = '\\'.join(nodeName[:-1])
-        return path, className
-
-    @staticmethod
-    def find_path_of_import(path, _import):
-        _import = _import.split('.')
-        path = path.split('\\')
-        candidate_path = []
-        for d in range(len(path) - 1):
-            if path[d] == _import[0]:
-                candidate_path.append('\\'.join(path[:d] + _import) + '.java')
-            elif path[d] == path[-2]:
-                candidate_path.append('\\'.join(path[:-1] + _import) + '.java')
-        for p in candidate_path:
-            try:
-                file = open('' + p, 'r')
-                file.close()
-                return p
-            except:
-                pass
-
-    @staticmethod
-    def find_all_path_of_import_star(path, imports_star):
-        path = path.split('\\')
-        candidate_path = []
-        for import_star in imports_star:
-            import_star = import_star.split('.')
-            for d in range(len(path)):
-                if path[d] == import_star[0]:
-                    candidate_path.append('\\'.join(path[:d] + import_star))
-
-        result = []
-        for c in candidate_path:
-            result += File.find_all_file(c, 'java')
-        return result
-
-    @staticmethod
-    def find_path_of_class_in_type_of_import(import_list, class_name):
-        class_name = class_name.split('.')
-        for _import in import_list:
-            if _import[:4] != 'java':
-                if _import.split('.')[-1] == class_name[0]:
-                    result = _import
-                    for c in class_name[1:]:
-                        result += '.' + c
-                    return result
-
-    @staticmethod
     def get_file_name_from_path(path):
         path = path.split('\\')
         class_name = path[-1]
