@@ -70,7 +70,6 @@ class File:
             )
             if listener.get_package() == None:
                 package = Path.get_default_package(base_java_dirs, f)
-                print('debug package:', package)
             else:
                 package = listener.get_package()
             for c in listener.get_classes() + listener.get_interfaces():

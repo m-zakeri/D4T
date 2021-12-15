@@ -225,7 +225,6 @@ class StereotypeListener(JavaParserLabeledListener):
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = None
-        print('fields :', self.field_info)
         self.field_info = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
@@ -285,7 +284,6 @@ class ClassDiagram:
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
-                        print(c)
                         n1 = index_dic[c]['index']
                         n2 = index_dic[i]['index']
                         weight = self.relationship_names.index(listener.class_dic[c][i])

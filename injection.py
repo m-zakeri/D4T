@@ -67,7 +67,6 @@ class DependeeEditorListener(JavaParserLabeledListener):
         formal_variable_text = ''
         assign_text = ''
         for v in self.class_dic[self.currentClass]['local_variables']:
-            print(11111111111)
             text += f"\n\tprivate {'I' + v['type']} {v['name']};"
             formal_variable_text += f"{'I' + v['type']} c_{v['name']},"
             assign_text += f"\n\t{v['name']} = c_{v['name']};"
@@ -116,6 +115,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         self.class_dic = {}
         self.imports_star = []
         self.imports = []
+        self.state = None
         self.initiate_constructor()
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
@@ -130,10 +130,11 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.currentClass = ctx.IDENTIFIER().getText()
-        self.class_dic[self.currentClass] = {'local_variables':[]}
+        self.class_dic[self.currentClass] = {'field_variables':{}}
+        self.state = 'before constructor'
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.class_dic[self.currentClass]['local_variables'] != []:
+        if self.class_dic[self.currentClass]['field_variables'] != {}:
             if self.current_constructor_info['formal_parameter_token_index'] == None:
                 self.generate_constructor()
             else:
@@ -141,25 +142,33 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
         self.currentClass = None
         self.initiate_constructor()
+        self.state = None
 
     def enterClassBody(self, ctx:JavaParserLabeled.ClassBodyContext):
         self.current_constructor_info['token_index'] = ctx.LBRACE().symbol.tokenIndex
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
-        self.current_constructor_info['token_index'] = ctx.stop.tokenIndex
-        if 'classOrInterfaceType' in dir(ctx.typeType()):
+        self.current_constructor_info['token_index'] = ctx.parentCtx.parentCtx.start.tokenIndex - 1
+
+        if ctx.typeType().classOrInterfaceType() != None:
             _type = ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].getText()
             name = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
-            self.class_dic[self.currentClass]['local_variables'].append({'type':_type, 'name':name})
-            # delete local variable instantiation
-            #self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-            #                                  from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
-            #                                  to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
-            #                                  )
+            self.class_dic[self.currentClass]['field_variables'][name] = {'type':_type,
+                                                                          'can_inject':False,
+                                                                          'ctx':ctx}
+
+    def enterVariableDeclarator(self, ctx:JavaParserLabeled.VariableDeclaratorContext):
+        if ctx.ASSIGN() != None:
+            name = ctx.variableDeclaratorId().IDENTIFIER().getText()
+            self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
 
     def enterConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
+        self.state = 'in constructor'
         self.current_constructor_info['formal_parameter_token_index'] = ctx.formalParameters().stop.tokenIndex
         self.current_constructor_info['assign_token_index'] = ctx.block().stop.tokenIndex
+
+    def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
+        self.state = 'in method'
 
 
     def enterImportDeclaration(self, ctx:JavaParserLabeled.ImportDeclarationContext):
@@ -168,60 +177,73 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         else:
             self.imports.append(ctx.qualifiedName().getText())
 
-
-    def find_import_of_variables(self, _type):
-        return None
-
     def generate_constructor(self):
         text = ''
         formal_variable_text = ''
         assign_text = ''
-        for v in self.class_dic[self.currentClass]['local_variables']:
-            text += f"\n\tprivate {'I' + v['type']} {v['name']};"
-            formal_variable_text += f"{'I' + v['type']} {v['name']},"
-            assign_text += f"\n\t\tthis.{v['name']} = {v['name']};"
+        can_make_constructor = False
+        for v in self.class_dic[self.currentClass]['field_variables']:
+            v_info = self.class_dic[self.currentClass]['field_variables'][v]
+            if v_info['can_inject']:
+                can_make_constructor = True
+                ctx = v_info['ctx']
+                # delete field variable instantiation
+                self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                                                  from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
+                                                  to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
+                                                  )
+                text += f"private {'I' + v_info['type']} {v};\n\t"
+                formal_variable_text += f"{'I' + v_info['type']} {v},"
+                assign_text += f"\n\t\tthis.{v} = {v};"
         formal_variable_text = formal_variable_text[:-1]
         assign_text = '{' + assign_text + '\n\t}'
 
-        text += f"\n\tpublic {self.currentClass} ({formal_variable_text})\n\t{assign_text}"
+        text += f"public {self.currentClass} ({formal_variable_text})\n\t{assign_text}\n\n\t"
 
-        print(self.current_constructor_info['token_index'])
-        print(text)
-        print(self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
-        self.token_stream_rewriter.insertAfter(self.current_constructor_info['token_index'],
-                                               text,
-                                               program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
-        print('debug:', self.token_stream_rewriter.getDefaultText())
+        if can_make_constructor:
+            self.token_stream_rewriter.insertAfter(self.current_constructor_info['token_index'],
+                                                   text,
+                                                   program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
 
     def edit_constructor(self):
         instantiate_text = ''
         formal_variable_text = ''
         assign_text = ''
-        for v in self.class_dic[self.currentClass]['local_variables']:
-            instantiate_text += f"\n\tprivate {'I' + v['type']} {v['name']};"
-            formal_variable_text += f"{'I' + v['type']} {v['name']},"
-            assign_text += f"\n\t\tthis.{v['name']} = {v['name']};"
+        can_edit_constructor = False
+        for v in self.class_dic[self.currentClass]['field_variables']:
+            v_info = self.class_dic[self.currentClass]['field_variables'][v]
+            if v_info['can_inject']:
+                can_edit_constructor = True
+                ctx = v_info['ctx']
+                # delete field variable instantiation
+                self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                                                  from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
+                                                  to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
+                                                  )
+                instantiate_text += f"private {'I' + v_info['type']} {v};\n\t"
+                formal_variable_text += f"{'I' + v_info['type']} {v},"
+                assign_text += f"\n\t\tthis.{v} = {v};"
         formal_variable_text = formal_variable_text[:-1]
         assign_text = assign_text[2:] + '\n\t'
 
+        if can_edit_constructor:
+            self.token_stream_rewriter.insertAfter(
+                self.current_constructor_info['token_index'],
+                instantiate_text,
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
+            )
 
-        self.token_stream_rewriter.insertAfter(
-            self.current_constructor_info['token_index'],
-            instantiate_text,
-            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
-        )
+            self.token_stream_rewriter.insertAfter(
+                self.current_constructor_info['formal_parameter_token_index'] - 1,
+                ', ' + formal_variable_text,
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
+            )
 
-        self.token_stream_rewriter.insertAfter(
-            self.current_constructor_info['formal_parameter_token_index'] - 1,
-            ', ' + formal_variable_text,
-            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
-        )
-
-        self.token_stream_rewriter.insertAfter(
-            self.current_constructor_info['assign_token_index'] - 1,
-            assign_text,
-            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
-        )
+            self.token_stream_rewriter.insertAfter(
+                self.current_constructor_info['assign_token_index'] - 1,
+                assign_text,
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
+            )
 
 class Injection:
     def detect_and_fix(self, index_dic, class_diagram):
