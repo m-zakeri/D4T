@@ -35,6 +35,6 @@ projects_info['bigJavaProject']['base_dirs'] = base_dirs
 projects_info['simple_injection'] = {}
 java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection'
 base_dirs = []
-base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\')
+base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\')
 projects_info['simple_injection']['path'] = java_project_address
 projects_info['simple_injection']['base_dirs'] = base_dirs

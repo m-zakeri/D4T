@@ -68,11 +68,12 @@ class File:
                 listener=listener,
                 t=tree
             )
+            if listener.get_package() == None:
+                package = Path.get_default_package(base_java_dirs, f)
+                print('debug package:', package)
+            else:
+                package = listener.get_package()
             for c in listener.get_classes() + listener.get_interfaces():
-                if listener.get_package() == None:
-                    package = Path.get_default_package(base_java_dirs, f)
-                else:
-                    package = listener.get_package()
                 index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
                 index += 1
 

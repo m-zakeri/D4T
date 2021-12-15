@@ -133,10 +133,11 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         self.class_dic[self.currentClass] = {'local_variables':[]}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_constructor_info['formal_parameter_token_index'] == None:
-            self.generate_constructor()
-        else:
-            self.edit_constructor()
+        if self.class_dic[self.currentClass]['local_variables'] != []:
+            if self.current_constructor_info['formal_parameter_token_index'] == None:
+                self.generate_constructor()
+            else:
+                self.edit_constructor()
 
         self.currentClass = None
         self.initiate_constructor()
@@ -146,6 +147,15 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
         self.current_constructor_info['token_index'] = ctx.stop.tokenIndex
+        if 'classOrInterfaceType' in dir(ctx.typeType()):
+            _type = ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].getText()
+            name = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
+            self.class_dic[self.currentClass]['local_variables'].append({'type':_type, 'name':name})
+            # delete local variable instantiation
+            #self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+            #                                  from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
+            #                                  to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
+            #                                  )
 
     def enterConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
         self.current_constructor_info['formal_parameter_token_index'] = ctx.formalParameters().stop.tokenIndex
@@ -158,16 +168,6 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         else:
             self.imports.append(ctx.qualifiedName().getText())
 
-    def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
-        if 'classOrInterfaceType' in dir(ctx.typeType()):
-            _type = ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].getText()
-            name = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
-            self.class_dic[self.currentClass]['local_variables'].append({'type':_type, 'name':name})
-            # delete local variable instantiation
-            self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                                              from_idx=ctx.start.tokenIndex,
-                                              to_idx=ctx.stop.tokenIndex + 1
-                                              )
 
     def find_import_of_variables(self, _type):
         return None
@@ -178,16 +178,20 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         assign_text = ''
         for v in self.class_dic[self.currentClass]['local_variables']:
             text += f"\n\tprivate {'I' + v['type']} {v['name']};"
-            formal_variable_text += f"{'I' + v['type']} c_{v['name']},"
-            assign_text += f"\n\t\t{v['name']} = c_{v['name']};"
+            formal_variable_text += f"{'I' + v['type']} {v['name']},"
+            assign_text += f"\n\t\tthis.{v['name']} = {v['name']};"
         formal_variable_text = formal_variable_text[:-1]
         assign_text = '{' + assign_text + '\n\t}'
 
         text += f"\n\tpublic {self.currentClass} ({formal_variable_text})\n\t{assign_text}"
 
+        print(self.current_constructor_info['token_index'])
+        print(text)
+        print(self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
         self.token_stream_rewriter.insertAfter(self.current_constructor_info['token_index'],
                                                text,
                                                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
+        print('debug:', self.token_stream_rewriter.getDefaultText())
 
     def edit_constructor(self):
         instantiate_text = ''
@@ -195,8 +199,8 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         assign_text = ''
         for v in self.class_dic[self.currentClass]['local_variables']:
             instantiate_text += f"\n\tprivate {'I' + v['type']} {v['name']};"
-            formal_variable_text += f"{'I' + v['type']} c_{v['name']},"
-            assign_text += f"\n\t\t{v['name']} = c_{v['name']};"
+            formal_variable_text += f"{'I' + v['type']} {v['name']},"
+            assign_text += f"\n\t\tthis.{v['name']} = {v['name']};"
         formal_variable_text = formal_variable_text[:-1]
         assign_text = assign_text[2:] + '\n\t'
 
