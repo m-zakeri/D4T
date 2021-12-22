@@ -401,6 +401,9 @@ class Factory:
                     result = self.__find_class_info_from_id(result, index_dic)
                     # make interface for
                     interface_creator = InterfaceCreator()
+                    print('result:', result)
+                    print('interface_name:', interface_name)
+                    print('package:', package)
                     interface_creator.save(result, interface_name, package)
                     creator_path = result['factory']['path']
                     creator_className = result['factory']['class_name']

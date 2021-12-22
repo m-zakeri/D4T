@@ -156,11 +156,13 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             self.class_dic[self.currentClass]['field_variables'][name] = {'type':_type,
                                                                           'can_inject':False,
                                                                           'ctx':ctx}
+            print(self.class_dic)
 
     def enterVariableDeclarator(self, ctx:JavaParserLabeled.VariableDeclaratorContext):
         if ctx.ASSIGN() != None:
             name = ctx.variableDeclaratorId().IDENTIFIER().getText()
-            self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
+            if name in self.class_dic[self.currentClass]['field_variables'].keys():
+                self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
 
     def enterConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
         self.state = 'in constructor'
