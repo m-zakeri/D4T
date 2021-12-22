@@ -7,7 +7,7 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 from gen.JavaParserLabeled import JavaParserLabeled
 
-from utils import Path
+from interface import InterfaceAdapter, InterfaceCreator
 
 class FixCreatorListener(JavaParserLabeledListener):
     def __init__(self, interfaceName, interface_import_text,
@@ -210,64 +210,17 @@ class ProductCreatorDetectorListener(JavaParserLabeledListener):
             self.methods[self.current_method_info['name']] = self.current_method_info
 
     def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
-        if 'formalParameter' in self.current_method_info.keys():
+        if 'formal_parameters' in self.current_method_info.keys():
             formal_parameter_info = []
             formal_parameter_info.append(ctx.typeType().getText())
             formal_parameter_info.append(ctx.variableDeclaratorId().getText())
-            self.current_method_info['formalParameter'].append(formal_parameter_info)
+            self.current_method_info['formal_parameters'].append(formal_parameter_info)
 
     def enterClassBodyDeclaration2(self, ctx:JavaParserLabeled.ClassBodyDeclaration2Context):
         if self.current_class == self.class_name:
             if len(ctx.modifier()) > 0:
                 if ctx.modifier()[0].getText() == 'public':
                     self.current_class_body_public = ctx.memberDeclaration()
-
-class InterfaceCreator:
-
-    def __init__(self):
-        self.import_text = 'import '
-
-    def make_body(self, name, products):
-        interfaceText = "public interface " + name + "{"
-        for method in products['methods']:
-            interfaceText += "\n\t" + 'public ' + method['returnType'] + ' ' + method['name'] + '('
-            for formalParameter in method['formalParameter']:
-                interfaceText += formalParameter[0] + ' ' + formalParameter[1] + ', '
-            if method['formalParameter'] != []:
-                interfaceText = interfaceText[:-2]
-            interfaceText += ');'
-        interfaceText += "\n}\n\n"
-        return interfaceText
-
-    def detect_path(self, paths):
-        if len(paths) == 1:
-            return '\\'.join(paths[0][-2])
-        max_path_lengh = max([len(listpath) for listpath in paths])
-        for i in range(max_path_lengh):
-            x = set([j[i] for j in paths])
-            if len(x) > 1 :
-                return '\\'.join(paths[0][:i])
-
-    def save(self, result, name, package):
-        all_paths = [result['factory']['path']]
-        for product_info in result['products']['classes']:
-            all_paths.append(product_info['path'])
-        path = self.detect_path(Path.convert_str_paths_to_list_paths(all_paths))
-        # detect import text
-        path_list = path.split("\\")
-        if package == None:
-            self.import_text += '.'.join(path_list) + '.' + name + ';'
-        else:
-            start_index = path_list.index(package.split('.')[0])
-            self.import_text += '.'.join(path_list[start_index:]) + '.' + name + ';'
-
-
-        inteface_text = self.make_body(name, result['products'])
-        with open(path + '\\' + name + '.java', "w") as write_file:
-            write_file.write(inteface_text)
-
-    def get_import_text(self):
-        return self.import_text
 
 class Factory:
     def __fix_creator(self, creator_path, interface_import_text, interface_name, creator_identifier, products_identifier):
@@ -358,7 +311,7 @@ class Factory:
         result['products']['classes'] = products_class_list
         return result
 
-    def detect_and_fix(self, sensitivity, index_dic, class_diagram):
+    def detect_and_fix(self, sensitivity, index_dic, class_diagram, base_dirs):
         index_dic_keys = list(index_dic.keys())
         roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
         for r in roots:
@@ -386,7 +339,6 @@ class Factory:
                         t=tree
                     )
                     method_class_dic[int(child_index[1])] = listener.methods
-                    package = listener.package
 
                 result = self.__find_products(root_dfs[0][0], method_class_dic, sensitivity)
                 if len(result['products']['classes']) > 1:
@@ -395,11 +347,12 @@ class Factory:
                     interface_name = 'Interface' + str(result['factory'])
                     result = self.__find_class_info_from_id(result, index_dic)
                     # make interface for
-                    interface_creator = InterfaceCreator()
-                    print('result:', result)
-                    print('interface_name:', interface_name)
-                    print('package:', package)
-                    interface_creator.save(result, interface_name, package)
+                    interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(result,
+                                                                                             base_dirs,
+                                                                                             interface_name
+                                                                                             )
+                    interface_creator = InterfaceCreator(interface_info)
+                    interface_creator.save()
                     creator_path = result['factory']['path']
                     creator_className = result['factory']['class_name']
                     products_path = []
@@ -408,10 +361,11 @@ class Factory:
                         products_path.append(product_info['path'])
                         products_className.append(product_info['class_name'])
 
-                    self.__fix_creator(creator_path, interface_creator.get_import_text(), interface_name, creator_className,
+                    interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
+                    self.__fix_creator(creator_path, interface_import_text, interface_name, creator_className,
                                 products_className)
                     for product_path in products_path:
-                        self.__fix_product(product_path, interface_creator.get_import_text(), interface_name,
+                        self.__fix_product(product_path, interface_import_text, interface_name,
                                     creator_className,
                                     products_className)
                     print('--------------------------------------------------')

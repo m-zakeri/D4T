@@ -102,7 +102,7 @@ if __name__ == "__main__":
         }
     }
 
-    interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(factory_info, base_dirs, "IAdder")
+    interface_info2 = InterfaceAdapter.convert_factory_info_to_interface_info(factory_info, base_dirs, "IAdder")
 
     ic = InterfaceCreator(interface_info)
     ic.save()
