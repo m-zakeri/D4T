@@ -98,6 +98,23 @@ class Path:
         class_name = class_name[0]
         return class_name
 
+    @staticmethod
+    def convert_str_paths_to_list_paths(str_paths):
+        list_paths = []
+        for str_path in str_paths:
+            list_paths.append(str_path.split('\\'))
+        return list_paths
+
+    @staticmethod
+    def detect_path(paths):
+        if len(paths) == 1:
+            return '\\'.join(paths[0][-2])
+        max_path_length = max([len(list_path) for list_path in paths])
+        for i in range(max_path_length):
+            x = set([j[i] for j in paths])
+            if len(x) > 1 :
+                return '\\'.join(paths[0][:i])
+
 class List:
     @staticmethod
     def compare_similarity_of_two_list(list1, list2):

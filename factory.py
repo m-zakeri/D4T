@@ -7,6 +7,8 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 from gen.JavaParserLabeled import JavaParserLabeled
 
+from utils import Path
+
 class FixCreatorListener(JavaParserLabeledListener):
     def __init__(self, interfaceName, interface_import_text,
                  common_token_stream: CommonTokenStream = None,
@@ -199,8 +201,8 @@ class ProductCreatorDetectorListener(JavaParserLabeledListener):
             if self.current_class_body_public != None:
                 if self.current_class_body_public.getText() == ctx.getText():
                     self.current_method_info['name'] = ctx.IDENTIFIER().getText()
-                    self.current_method_info['returnType'] = ctx.typeTypeOrVoid().getText()
-                    self.current_method_info['formalParameter'] = []
+                    self.current_method_info['return_type'] = ctx.typeTypeOrVoid().getText()
+                    self.current_method_info['formal_parameters'] = []
                     self.methods[ctx.IDENTIFIER().getText()] = {}
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
@@ -246,18 +248,11 @@ class InterfaceCreator:
             if len(x) > 1 :
                 return '\\'.join(paths[0][:i])
 
-
-    def convert_strpath_to_listpath(self, strpathlist):
-        listpathlist = []
-        for strpath in strpathlist:
-            listpathlist.append(strpath.split('\\'))
-        return listpathlist
-
     def save(self, result, name, package):
         all_paths = [result['factory']['path']]
         for product_info in result['products']['classes']:
             all_paths.append(product_info['path'])
-        path = self.detect_path(self.convert_strpath_to_listpath(all_paths))
+        path = self.detect_path(Path.convert_str_paths_to_list_paths(all_paths))
         # detect import text
         path_list = path.split("\\")
         if package == None:
