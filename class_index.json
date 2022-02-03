@@ -1,14 +1,446 @@
 {
-    "src-Main-Main": {
+    "com.treasure_data.td_import-BulkImport-BulkImport": {
         "index": 0,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\Main.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\BulkImport.java"
     },
-    "calculator-Calculator-Calculator": {
+    "com.treasure_data.td_import-BulkImportCommand-BulkImportCommand": {
         "index": 1,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\calculator\\Calculator.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\BulkImportCommand.java"
     },
-    "calculator.adder-Adder-Adder": {
+    "com.treasure_data.td_import-CommandHelper-CommandHelper": {
         "index": 2,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\calculator\\adder\\Adder.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\CommandHelper.java"
+    },
+    "com.treasure_data.td_import-Configuration-Configuration": {
+        "index": 3,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Configuration.java"
+    },
+    "com.treasure_data.td_import-Constants-Constants": {
+        "index": 4,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Constants.java"
+    },
+    "com.treasure_data.td_import-Import-Import": {
+        "index": 5,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Import.java"
+    },
+    "com.treasure_data.td_import-Interface0-Interface0": {
+        "index": 6,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Interface0.java"
+    },
+    "com.treasure_data.td_import-Interface102-Interface102": {
+        "index": 7,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Interface102.java"
+    },
+    "com.treasure_data.td_import-Options-Options": {
+        "index": 8,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Options.java"
+    },
+    "com.treasure_data.td_import-TableImport-TableImport": {
+        "index": 9,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\TableImport.java"
+    },
+    "com.treasure_data.td_import-Task-Task": {
+        "index": 10,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\Task.java"
+    },
+    "com.treasure_data.td_import-TaskResult-TaskResult": {
+        "index": 11,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\TaskResult.java"
+    },
+    "com.treasure_data.td_import.model-AbstractColumnType-AbstractColumnType": {
+        "index": 12,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\AbstractColumnType.java"
+    },
+    "com.treasure_data.td_import.model-AbstractColumnValue-AbstractColumnValue": {
+        "index": 13,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\AbstractColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-AliasTimeColumnValue-AliasTimeColumnValue": {
+        "index": 14,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\AliasTimeColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-ArrayColumnType-ArrayColumnType": {
+        "index": 15,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ArrayColumnType.java"
+    },
+    "com.treasure_data.td_import.model-ArrayColumnValue-ArrayColumnValue": {
+        "index": 16,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ArrayColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-BigIntColumnType-BigIntColumnType": {
+        "index": 17,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\BigIntColumnType.java"
+    },
+    "com.treasure_data.td_import.model-BooleanColumnType-BooleanColumnType": {
+        "index": 18,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\BooleanColumnType.java"
+    },
+    "com.treasure_data.td_import.model-BooleanColumnValue-BooleanColumnValue": {
+        "index": 19,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\BooleanColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-ColumnSampling-ColumnSampling": {
+        "index": 20,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ColumnSampling.java"
+    },
+    "com.treasure_data.td_import.model-ColumnType-Conv": {
+        "index": 21,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ColumnType.java"
+    },
+    "com.treasure_data.td_import.model-ColumnType-ColumnType": {
+        "index": 22,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ColumnType.java"
+    },
+    "com.treasure_data.td_import.model-ColumnValue-ColumnValue": {
+        "index": 23,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-DoubleColumnType-DoubleColumnType": {
+        "index": 24,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\DoubleColumnType.java"
+    },
+    "com.treasure_data.td_import.model-DoubleColumnValue-DoubleColumnValue": {
+        "index": 25,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\DoubleColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-FloatColumnType-FloatColumnType": {
+        "index": 26,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\FloatColumnType.java"
+    },
+    "com.treasure_data.td_import.model-FloatColumnValue-FloatColumnValue": {
+        "index": 27,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\FloatColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-IntColumnType-IntColumnType": {
+        "index": 28,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\IntColumnType.java"
+    },
+    "com.treasure_data.td_import.model-IntColumnValue-IntColumnValue": {
+        "index": 29,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\IntColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-ItemTable-ItemTable": {
+        "index": 30,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\ItemTable.java"
+    },
+    "com.treasure_data.td_import.model-LogTable-LogTable": {
+        "index": 31,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\LogTable.java"
+    },
+    "com.treasure_data.td_import.model-LongColumnType-LongColumnType": {
+        "index": 32,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\LongColumnType.java"
+    },
+    "com.treasure_data.td_import.model-LongColumnValue-LongColumnValue": {
+        "index": 33,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\LongColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-MapColumnType-MapColumnType": {
+        "index": 34,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\MapColumnType.java"
+    },
+    "com.treasure_data.td_import.model-MapColumnValue-MapColumnValue": {
+        "index": 35,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\MapColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-NilColumnType-NilColumnType": {
+        "index": 36,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\NilColumnType.java"
+    },
+    "com.treasure_data.td_import.model-NilColumnValue-NilColumnValue": {
+        "index": 37,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\NilColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-Record-Record": {
+        "index": 38,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\Record.java"
+    },
+    "com.treasure_data.td_import.model-SkippedTimeColumnValue-SkippedTimeColumnValue": {
+        "index": 39,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\SkippedTimeColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-StringColumnType-StringColumnType": {
+        "index": 40,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\StringColumnType.java"
+    },
+    "com.treasure_data.td_import.model-StringColumnValue-StringColumnValue": {
+        "index": 41,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\StringColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-Table-Table": {
+        "index": 42,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\Table.java"
+    },
+    "com.treasure_data.td_import.model-TableSchema-TableSchema": {
+        "index": 43,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\TableSchema.java"
+    },
+    "com.treasure_data.td_import.model-TimeColumnSampling-TimeColumnSampling": {
+        "index": 44,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\TimeColumnSampling.java"
+    },
+    "com.treasure_data.td_import.model-TimeColumnValue-TimeColumnValue": {
+        "index": 45,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\TimeColumnValue.java"
+    },
+    "com.treasure_data.td_import.model-TimeValueTimeColumnValue-TimeValueTimeColumnValue": {
+        "index": 46,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\model\\TimeValueTimeColumnValue.java"
+    },
+    "com.treasure_data.td_import.prepare-ApachePrepareConfiguration-ApachePrepareConfiguration": {
+        "index": 47,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\ApachePrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-ApachePrepareConfiguration-ApacheIntColumnType": {
+        "index": 48,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\ApachePrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-CSVPrepareConfiguration-CSVPrepareConfiguration": {
+        "index": 49,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\CSVPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-FixedColumnsPrepareConfiguration-FixedColumnsPrepareConfiguration": {
+        "index": 50,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\FixedColumnsPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-HHmmssStrftime-HHmmssStrftime": {
+        "index": 51,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\HHmmssStrftime.java"
+    },
+    "com.treasure_data.td_import.prepare-JSONPrepareConfiguration-JSONPrepareConfiguration": {
+        "index": 52,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\JSONPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-MessagePackPrepareConfiguration-MessagePackPrepareConfiguration": {
+        "index": 53,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MessagePackPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-MultiThreadPrepareProcessor-MultiThreadPrepareProcessor": {
+        "index": 54,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MultiThreadPrepareProcessor.java"
+    },
+    "com.treasure_data.td_import.prepare-MySQLPrepareConfiguration-MySQLPrepareConfiguration": {
+        "index": 55,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MySQLPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-MySQLPrepareConfiguration-TimestampColumnValue": {
+        "index": 56,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MySQLPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-MySQLPrepareConfiguration-DateColumnType": {
+        "index": 57,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MySQLPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-MySQLPrepareConfiguration-DateColumnValue": {
+        "index": 58,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\MySQLPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-PrepareConfiguration": {
+        "index": 59,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-StringToFormat": {
+        "index": 60,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-StringToOutputFormat": {
+        "index": 61,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-StringToCompressionType": {
+        "index": 62,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-StringToErrorHandling": {
+        "index": 63,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareConfiguration-StringToInvalidColumnsHandling": {
+        "index": 64,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-PreparePartsException-PreparePartsException": {
+        "index": 65,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PreparePartsException.java"
+    },
+    "com.treasure_data.td_import.prepare-PrepareProcessor-PrepareProcessor": {
+        "index": 66,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\PrepareProcessor.java"
+    },
+    "com.treasure_data.td_import.prepare-RegexPrepareConfiguration-RegexPrepareConfiguration": {
+        "index": 67,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\RegexPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-SequentialImportTask-SequentialImportTask": {
+        "index": 68,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\SequentialImportTask.java"
+    },
+    "com.treasure_data.td_import.prepare-SequentialUploadTask-SequentialUploadTask": {
+        "index": 69,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\SequentialUploadTask.java"
+    },
+    "com.treasure_data.td_import.prepare-SequentialUploadTaskBase-SequentialUploadTaskBase": {
+        "index": 70,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\SequentialUploadTaskBase.java"
+    },
+    "com.treasure_data.td_import.prepare-Strftime-Strftime": {
+        "index": 71,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\Strftime.java"
+    },
+    "com.treasure_data.td_import.prepare-SyslogPrepareConfiguration-SyslogPrepareConfiguration": {
+        "index": 72,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\SyslogPrepareConfiguration.java"
+    },
+    "com.treasure_data.td_import.prepare-Task-Task": {
+        "index": 73,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\Task.java"
+    },
+    "com.treasure_data.td_import.prepare-TaskResult-TaskResult": {
+        "index": 74,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\prepare\\TaskResult.java"
+    },
+    "com.treasure_data.td_import.reader-AbstractRecordReader-AbstractRecordReader": {
+        "index": 75,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\AbstractRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-ApacheRecordReader-ApacheRecordReader": {
+        "index": 76,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\ApacheRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-CSVRecordReader-CSVRecordReader": {
+        "index": 77,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\CSVRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-FixedColumnsRecordReader-FixedColumnsRecordReader": {
+        "index": 78,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\FixedColumnsRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-JSONRecordReader-JSONRecordReader": {
+        "index": 79,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\JSONRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-MessagePackRecordReader-MessagePackRecordReader": {
+        "index": 80,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\MessagePackRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-MySQLTableReader-MySQLTableReader": {
+        "index": 81,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\MySQLTableReader.java"
+    },
+    "com.treasure_data.td_import.reader-RecordReader-RecordReader": {
+        "index": 82,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\RecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-RegexRecordReader-RegexRecordReader": {
+        "index": 83,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\RegexRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-SyslogRecordReader-SyslogRecordReader": {
+        "index": 84,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\SyslogRecordReader.java"
+    },
+    "com.treasure_data.td_import.reader-VariableLengthColumnsRecordReader-VariableLengthColumnsRecordReader": {
+        "index": 85,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\reader\\VariableLengthColumnsRecordReader.java"
+    },
+    "com.treasure_data.td_import.source-LocalFileSource-LocalFileSource": {
+        "index": 86,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\LocalFileSource.java"
+    },
+    "com.treasure_data.td_import.source-MysqlSource-MysqlSource": {
+        "index": 87,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\MysqlSource.java"
+    },
+    "com.treasure_data.td_import.source-S3Source-S3Source": {
+        "index": 88,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\S3Source.java"
+    },
+    "com.treasure_data.td_import.source-Source-Source": {
+        "index": 89,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\Source.java"
+    },
+    "com.treasure_data.td_import.source-Source-Factory": {
+        "index": 90,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\Source.java"
+    },
+    "com.treasure_data.td_import.source-SourceDesc-SourceDesc": {
+        "index": 91,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\source\\SourceDesc.java"
+    },
+    "com.treasure_data.td_import.upload-ImportProcessor-ImportProcessor": {
+        "index": 92,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\ImportProcessor.java"
+    },
+    "com.treasure_data.td_import.upload-ImportTask-ImportTask": {
+        "index": 93,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\ImportTask.java"
+    },
+    "com.treasure_data.td_import.upload-MultiThreadUploadProcessor-MultiThreadUploadProcessor": {
+        "index": 94,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\MultiThreadUploadProcessor.java"
+    },
+    "com.treasure_data.td_import.upload-TableImportConfiguration-TableImportConfiguration": {
+        "index": 95,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\TableImportConfiguration.java"
+    },
+    "com.treasure_data.td_import.upload-TaskResult-TaskResult": {
+        "index": 96,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\TaskResult.java"
+    },
+    "com.treasure_data.td_import.upload-UploadConfiguration-UploadConfiguration": {
+        "index": 97,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadConfiguration.java"
+    },
+    "com.treasure_data.td_import.upload-UploadConfigurationBase-UploadConfigurationBase": {
+        "index": 98,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadConfigurationBase.java"
+    },
+    "com.treasure_data.td_import.upload-UploadPartsException-UploadPartsException": {
+        "index": 99,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadPartsException.java"
+    },
+    "com.treasure_data.td_import.upload-UploadProcessor-UploadProcessor": {
+        "index": 100,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadProcessor.java"
+    },
+    "com.treasure_data.td_import.upload-UploadProcessorBase-UploadProcessorBase": {
+        "index": 101,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadProcessorBase.java"
+    },
+    "com.treasure_data.td_import.upload-UploadTask-UploadTask": {
+        "index": 102,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadTask.java"
+    },
+    "com.treasure_data.td_import.upload-UploadTaskBase-UploadTaskBase": {
+        "index": 103,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\upload\\UploadTaskBase.java"
+    },
+    "com.treasure_data.td_import.writer-AbstractRecordWriter-AbstractRecordWriter": {
+        "index": 104,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\AbstractRecordWriter.java"
+    },
+    "com.treasure_data.td_import.writer-JSONRecordWriter-JSONRecordWriter": {
+        "index": 105,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\JSONRecordWriter.java"
+    },
+    "com.treasure_data.td_import.writer-MsgpackGZIPRecordWriter-MsgpackGZIPRecordWriter": {
+        "index": 106,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\MsgpackGZIPRecordWriter.java"
+    },
+    "com.treasure_data.td_import.writer-MySQLTimestampAdaptedJSONRecordWriter-MySQLTimestampAdaptedJSONRecordWriter": {
+        "index": 107,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\MySQLTimestampAdaptedJSONRecordWriter.java"
+    },
+    "com.treasure_data.td_import.writer-MySQLTimestampAdaptedMsgpackGZIPRecordWriter-MySQLTimestampAdaptedMsgpackGZIPRecordWriter": {
+        "index": 108,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\MySQLTimestampAdaptedMsgpackGZIPRecordWriter.java"
+    },
+    "com.treasure_data.td_import.writer-MySQLTimestampAdaptor-MySQLTimestampAdaptor": {
+        "index": 109,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\MySQLTimestampAdaptor.java"
+    },
+    "com.treasure_data.td_import.writer-RecordWriter-RecordWriter": {
+        "index": 110,
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\com\\treasure_data\\td_import\\writer\\RecordWriter.java"
     }
 }
