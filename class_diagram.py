@@ -115,6 +115,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
             if ctx.classDeclaration().EXTENDS() != None:
                 self.has_extends = True
 
+
 class MethodModificationTypeListener(JavaParserLabeledListener):
     #file_info = {}
     def __init__(self):
@@ -126,6 +127,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.parameters = {}
         self.is_modify_itself = False
         self.__package = None
+        self.in_sub_class = False
 
     def get_file_info(self):
         return self.file_info
@@ -137,26 +139,35 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = ctx.IDENTIFIER().getText()
-        self.file_info[self.current_class] = {}
-        #print('class :', self.current_class)
+        if self.current_class == None:
+            self.current_class = ctx.IDENTIFIER().getText()
+            self.file_info[self.current_class] = {}
+            #print('class :', self.current_class)
+        else:
+            self.in_sub_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = None
-        #print('attributes :', self.attributes)
-        self.attributes = {}
+        if not self.in_sub_class:
+            if self.current_class == ctx.IDENTIFIER().getText():
+                self.in_sub_class = False
+            self.current_class = None
+            #print('attributes :', self.attributes)
+            self.attributes = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        self.current_method = ctx.IDENTIFIER().getText()
-        self.file_info[self.current_class][self.current_method] = {}
-        #print('method :', self.current_method)
+        if not self.in_sub_class:
+            self.current_method = ctx.IDENTIFIER().getText()
+            print(self.current_class, self.current_method)
+            self.file_info[self.current_class][self.current_method] = {}
+            #print('method :', self.current_method)
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        self.file_info[self.current_class][self.current_method]['is_modify_itself'] = self.is_modify_itself
-        self.current_method = None
-        self.local_variables = {}
-        self.parameters = {}
-        self.is_modify_itself = False
+        if not self.in_sub_class:
+            self.file_info[self.current_class][self.current_method]['is_modify_itself'] = self.is_modify_itself
+            self.current_method = None
+            self.local_variables = {}
+            self.parameters = {}
+            self.is_modify_itself = False
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
         for vd in ctx.variableDeclarators().variableDeclarator():
@@ -178,7 +189,14 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
 
     def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
         if 'expression' in dir(ctx.expression(0)):
-            variable = ctx.expression(0).expression().getText()
+            #print(ctx.getText())
+            #print(ctx.expression(0).expression(0).getText())
+            try:
+                #print(ctx.expression(0).expression().getText())
+                variable = ctx.expression(0).expression().getText()
+            except:
+                #print(ctx.expression(0).expression(0).getText())
+                variable = ctx.expression(0).expression(0).getText()
             #print('type1:', variable)
             if variable == 'this' or self.is_class_attribute(variable):
                 self.is_modify_itself = True
@@ -259,9 +277,9 @@ class ClassDiagram:
         files = File.find_all_file(java_project_address, 'java')
         if index_dic == None:
             index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-        #methods_information = self.__find_methods_information(files, index_dic)
-        #print(methods_information)
-        methods_information = None
+        methods_information = self.__find_methods_information(files, index_dic)
+        print(methods_information)
+        #methods_information = None
         for f in files:
             file_name = Path.get_file_name_from_path(f)
             print(f)
@@ -309,10 +327,12 @@ class ClassDiagram:
         return nx.dfs_postorder_nodes(self.class_diagram_graph)
 
     def __find_methods_information(self, files, index_dic):
+        print('start finding methods information . . .')
         methods_info = {}
         for file in files:
             try:
                 stream = FileStream(file)
+                print(file)
             except:
                 print(file, 'can not read')
                 continue
@@ -328,14 +348,15 @@ class ClassDiagram:
             )
             #print(listener.get_file_info())
             file_info = listener.get_file_info()
+            file_name = Path.get_file_name_from_path(file)
             for c in file_info:
                 if listener.get_package() == None:
                     package = Path.get_default_package(base_dirs, file)
                 else:
                     package = listener.get_package()
-                class_index = index_dic[package + '-' + c]
+                class_index = index_dic[package + '-' + file_name + '-' + c]['index']
                 methods_info[class_index] = file_info[c]
-        #print("finish finding methods information . . .")
+        print("finish finding methods information !")
         return methods_info
 
 if __name__ == "__main__":
