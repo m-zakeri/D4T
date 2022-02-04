@@ -139,7 +139,7 @@ class Modularity:
 
 
 # Modularity API
-def compute_modularity(root_path, project_name=None, make_db=False):
+def compute_modularity(root_path, project_name=None, make_db=False, make_mdg=False):
     """
     API for computing modularity with Understand
     """
@@ -153,15 +153,15 @@ def compute_modularity(root_path, project_name=None, make_db=False):
         cmd_ = f'und analyze -all  {root_path}{project_name}.und'
         os.system(f'cmd /c "{cmd_}"')
 
-    print('Compute MDG from UND ...')
-    cmd_ = 'und export -format long -dependencies class csv {0} {1}'.format(f'mdgs/{project_name}_UMDG.csv',
-                                                                            root_path + project_name + '.und')
-    os.system('cmd /c "{0}"'.format(cmd_))
+    if make_mdg:
+        print('Compute MDG from UND ...')
+        cmd_ = 'und export -format long -dependencies class csv {0} {1}'.format(f'mdgs/{project_name}_UMDG.csv',
+                                                                                root_path + project_name + '.und')
+        os.system('cmd /c "{0}"'.format(cmd_))
 
-    # db = understand.open(root_path + project_name + '.und')
-    # modulo = Modularity(graph_path=f'mdgs/{project_name}_UMDG.csv', db=db)
-    # q = modulo.compute_modularity_newman_leicht()
-    q = 0
+    db = understand.open(root_path + project_name + '.und')
+    modulo = Modularity(graph_path=f'mdgs/{project_name}_UMDG.csv', db=db)
+    q = modulo.compute_modularity_newman_leicht()
     print('Modularity of project "{0}": Q={1}'.format(project_name, q))
     return q
 
@@ -172,9 +172,9 @@ def make_benchmark():
     modularity_sf110_list = []
     for project_ in df['Project']:
         q = compute_modularity(root_path=benchmark_path, project_name=str(project_))
-        # modularity_sf110_list.append(q)
-    # df['ModularityRawValueUnderstand'] = modularity_sf110_list
-    # df.to_csv(r'../evaluation/data_modularity_QualCode_Understand3.csv', index=False)
+        modularity_sf110_list.append(q)
+    df['ModularityRawValueUnderstandWithoutTestClasses'] = modularity_sf110_list
+    df.to_csv(r'data/data_modularity_QualCode_Understand3.csv', index=False)
 
 
 if __name__ == '__main__':
