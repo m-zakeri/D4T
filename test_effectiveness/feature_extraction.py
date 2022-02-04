@@ -28,9 +28,36 @@ class ModularDependencyGraph:
         with open(graph_path, mode='r') as f:
             lines = f.readlines()
         with open(graph_path, mode='w') as f:
-            for line in lines:
+            f.write(lines[0])
+            for line in lines[1:]:
                 if line.find('EvoSuiteTest') == -1:
                     f.write(line)
+
+    def create_evosuite_classes_mdg(self, graph_path):
+        with open(graph_path, mode='r') as f:
+            lines = f.readlines()
+        with open(graph_path, mode='w') as f:
+            f.write(lines[0])
+            for line in lines[1:]:
+                if line.find('EvoSuiteTest') != -1:
+                    line_parts = line.split(',')
+                    # print(line_parts)1
+                    if line_parts[0][:-13] != line_parts[1][:-1]:
+                        f.write(line)
+    def compute_design_coverage(self, test_graph_path):
+        test_mdg_df = pandas.read_csv(test_graph_path)
+        if test_mdg_df is not None and not test_mdg_df.empty:
+            test_mdg_graph = nx.from_pandas_edgelist(test_mdg_df, source='From Class', target='To Class',
+                                                     edge_attr='References', create_using=nx.DiGraph())
+        else:
+            test_mdg_graph = None
+
+        if test_mdg_graph is None:
+            return 0, 0
+        else:
+            node_coverage = nx.number_of_nodes(test_mdg_graph) / nx.number_of_nodes(self.mdg_graph)
+            edge_coverage = nx.number_of_edges(test_mdg_graph) / nx.number_of_edges(self.mdg_graph)
+            return 1.0 if node_coverage > 1 else node_coverage, 1.0 if edge_coverage > 1 else edge_coverage
 
     def extract_components(self, project_name):
         # x = nx.number_connected_components(self.mdg_graph)
@@ -122,8 +149,57 @@ class ModularDependencyGraph:
         return df
 
 
-if __name__ == '__main__':
-    mdg_path = 'mdgs/'
+def concat_dataset_files():
+    ds_path = r'dataset/'
+    files = [f for f in os.listdir(ds_path) if os.path.isfile(os.path.join(ds_path, f))]
+    df1 = pd.DataFrame()
+    for f in files:
+        df = pd.read_csv(ds_path + f)
+        df1 = pd.concat([df1, df], ignore_index=True)
+
+    df2 = pd.read_excel(r'data/evosuite160_with_modularity_and_coverageability2.xlsx', 'Sheet1')
+    df_result = df1.merge(df2, how='inner', on='Project')
+    print(df_result)
+    df_result.to_csv('d4t_ds_sf110_01.csv', index=False, )
+
+def concat_modularity_wtih_d4t_dataset():
+    df1 = pd.read_csv('d4t_ds_sf110_01.csv')
+    df2 = pd.read_csv(r'data/data_modularity_QualCode_Understand3.csv')
+    df_result = df1.merge(df2, how='inner', on='Project')
+    df_result.to_csv('d4t_ds_sf110_02.csv', index=False, )
+
+
+def create_test_graph():
+    mdg_path = 'mdgs_only_test_classes/'
+    files = [f for f in os.listdir(mdg_path) if os.path.isfile(os.path.join(mdg_path, f))]
+    for f in files:
+        print(f'processing understand db file {f}:')
+        mdg = ModularDependencyGraph(mdg_path + f, )
+        mdg.create_evosuite_classes_mdg(graph_path=mdg_path+f)
+
+
+def compute_design_test_effectiveness():
+    df = pd.read_csv(r'd4t_ds_sf110_02.csv')
+    nc_list = []
+    ec_list = []
+    avg_list = []
+    for project_ in df['Project']:
+        print(f'processing understand db file {project_}:')
+        mdg_production = ModularDependencyGraph(f'mdgs/{project_}_UMDG.csv')
+        nc, ec = mdg_production.compute_design_coverage(test_graph_path=f'mdgs_only_test_classes/{project_}_UMDG.csv')
+        nc_list.append(nc)
+        ec_list.append(ec)
+        avg_list.append((nc+ec)/2.)
+
+    df['DesignNodeCoverage'] = nc_list
+    df['DesignEdgeCoverage'] = ec_list
+    df['DesignMeanCoverage'] = avg_list
+
+    df.to_csv(r'd4t_ds_sf110_03.csv', index=False)
+
+
+def extract_design_metrics():
+    mdg_path = 'mdgs_remained/'
     files = [f for f in os.listdir(mdg_path) if os.path.isfile(os.path.join(mdg_path, f))]
     z = 0
     for f in files:
@@ -135,3 +211,11 @@ if __name__ == '__main__':
         # quit()
 
     print('z', z)
+
+
+if __name__ == '__main__':
+    # concat_modularity_wtih_d4t_dataset()
+    # create_test_graph()
+    compute_design_test_effectiveness()
+    # quit()
+
