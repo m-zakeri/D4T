@@ -28,6 +28,9 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.file_name = file_name
         self.class_list = []
         self.file = file
+        self.local_variables = {}
+        self.field_variables = {}
+        self.formal_parameters = {}
 
     def get_package(self):
         return self.__package
@@ -55,10 +58,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         if self.__package == None:
-            #print(self.base_dirs)
-            #print(self.file)
             self.__package = Path.get_default_package(self.base_dirs, self.file)
-            #print("self.__package:", self.__package)
         if self.current_class == None:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
@@ -66,12 +66,18 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.current_class = None
+        print('field_variables:', self.field_variables)
+        self.field_variables = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = ctx.IDENTIFIER().getText()
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = None
+        print('formal_parameters:', self.formal_parameters)
+        print('local_variables:', self.local_variables)
+        self.local_variables = {}
+        self.formal_parameters = {}
 
 
     def enterImportDeclaration(self, ctx:JavaParserLabeled.ImportDeclarationContext):
@@ -93,7 +99,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.no_implements -= 1
                 self.current_relationship = 'implements'
             else:
-                self.current_relationship = 'associated'
+                self.current_relationship = 'create'
 
             dependee = text[:-1]
             if dependee in self.class_list:
@@ -115,6 +121,31 @@ class ClassDiagramListener(JavaParserLabeledListener):
             if ctx.classDeclaration().EXTENDS() != None:
                 self.has_extends = True
 
+    def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
+        if ctx.typeType().classOrInterfaceType() != None:
+            _type = ctx.typeType().classOrInterfaceType().getText()
+            identifier = ctx.variableDeclaratorId().getText()
+            self.formal_parameters[identifier] = _type
+
+    def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
+        if ctx.typeType().classOrInterfaceType() != None:
+            _type = ctx.typeType().classOrInterfaceType().getText()
+            for i in ctx.variableDeclarators().variableDeclarator():
+                identifier = i.variableDeclaratorId().getText()
+                self.field_variables[identifier] = _type
+
+    def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
+        if ctx.typeType().classOrInterfaceType() != None:
+            _type = ctx.typeType().classOrInterfaceType().getText()
+            for i in ctx.variableDeclarators().variableDeclarator():
+                identifier = i.variableDeclaratorId().getText()
+                self.local_variables[identifier] = _type
+
+    def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
+        print('expression21:', ctx.getText())
+
+    def enterExpression1(self, ctx:JavaParserLabeled.Expression1Context):
+        print('expression1:', ctx.getText())
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
     #file_info = {}
@@ -157,7 +188,6 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         if not self.in_sub_class:
             self.current_method = ctx.IDENTIFIER().getText()
-            print(self.current_class, self.current_method)
             self.file_info[self.current_class][self.current_method] = {}
             #print('method :', self.current_method)
 
@@ -170,10 +200,13 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.is_modify_itself = False
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
+        #print(ctx.getText())
         for vd in ctx.variableDeclarators().variableDeclarator():
             _type = ctx.typeType().getText()
             identifier = vd.variableDeclaratorId().IDENTIFIER().getText()
+            #print(_type, identifier)
             self.attributes[identifier] = _type
+            #print(self.attributes)
 
 
     def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
@@ -189,22 +222,19 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
 
     def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
         if 'expression' in dir(ctx.expression(0)):
-            #print(ctx.getText())
-            #print(ctx.expression(0).expression(0).getText())
             try:
-                #print(ctx.expression(0).expression().getText())
                 variable = ctx.expression(0).expression().getText()
             except:
-                #print(ctx.expression(0).expression(0).getText())
                 variable = ctx.expression(0).expression(0).getText()
-            #print('type1:', variable)
-            if variable == 'this' or self.is_class_attribute(variable):
+
+            if variable == 'this':
+                self.is_modify_itself = True
+            elif self.is_class_attribute(variable):
                 self.is_modify_itself = True
         else:
             variable = ctx.expression(0).getText()
             if self.is_class_attribute(variable):
                 self.is_modify_itself = True
-            #print('type2:', variable)
 
 
     def exitConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
@@ -270,8 +300,7 @@ class StereotypeListener(JavaParserLabeledListener):
 class ClassDiagram:
     def __init__(self):
         self.class_diagram_graph = nx.DiGraph()
-        self.relationship_names = ['implements', 'extends', 'associated']
-        self.stereotype_names = ['create', 'use_consult', 'use_def', 'use']
+        self.relationship_names = ['implements', 'extends', 'create', 'use_consult', 'use_def']
 
     def make(self, java_project_address, base_dirs, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
@@ -299,6 +328,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
+            print(graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -360,8 +390,8 @@ class ClassDiagram:
         return methods_info
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['bigJavaProject']['path']
-    base_dirs = config.projects_info['bigJavaProject']['base_dirs']
+    java_project_address = config.projects_info['simple_injection']['path']
+    base_dirs = config.projects_info['simple_injection']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
     cd = ClassDiagram()

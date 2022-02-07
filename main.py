@@ -5,8 +5,8 @@ import config
 import networkx as nx
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['bigJavaProject']['path']
-    base_dirs = config.projects_info['bigJavaProject']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

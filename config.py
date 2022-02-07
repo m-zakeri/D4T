@@ -23,3 +23,11 @@ base_dirs = []
 base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\')
 projects_info['javaproject']['path'] = java_project_address
 projects_info['javaproject']['base_dirs'] = base_dirs
+
+# nest_project
+projects_info['nest_project'] = {}
+java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\nest_project'
+base_dirs = []
+base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\nest_project\\')
+projects_info['nest_project']['path'] = java_project_address
+projects_info['nest_project']['base_dirs'] = base_dirs
