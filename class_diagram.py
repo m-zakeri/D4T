@@ -17,6 +17,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.current_class = None
         self.current_method = None
         self.class_dic = {}
+        self.dependee_dic = {}
         self.imports = []
         self.imports_star = []
         self.current_relationship = None
@@ -31,6 +32,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.local_variables = {}
         self.field_variables = {}
         self.formal_parameters = {}
+        self.in_nest_class = False
 
     def get_package(self):
         return self.__package
@@ -63,19 +65,33 @@ class ClassDiagramListener(JavaParserLabeledListener):
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             self.class_dic[self.current_class] = {}
+        else:
+            self.in_nest_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = None
-        print('field_variables:', self.field_variables)
-        self.field_variables = {}
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_nest_class = False
+
+        if not self.in_nest_class:
+            # detect package and file of each instance
+            dependee_dic = {}
+            for dependee in self.class_dic[self.current_class].keys():
+                #print(self.dependee_dic)
+                if dependee in self.dependee_dic.keys():
+                    dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
+            self.class_dic[self.current_class] = dependee_dic
+
+            self.current_class = None
+            #print('field_variables:', self.field_variables)
+            self.field_variables = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = ctx.IDENTIFIER().getText()
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = None
-        print('formal_parameters:', self.formal_parameters)
-        print('local_variables:', self.local_variables)
+        #print('formal_parameters:', self.formal_parameters)
+        #print('local_variables:', self.local_variables)
         self.local_variables = {}
         self.formal_parameters = {}
 
@@ -91,6 +107,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
+                #print('text:', text)
 
             if self.has_extends:
                 self.current_relationship = 'extends'
@@ -102,15 +119,17 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.current_relationship = 'create'
 
             dependee = text[:-1]
-            if dependee in self.class_list:
-                file_name = self.file_name
-                package = self.__package
-            else:
-                file_name = dependee
-                package = self.__find_package_of_dependee(dependee)
+            if not (dependee in self.dependee_dic.keys()):
+                if dependee in self.class_list:
+                    file_name = self.file_name
+                    package = self.__package
+                else:
+                    file_name = dependee
+                    package = self.__find_package_of_dependee(dependee)
 
-            if package != None:
-                self.class_dic[self.current_class][package + '-' + file_name + '-' + dependee] = self.current_relationship
+                if package != None:
+                    self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
+            self.class_dic[self.current_class][dependee] = self.current_relationship
 
 
     # this method is for detecting interface relationships
@@ -141,11 +160,31 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 identifier = i.variableDeclaratorId().getText()
                 self.local_variables[identifier] = _type
 
-    def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
-        print('expression21:', ctx.getText())
+    #def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
+    #    print('expression21:', ctx.getText())
 
-    def enterExpression1(self, ctx:JavaParserLabeled.Expression1Context):
-        print('expression1:', ctx.getText())
+    #def enterExpression1(self, ctx:JavaParserLabeled.Expression1Context):
+    #    print('expression1:', ctx.getText())
+
+    def enterMethodCall0(self, ctx:JavaParserLabeled.MethodCall0Context):
+        method_name = ctx.IDENTIFIER().getText()
+        list_of_objects = []
+        current_exp1 = ctx.parentCtx
+        #print('current_exp1:', current_exp1.getText())
+        if "expression" in dir(current_exp1):
+            while current_exp1.expression() != None:
+                current_exp1 = current_exp1.expression()
+                if ('IDENTIFIER' in dir(current_exp1)) and (current_exp1.IDENTIFIER() != None):
+                    list_of_objects.append(current_exp1.IDENTIFIER().getText())
+                else:
+                    break
+            list_of_objects.append(current_exp1.getText())
+            list_of_objects.reverse()
+            #print('method_name:', method_name)
+            #print('list_of_objects:', list_of_objects)
+
+    def get_use_type(self, method_name, list_of_objects):
+        pass
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
     #file_info = {}
@@ -172,7 +211,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         if self.current_class == None:
             self.current_class = ctx.IDENTIFIER().getText()
-            self.file_info[self.current_class] = {}
+            self.file_info[self.current_class] = {'attributes':{}, 'methods':{}}
             #print('class :', self.current_class)
         else:
             self.in_sub_class = True
@@ -188,12 +227,12 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         if not self.in_sub_class:
             self.current_method = ctx.IDENTIFIER().getText()
-            self.file_info[self.current_class][self.current_method] = {}
+            self.file_info[self.current_class]['methods'][self.current_method] = {}
             #print('method :', self.current_method)
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         if not self.in_sub_class:
-            self.file_info[self.current_class][self.current_method]['is_modify_itself'] = self.is_modify_itself
+            self.file_info[self.current_class]['methods'][self.current_method]['is_modify_itself'] = self.is_modify_itself
             self.current_method = None
             self.local_variables = {}
             self.parameters = {}
@@ -206,6 +245,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             identifier = vd.variableDeclaratorId().IDENTIFIER().getText()
             #print(_type, identifier)
             self.attributes[identifier] = _type
+            self.file_info[self.current_class]['attributes'][identifier] = _type
             #print(self.attributes)
 
 
@@ -221,20 +261,23 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.parameters[identifier] = _type
 
     def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
-        if 'expression' in dir(ctx.expression(0)):
-            try:
-                variable = ctx.expression(0).expression().getText()
-            except:
-                variable = ctx.expression(0).expression(0).getText()
-
-            if variable == 'this':
-                self.is_modify_itself = True
-            elif self.is_class_attribute(variable):
-                self.is_modify_itself = True
-        else:
-            variable = ctx.expression(0).getText()
-            if self.is_class_attribute(variable):
-                self.is_modify_itself = True
+        #print('current_method:', self.current_method)
+        if self.current_method != None:
+            if ('expression' in dir(ctx.expression(0))):
+                try:
+                    variable = ctx.expression(0).expression().getText()
+                except:
+                    variable = ctx.expression(0).expression(0).getText()
+                #print('variable:', variable)
+                if variable == 'this':
+                    self.is_modify_itself = True
+                elif self.is_class_attribute(variable):
+                    self.is_modify_itself = True
+            else:
+                variable = ctx.expression(0).getText()
+                #print('variable:', variable)
+                if self.is_class_attribute(variable):
+                    self.is_modify_itself = True
 
 
     def exitConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
@@ -328,7 +371,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            print(graph)
+            print('graph:', graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -362,7 +405,7 @@ class ClassDiagram:
         for file in files:
             try:
                 stream = FileStream(file)
-                print(file)
+                print('\t' + file)
             except:
                 print(file, 'can not read')
                 continue
@@ -390,8 +433,8 @@ class ClassDiagram:
         return methods_info
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['simple_injection']['path']
-    base_dirs = config.projects_info['simple_injection']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
     cd = ClassDiagram()
