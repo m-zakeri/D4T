@@ -4,7 +4,7 @@ The extracted feature are then used to predict design test effectiveness.
 
 """
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Morteza Zakeri'
 
 import sys
@@ -18,9 +18,10 @@ import networkx.algorithms.community as nx_comm
 class ModularDependencyGraph:
     def __init__(self, graph_path, **kwargs):
         self.mdg_df = pandas.read_csv(graph_path)
+        self.mdg_df.rename(columns={"From Entities": "From_Entities", "To Entities": "To_Entities"}, inplace=True)
         if self.mdg_df is not None and not self.mdg_df.empty:
             self.mdg_graph = nx.from_pandas_edgelist(self.mdg_df, source='From Class', target='To Class',
-                                                     edge_attr='References', create_using=nx.DiGraph())
+                                                     edge_attr=True, create_using=nx.DiGraph())
         else:
             self.mdg_graph = None
 
@@ -41,14 +42,16 @@ class ModularDependencyGraph:
             for line in lines[1:]:
                 if line.find('EvoSuiteTest') != -1:
                     line_parts = line.split(',')
-                    # print(line_parts)1
+                    # print(line_parts)
                     if line_parts[0][:-13] != line_parts[1][:-1]:
-                        f.write(line)
+                        x = line.replace('EvoSuiteTest', '')
+                        f.write(x)
+
     def compute_design_coverage(self, test_graph_path):
         test_mdg_df = pandas.read_csv(test_graph_path)
         if test_mdg_df is not None and not test_mdg_df.empty:
             test_mdg_graph = nx.from_pandas_edgelist(test_mdg_df, source='From Class', target='To Class',
-                                                     edge_attr='References', create_using=nx.DiGraph())
+                                                     edge_attr=True, create_using=nx.DiGraph())
         else:
             test_mdg_graph = None
 
@@ -170,7 +173,7 @@ def concat_modularity_wtih_d4t_dataset():
 
 
 def create_test_graph():
-    mdg_path = 'mdgs_only_test_classes/'
+    mdg_path = 'mdgs_only_test_classes2/'
     files = [f for f in os.listdir(mdg_path) if os.path.isfile(os.path.join(mdg_path, f))]
     for f in files:
         print(f'processing understand db file {f}:')
@@ -215,7 +218,7 @@ def extract_design_metrics():
 
 if __name__ == '__main__':
     # concat_modularity_wtih_d4t_dataset()
-    # create_test_graph()
-    compute_design_test_effectiveness()
+    create_test_graph()
+    # compute_design_test_effectiveness()
     # quit()
 
