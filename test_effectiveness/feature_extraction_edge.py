@@ -59,80 +59,102 @@ class ModularDependencyGraphEdgeFeature(ModularDependencyGraph):
         for node_set in nx.weakly_connected_components(self.mdg_graph):
             CCG = nx.subgraph(self.mdg_graph, node_set)
             current_flow_closeness_centrality_dict.update(nx.current_flow_closeness_centrality(nx.Graph(CCG)))
-            current_flow_betweenness_centrality_dict.update(nx.current_flow_betweenness_centrality(nx.Graph(CCG)))  # time-consuming
+            # time-consuming
+            current_flow_betweenness_centrality_dict.update(nx.current_flow_betweenness_centrality(nx.Graph(CCG)))
 
         pagerank_dict = nx.pagerank(G)
 
         for u in self.mdg_graph.nodes():
+            entities = self.db.lookup(re.compile(u + r'$'), )
+            if entities is None or len(entities) == 0:  # Nested classes
+                continue
+            if str(entities[0].kind().name()).find('Abstract') != -1:
+                continue
+            if str(entities[0].kind().name()).find('Interface') != -1:
+                continue
+            if str(entities[0].kind().name()).find('Enum') != -1:
+                continue
+            if str(entities[0].kind().name()).find('Unknown') != -1:
+                continue
+            if str(entities[0].kind().name()).find('Unresolved') != -1:
+                continue
+
             for v in self.mdg_graph.nodes():
-                if u != v:
-                    if nx.has_path(self.mdg_graph, u, v):
-                        entities = self.db.lookup(re.compile(u + r'$'), )
-                        if entities is None or len(entities) == 0:  # Nested classes
-                            continue
-                        if str(entities[0].kind().name()).find('Abstract') != -1:
-                            continue
-                        if str(entities[0].kind().name()).find('Interface') != -1:
-                            continue
-                        if str(entities[0].kind().name()).find('Enum') != -1:
-                            continue
-                        df_temp = pd.DataFrame()
-                        df_temp['FromClass'] = [u]
-                        df_temp['ToClass'] = [v]
+                if v == u:
+                    continue
+                if not nx.has_path(self.mdg_graph, u, v):
+                    continue
+                entities = self.db.lookup(re.compile(v + r'$'), )
+                if entities is None or len(entities) == 0:  # Nested classes
+                    continue
+                if str(entities[0].kind().name()).find('Abstract') != -1:
+                    continue
+                if str(entities[0].kind().name()).find('Interface') != -1:
+                    continue
+                if str(entities[0].kind().name()).find('Enum') != -1:
+                    continue
+                if str(entities[0].kind().name()).find('Unknown') != -1:
+                    continue
+                if str(entities[0].kind().name()).find('Unresolved') != -1:
+                    continue
 
-                        # Features for source class, u (14)
-                        df_temp['FromClassInDegree'] = [self.mdg_graph.in_degree(u)]
-                        df_temp['FromClassOutDegree'] = [self.mdg_graph.out_degree(u)]
-                        df_temp['FromClassAverageNeighborDegree'] = [average_neighbor_degree_dict[u]]
-                        # Category: Node centrality features
-                        df_temp['FromClassDegreeCentrality'] = [degree_centrality_dict[u]]
-                        df_temp['FromClassInDegreeCentrality'] = [in_degree_centrality_dict[u]]
-                        df_temp['FromClassOutDegreeCentrality'] = [out_degree_centrality_dict[u]]
-                        df_temp['FromClassClosenessCentrality'] = [closeness_centrality_dict[u]]
-                        df_temp['FromClassBetweennessCentrality'] = [betweenness_centrality_dict[u]]
-                        df_temp['FromClassKatzCentrality'] = [katz_centrality_dict[u]]
-                        df_temp['FromClassEigenvectorCentrality'] = [eigenvector_centrality_numpy_dict[u]]
-                        df_temp['FromClassHarmonicCentrality'] = [harmonic_centrality_dict[u]]
-                        df_temp['FromClassCurrentFlowClosenessCentrality'] = [current_flow_closeness_centrality_dict[u]]
-                        df_temp['FromClassCurrentFlowBetweennessCentrality'] = [current_flow_betweenness_centrality_dict[u]]  # time-consuming
-                        df_temp['FromClassPageRank'] = [pagerank_dict[u]]
+                df_temp = pd.DataFrame()
+                df_temp['FromClass'] = [u]
+                df_temp['ToClass'] = [v]
 
-                        # Features for destination class, v (14)
-                        df_temp['ToClassInDegree'] = [self.mdg_graph.in_degree(v)]
-                        df_temp['ToClassOutDegree'] = [self.mdg_graph.out_degree(v)]
-                        df_temp['ToClassAverageNeighborDegree'] = [average_neighbor_degree_dict[v]]
-                        # Category: Node centrality features
-                        df_temp['ToClassDegreeCentrality'] = [degree_centrality_dict[v]]
-                        df_temp['ToClassInDegreeCentrality'] = [in_degree_centrality_dict[v]]
-                        df_temp['ToClassOutDegreeCentrality'] = [out_degree_centrality_dict[v]]
-                        df_temp['ToClassClosenessCentrality'] = [closeness_centrality_dict[v]]
-                        df_temp['ToClassBetweennessCentrality'] = [betweenness_centrality_dict[v]]
-                        df_temp['ToClassKatzCentrality'] = [katz_centrality_dict[v]]
-                        df_temp['ToClassEigenvectorCentrality'] = [eigenvector_centrality_numpy_dict[v]]
-                        df_temp['ToClassHarmonicCentrality'] = [harmonic_centrality_dict[v]]
-                        df_temp['ToClassCurrentFlowClosenessCentrality'] = [current_flow_closeness_centrality_dict[v]]
-                        df_temp['ToClassCurrentFlowBetweennessCentrality'] = [current_flow_betweenness_centrality_dict[v]]  # time-consuming
-                        df_temp['ToClassPageRank'] = [pagerank_dict[v]]
+                # Features for source class, u (14)
+                df_temp['FromClassInDegree'] = [self.mdg_graph.in_degree(u)]
+                df_temp['FromClassOutDegree'] = [self.mdg_graph.out_degree(u)]
+                df_temp['FromClassAverageNeighborDegree'] = [average_neighbor_degree_dict[u]]
+                # Category: Node centrality features
+                df_temp['FromClassDegreeCentrality'] = [degree_centrality_dict[u]]
+                df_temp['FromClassInDegreeCentrality'] = [in_degree_centrality_dict[u]]
+                df_temp['FromClassOutDegreeCentrality'] = [out_degree_centrality_dict[u]]
+                df_temp['FromClassClosenessCentrality'] = [closeness_centrality_dict[u]]
+                df_temp['FromClassBetweennessCentrality'] = [betweenness_centrality_dict[u]]
+                df_temp['FromClassKatzCentrality'] = [katz_centrality_dict[u]]
+                df_temp['FromClassEigenvectorCentrality'] = [eigenvector_centrality_numpy_dict[u]]
+                df_temp['FromClassHarmonicCentrality'] = [harmonic_centrality_dict[u]]
+                df_temp['FromClassCurrentFlowClosenessCentrality'] = [current_flow_closeness_centrality_dict[u]]
+                df_temp['FromClassCurrentFlowBetweennessCentrality'] = [current_flow_betweenness_centrality_dict[u]]
+                df_temp['FromClassPageRank'] = [pagerank_dict[u]]
 
-                        # Features for edge
-                        if self.mdg_graph.has_edge(u, v):
-                            df_temp['References'] = [self.mdg_graph[u][v]['References']]
-                        else:
-                            df_temp['References'] = [0]
+                # Features for destination class, v (14)
+                df_temp['ToClassInDegree'] = [self.mdg_graph.in_degree(v)]
+                df_temp['ToClassOutDegree'] = [self.mdg_graph.out_degree(v)]
+                df_temp['ToClassAverageNeighborDegree'] = [average_neighbor_degree_dict[v]]
+                # Category: Node centrality features
+                df_temp['ToClassDegreeCentrality'] = [degree_centrality_dict[v]]
+                df_temp['ToClassInDegreeCentrality'] = [in_degree_centrality_dict[v]]
+                df_temp['ToClassOutDegreeCentrality'] = [out_degree_centrality_dict[v]]
+                df_temp['ToClassClosenessCentrality'] = [closeness_centrality_dict[v]]
+                df_temp['ToClassBetweennessCentrality'] = [betweenness_centrality_dict[v]]
+                df_temp['ToClassKatzCentrality'] = [katz_centrality_dict[v]]
+                df_temp['ToClassEigenvectorCentrality'] = [eigenvector_centrality_numpy_dict[v]]
+                df_temp['ToClassHarmonicCentrality'] = [harmonic_centrality_dict[v]]
+                df_temp['ToClassCurrentFlowClosenessCentrality'] = [current_flow_closeness_centrality_dict[v]]
+                df_temp['ToClassCurrentFlowBetweennessCentrality'] = [current_flow_betweenness_centrality_dict[v]]
+                df_temp['ToClassPageRank'] = [pagerank_dict[v]]
 
-                        # Labels for each possible connection in production mdg
-                        if not self.test_mdg_graph.has_node(u) or not self.test_mdg_graph.has_node(v):
-                            df_temp['IsCovered'] = [-1]
-                        elif self.test_mdg_graph.has_edge(u, v):
-                            df_temp['IsCovered'] = [2]
-                        elif nx.has_path(self.test_mdg_graph, u, v):
-                            df_temp['IsCovered'] = [1]
-                        else:
-                            df_temp['IsCovered'] = [0]
+                # Features for edge
+                if self.mdg_graph.has_edge(u, v):
+                    df_temp['References'] = [self.mdg_graph[u][v]['References']]
+                else:
+                    df_temp['References'] = [0]
 
-                        df = pd.concat([df, df_temp], ignore_index=True)
-                        # print(df.values)
-                        # quit()
+                # Labels for each possible connection in production mdg
+                if not self.test_mdg_graph.has_node(u) or not self.test_mdg_graph.has_node(v):
+                    df_temp['IsCovered'] = [-1]
+                elif self.test_mdg_graph.has_edge(u, v):
+                    df_temp['IsCovered'] = [2]
+                elif nx.has_path(self.test_mdg_graph, u, v):
+                    df_temp['IsCovered'] = [1]
+                else:
+                    df_temp['IsCovered'] = [0]
+
+                df = pd.concat([df, df_temp], ignore_index=True)
+                # print(df.values)
+                # quit()
         print(df)
         return df
 
