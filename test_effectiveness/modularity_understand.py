@@ -121,6 +121,7 @@ class Modularity:
 
         # entities = db.ents('Type')  ## Use this for evo-suite SF110 already measured class
         # entities = db.ents('Java Class ~Enum ~Unknown ~Unresolved ~Jar ~Library')
+        # entities = self.db.lookup(re.compile(class_name+r'$'), )  ## I think it is the best query
         entities = db.ents('Java Class ~Jar ~Library, Java Interface')
         if entities is not None:
             for entity_ in entities:
@@ -175,6 +176,8 @@ def make_benchmark():
         modularity_sf110_list.append(q)
     df['ModularityRawValueUnderstandWithoutTestClasses'] = modularity_sf110_list
     df.to_csv(r'data/data_modularity_QualCode_Understand3.csv', index=False)
+
+
 
 
 if __name__ == '__main__':
