@@ -63,8 +63,9 @@ class ModularDependencyGraphEdgeFeature(ModularDependencyGraph):
             current_flow_betweenness_centrality_dict.update(nx.current_flow_betweenness_centrality(nx.Graph(CCG)))
 
         pagerank_dict = nx.pagerank(G)
+        print('Finish computing graph attributes.')
 
-        for u in self.mdg_graph.nodes():
+        for i, u in enumerate(self.mdg_graph.nodes()):
             entities = self.db.lookup(re.compile(u + r'$'), )
             if entities is None or len(entities) == 0:  # Nested classes
                 continue
@@ -79,7 +80,7 @@ class ModularDependencyGraphEdgeFeature(ModularDependencyGraph):
             if str(entities[0].kind().name()).find('Unresolved') != -1:
                 continue
 
-            for v in self.mdg_graph.nodes():
+            for j, v in enumerate(self.mdg_graph.nodes()):
                 if v == u:
                     continue
                 if not nx.has_path(self.mdg_graph, u, v):
@@ -154,7 +155,9 @@ class ModularDependencyGraphEdgeFeature(ModularDependencyGraph):
 
                 df = pd.concat([df, df_temp], ignore_index=True)
                 # print(df.values)
-                # quit()
+
+            print(f"\rProgress {i}/{nx.number_of_nodes(self.mdg_graph)} ({i/nx.number_of_nodes(self.mdg_graph)*100}%)",
+                  end="")
         print(df)
         return df
 
