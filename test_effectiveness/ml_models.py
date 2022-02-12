@@ -11,6 +11,7 @@ import math
 import datetime
 
 import smogn
+from sklearn.linear_model import LassoCV, LarsCV
 from sklearn.svm import NuSVR
 from sklearnex import patch_sklearn
 
@@ -24,13 +25,17 @@ from sklearn.metrics import *
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.inspection import permutation_importance
 from sklearn.neural_network import MLPRegressor
-from sklearn import linear_model, feature_selection
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit, GridSearchCV
 from sklearn import tree, preprocessing
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
     VotingRegressor
+
+
+from sklearn import linear_model, feature_selection
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, RationalQuadratic, Exponentiation
 
 
 class Regression:
@@ -64,7 +69,7 @@ class Regression:
 
         self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(self.dfx.iloc[:, :-1],
                                                                                   self.df.iloc[:, -1],
-                                                                                  test_size=0.20,
+                                                                                  test_size=0.25,
                                                                                   random_state=111,
                                                                                   )
 
@@ -114,7 +119,7 @@ class Regression:
         df_new['PredictedTestability'] = list(y_pred)
 
         print(df_new)
-        # df_new.to_csv(r'dataset06/refactored01010_predicted_testability.csv', index=True, index_label='Row')
+        # df_new.to_csv(r'dataset/refactored01010_predicted_testability.csv', index=True, index_label='Row')
 
     def evaluate_model(self, model=None, model_path=None):
         # X = self.data_frame.iloc[:, 1:-4]
@@ -129,7 +134,7 @@ class Regression:
 
         # Print all classifier model metrics
         print('Evaluating regressor ...')
-        print('Regressor minimum prediction', min(y_pred), 'Regressor maximum prediction', max(y_pred))
+        # print('Regressor minimum prediction', min(y_pred), 'Regressor maximum prediction', max(y_pred))
         df = pd.DataFrame()
         df['r2_score_uniform_average'] = [r2_score(y_true, y_pred, multioutput='uniform_average')]
         df['r2_score_variance_weighted'] = [r2_score(y_true, y_pred, multioutput='variance_weighted')]
@@ -154,6 +159,7 @@ class Regression:
             df['mean_gamma_deviance'] = [mean_gamma_deviance(y_true, y_pred, )]
         df['max_error'] = [max_error(y_true, y_pred)]
 
+        print(df)
         df.to_csv(model_path[:-7] + '_evaluation_metrics_R1.csv', index=True, index_label='Row')
 
     def regress(self, model_path: str = None, model_number: int = None):
@@ -220,6 +226,20 @@ class Regression:
                 'nu': [i * 0.1 for i in range(1, 10, 1)],
                 'C': [1.0, 2.0, 3.0]
             }
+        elif model_number == 8:
+        # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
+             regressor = GaussianProcessRegressor(random_state=0)
+             parameters = {
+                 'kernel': [DotProduct() + WhiteKernel(), DotProduct(), WhiteKernel(), Matern(),
+                            Exponentiation(RationalQuadratic(alpha=1.0), exponent=2),
+                            Exponentiation(RationalQuadratic(alpha=0.9), exponent=3),
+                            RationalQuadratic(alpha=1.0)],
+             }
+        elif model_number == 9:
+            regressor = LarsCV()
+            parameters = {
+                "fit_intercept": [True, False],
+            }
         else:
             return
 
@@ -277,8 +297,8 @@ class Regression:
 def train():
     dataset_path = 'dataset_merged/d4t_ds_sf110_03.csv'
     model_path = 'sklearn_models1/'
-    ds_no = 2
-    reg = Regression(df_path=dataset_path, selection_on=True)
+    ds_no = 1
+    reg = Regression(df_path=dataset_path, selection_on=False)
     reg.regress(model_path=f'{model_path}DTR1_DS{ds_no}.joblib', model_number=1)
     reg.regress(model_path=f'{model_path}RFR1_DS{ds_no}.joblib', model_number=2)
     # reg.regress(model_path=f'{model_path}GBR1_DS{ds_no}.joblib', model_number=3)
@@ -287,6 +307,9 @@ def train():
     reg.regress(model_path=f'{model_path}MLPR1_DS{ds_no}.joblib', model_number=6)
     reg.regress(model_path=f'{model_path}NuSVR1_DS{ds_no}.joblib', model_number=7)
     reg.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
+
+    # reg.regress(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
+    # reg.regress(model_path=f'{model_path}LassoCV_DS{ds_no}.joblib', model_number=9)
 
 
 if __name__ == '__main__':
