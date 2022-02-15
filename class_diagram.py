@@ -512,8 +512,8 @@ class ClassDiagram:
                         self.class_diagram_graph.add_edge(n1, n2, weight=weight)
                         self.class_diagram_graph[n1][n2]['weight'] = weight
 
-            methods_information = self.__find_methods_information(files, index_dic)
-            print(json.dumps(methods_information, sort_keys = True, indent = 4))
+        methods_information = self.__find_methods_information(files, index_dic)
+        print(json.dumps(methods_information, sort_keys = True, indent = 4))
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -563,11 +563,32 @@ class ClassDiagram:
                     package = listener.get_package()
                 #class_index = index_dic[]['index']
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
+        methods_info = self.__calculate_interface_modification_type(methods_info, index_dic)
         print("finish finding methods information !")
         return methods_info
 
-    def __calculate_interface_modification_type(self):
-        pass
+    def __calculate_interface_modification_type(self, method_info, index_dic):
+        index_list = list(index_dic.keys())
+        for c in method_info:
+            if not method_info[c]['is_class']:
+                implemented_classes = []
+                all_depended_classes = list(self.class_diagram_graph.predecessors(1))
+                # check if relationship between 2 nodes is implements
+                for node in all_depended_classes:
+                    #print(node, index_dic[c]['index'])
+                    if (node, index_dic[c]['index']) in self.class_diagram_graph.edges:
+                        if self.relationships_name[self.class_diagram_graph.edges[(node, index_dic[c]['index'])]['weight']] == 'implements':
+                            implemented_classes.append(node)
+                #print(self.class_diagram_graph.edges[(2,1)])
+                for m in method_info[c]['methods']:
+                    for implemented_class in implemented_classes:
+                        class_name = index_list[implemented_class]
+                        if method_info[class_name]['methods'][m]['is_modify_itself']:
+                            method_info[c]['methods'][m]['is_modify_itself'] = True
+                            break
+                        else:
+                            method_info[c]['methods'][m]['is_modify_itself'] = False
+        return method_info
 
     def set_stereotypes(self):
         pass
@@ -582,7 +603,7 @@ if __name__ == "__main__":
     index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
     cd = ClassDiagram()
     cd.make(java_project_address, base_dirs, index_dic)
-    #cd.save('class_diagram.gml')
+    cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
     #print(list(cd.dfs()))
     cd.show()
