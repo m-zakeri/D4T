@@ -502,11 +502,11 @@ class ClassDiagram:
     def load(self, address):
         self.class_diagram_graph = nx.read_gml(address)
 
-    def show(self):
-        pos = nx.spring_layout(self.class_diagram_graph)
-        nx.draw_networkx(self.class_diagram_graph, pos)
-        labels = nx.get_edge_attributes(self.class_diagram_graph, 'relation_type')
-        nx.draw_networkx_edge_labels(self.class_diagram_graph, pos, edge_labels=labels)
+    def show(self, graph):
+        pos = nx.spring_layout(graph)
+        nx.draw_networkx(graph, pos)
+        labels = nx.get_edge_attributes(graph, 'relation_type')
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels)
         plt.show()
 
     def dfs(self):
@@ -606,7 +606,27 @@ class ClassDiagram:
         print('End setting stereotype !')
 
     def get_CFG(self):
-        pass
+        CDG = nx.DiGraph()
+        relationships_name = ['parent', 'child', 'create', 'use_consult', 'use_def']
+        nx.set_edge_attributes(CDG, relationships_name, "relation_type")
+
+        for edge in self.class_diagram_graph.edges:
+            edge_info = self.class_diagram_graph.edges[edge]
+
+            if edge_info['relation_type'] == 'extends':
+                CDG.add_edge(edge[0], edge[1])
+                CDG.add_edge(edge[1], edge[0])
+                CDG[edge[0]][edge[1]]['relation_type'] = 'parent'
+                CDG[edge[1]][edge[0]]['relation_type'] = 'child'
+
+            elif edge_info['relation_type'] == 'implements':
+                CDG.add_edge(edge[1], edge[0])
+                CDG[edge[1]][edge[0]]['relation_type'] = 'child'
+
+            else:
+                CDG.add_edge(edge[0], edge[1])
+                CDG[edge[0]][edge[1]]['relation_type'] = edge_info['relation_type']
+        return CDG
 
 if __name__ == "__main__":
     java_project_address = config.projects_info['javaproject']['path']
@@ -616,11 +636,17 @@ if __name__ == "__main__":
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')
-    cd.show()
+    cd.show(cd.class_diagram_graph)
+
     #cd.load('class_diagram.gml')
-    #print(list(cd.dfs()))
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
-    cd.show()
+    cd.show(cd.class_diagram_graph)
+
+    CDG = cd.get_CFG()
+    for edge in CDG.edges:
+        print(edge, CDG.edges[edge])
+    cd.show(CDG)
+
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
     for i in nx.weakly_connected_components(g):
