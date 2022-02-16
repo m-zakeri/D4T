@@ -376,7 +376,7 @@ class StereotypeListener(JavaParserLabeledListener):
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
-            self.class_dic[self.current_class][dependee] = self.current_relationship
+
 
     def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
         if ctx.typeType().classOrInterfaceType() != None:
@@ -413,11 +413,16 @@ class StereotypeListener(JavaParserLabeledListener):
                     break
             list_of_objects.append(current_exp1.getText())
             list_of_objects.reverse()
-            print(self.formal_parameters, self.field_variables, self.local_variables)
-            print('method_name:', method_name)
-            print('list_of_objects:', list_of_objects)
-            print(self.__get_use_type(method_name, list_of_objects))
-            print('---------------------')
+            stereotype = self.__get_use_type(method_name, list_of_objects)
+
+            if stereotype != None:
+                dependee = self.__get_object_type(list_of_objects[0])
+                if self.current_class in self.class_dic:
+                    if dependee in self.class_dic[self.current_class]:
+                        if self.class_dic[self.current_class][dependee] == 'use_consult':
+                            self.class_dic[self.current_class][dependee] = stereotype
+                    else:
+                        self.class_dic[self.current_class][dependee] = stereotype
 
 
     def __get_use_type(self, method_name, list_of_objects):
@@ -431,8 +436,6 @@ class StereotypeListener(JavaParserLabeledListener):
                     current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
-            print('current_type:', current_type)
-            print(self.methods_information[current_type]['methods'][method_name])
             if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
                 return 'use_def'
             else:
@@ -457,18 +460,19 @@ class ClassDiagram:
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
         #self.stereotypes_name = ['create', 'use_consult', 'use_def']
 
-    def make(self, java_project_address, base_dirs, index_dic=None):
+    def make_class_diagram(self, java_project_address, base_dirs, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
         if index_dic == None:
             index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
 
+        print('Start making class diagram . . .')
         for f in files:
             file_name = Path.get_file_name_from_path(f)
-            print(f)
+            print('\t' + f)
             try:
                 stream = FileStream(f)
             except:
-                print(f, 'can not read')
+                print('\t' + f, 'can not read')
                 continue
             lexer = JavaLexer(stream)
             tokens = CommonTokenStream(lexer)
@@ -481,7 +485,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            print('graph:', graph)
+            #print('graph:', graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -490,9 +494,7 @@ class ClassDiagram:
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph.add_edge(n1, n2)
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
-
-        methods_information = self.__find_methods_information(files, index_dic)
-        print(json.dumps(methods_information, sort_keys = True, indent = 4))
+        print('End making class diagram !')
 
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
@@ -566,8 +568,42 @@ class ClassDiagram:
                             method_info[c]['methods'][m]['is_modify_itself'] = False
         return method_info
 
-    def set_stereotypes(self):
-        pass
+    def set_stereotypes(self, java_project_address, base_dirs, index_dic=None):
+        files = File.find_all_file(java_project_address, 'java')
+        if index_dic == None:
+            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+
+        methods_information = self.__find_methods_information(files, index_dic)
+        #print(json.dumps(methods_information, sort_keys = True, indent = 4))
+        print('Start setting stereotype . . .')
+        for f in files:
+            file_name = Path.get_file_name_from_path(f)
+            print('\t' + f)
+            try:
+                stream = FileStream(f)
+            except:
+                print('\t' + f, 'can not read')
+                continue
+            lexer = JavaLexer(stream)
+            tokens = CommonTokenStream(lexer)
+            parser = JavaParserLabeled(tokens)
+            tree = parser.compilationUnit()
+            listener = StereotypeListener(methods_information, base_dirs, index_dic, file_name, f)
+            walker = ParseTreeWalker()
+            walker.walk(
+                listener=listener,
+                t=tree
+            )
+            graph = listener.class_dic
+            #print('graph:', graph)
+            for c in graph:
+                for i in graph[c]:
+                    if i in index_dic.keys():
+                        n1 = index_dic[c]['index']
+                        n2 = index_dic[i]['index']
+                        relation_type = listener.class_dic[c][i]
+                        self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
+        print('End setting stereotype !')
 
     def get_CFG(self):
         pass
@@ -578,10 +614,12 @@ if __name__ == "__main__":
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
     cd = ClassDiagram()
-    cd.make(java_project_address, base_dirs, index_dic)
+    cd.make_class_diagram(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')
+    cd.show()
     #cd.load('class_diagram.gml')
     #print(list(cd.dfs()))
+    cd.set_stereotypes(java_project_address, base_dirs, index_dic)
     cd.show()
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
