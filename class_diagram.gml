@@ -23,31 +23,31 @@ graph [
   edge [
     source 0
     target 1
-    weight 2
+    relation_type "create"
   ]
   edge [
     source 0
     target 2
-    weight 2
+    relation_type "create"
   ]
   edge [
     source 3
     target 1
-    weight 0
+    relation_type "implements"
   ]
   edge [
     source 3
     target 2
-    weight 2
+    relation_type "create"
   ]
   edge [
     source 4
     target 1
-    weight 0
+    relation_type "implements"
   ]
   edge [
     source 4
     target 2
-    weight 2
+    relation_type "create"
   ]
 ]

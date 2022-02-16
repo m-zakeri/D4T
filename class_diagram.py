@@ -105,7 +105,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.no_implements -= 1
                 self.current_relationship = 'implements'
             else:
-                self.current_relationship = 'aggregate'
+                self.current_relationship = 'create'
 
             dependee = text[:-1]
             if not (dependee in self.dependee_dic.keys()):
@@ -349,8 +349,6 @@ class StereotypeListener(JavaParserLabeledListener):
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         self.current_method = None
-        #print('formal_parameters:', self.formal_parameters)
-        #print('local_variables:', self.local_variables)
         self.local_variables = {}
         self.formal_parameters = {}
 
@@ -366,16 +364,6 @@ class StereotypeListener(JavaParserLabeledListener):
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
-                #print('text:', text)
-
-            if self.has_extends:
-                self.current_relationship = 'extends'
-                self.has_extends = False
-            elif self.no_implements > 0:
-                self.no_implements -= 1
-                self.current_relationship = 'implements'
-            else:
-                self.current_relationship = 'aggregate'
 
             dependee = text[:-1]
             if not (dependee in self.dependee_dic.keys()):
@@ -389,15 +377,6 @@ class StereotypeListener(JavaParserLabeledListener):
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
             self.class_dic[self.current_class][dependee] = self.current_relationship
-
-
-    # this method is for detecting interface relationships
-    def enterTypeDeclaration(self, ctx:JavaParserLabeled.TypeDeclarationContext):
-        if ctx.classDeclaration() != None:
-            if ctx.classDeclaration().IMPLEMENTS() != None:
-                self.no_implements = len(ctx.classDeclaration().typeList().typeType())
-            if ctx.classDeclaration().EXTENDS() != None:
-                self.has_extends = True
 
     def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
         if ctx.typeType().classOrInterfaceType() != None:
@@ -474,8 +453,9 @@ class StereotypeListener(JavaParserLabeledListener):
 class ClassDiagram:
     def __init__(self):
         self.class_diagram_graph = nx.DiGraph()
-        self.relationships_name = ['implements', 'extends', 'aggregate']
-        self.stereotypes_name = ['create', 'use_consult', 'use_def']
+        self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
+        nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
+        #self.stereotypes_name = ['create', 'use_consult', 'use_def']
 
     def make(self, java_project_address, base_dirs, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
@@ -502,15 +482,14 @@ class ClassDiagram:
             )
             graph = listener.class_dic
             print('graph:', graph)
-            #print('dependee_dic:', listener.dependee_dic)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
                         n1 = index_dic[c]['index']
                         n2 = index_dic[i]['index']
-                        weight = self.relationships_name.index(listener.class_dic[c][i])
-                        self.class_diagram_graph.add_edge(n1, n2, weight=weight)
-                        self.class_diagram_graph[n1][n2]['weight'] = weight
+                        relation_type = listener.class_dic[c][i]
+                        self.class_diagram_graph.add_edge(n1, n2)
+                        self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
 
         methods_information = self.__find_methods_information(files, index_dic)
         print(json.dumps(methods_information, sort_keys = True, indent = 4))
@@ -522,11 +501,9 @@ class ClassDiagram:
         self.class_diagram_graph = nx.read_gml(address)
 
     def show(self):
-        pos = nx.spring_layout(self.class_diagram_graph)  # pos = nx.nx_agraph.graphviz_layout(G)
+        pos = nx.spring_layout(self.class_diagram_graph)
         nx.draw_networkx(self.class_diagram_graph, pos)
-        labels = nx.get_edge_attributes(self.class_diagram_graph, 'weight')
-        for i in labels.keys():
-            labels[i] = self.relationships_name[labels[i]]
+        labels = nx.get_edge_attributes(self.class_diagram_graph, 'relation_type')
         nx.draw_networkx_edge_labels(self.class_diagram_graph, pos, edge_labels=labels)
         plt.show()
 
@@ -575,11 +552,10 @@ class ClassDiagram:
                 all_depended_classes = list(self.class_diagram_graph.predecessors(1))
                 # check if relationship between 2 nodes is implements
                 for node in all_depended_classes:
-                    #print(node, index_dic[c]['index'])
                     if (node, index_dic[c]['index']) in self.class_diagram_graph.edges:
-                        if self.relationships_name[self.class_diagram_graph.edges[(node, index_dic[c]['index'])]['weight']] == 'implements':
+                        if self.class_diagram_graph.edges[(node, index_dic[c]['index'])]['relation_type'] == 'implements':
                             implemented_classes.append(node)
-                #print(self.class_diagram_graph.edges[(2,1)])
+
                 for m in method_info[c]['methods']:
                     for implemented_class in implemented_classes:
                         class_name = index_list[implemented_class]
