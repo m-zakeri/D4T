@@ -3,20 +3,15 @@ The module provide learning to predict design test effectiveness
 
 """
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __author__ = 'Morteza Zakeri'
 
 import os
 import math
 import datetime
 
-import smogn
 from matplotlib import pyplot as plt
-from sklearn.linear_model import LassoCV, LarsCV
-from sklearn.svm import NuSVR, NuSVC
-from sklearnex import patch_sklearn
 
-patch_sklearn()
 
 import pandas as pd
 import joblib
@@ -25,11 +20,12 @@ from joblib import dump, load
 from sklearn.metrics import *
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.inspection import permutation_importance
+from sklearn.linear_model import LassoCV, LarsCV
+from sklearn.svm import NuSVR, NuSVC
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit, GridSearchCV
 from sklearn import tree, preprocessing
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
     VotingRegressor, GradientBoostingClassifier, RandomForestClassifier, HistGradientBoostingClassifier, \
     VotingClassifier
@@ -42,6 +38,17 @@ from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, Ra
 class EdgeCoverageClassification:
     def __init__(self, df_path: str = None, selection_on=False, skewness=False):
         self.df = pd.read_csv(df_path, delimiter=',', index_col=False)
+        # Compelling with NaNs
+        number_of_nans = self.df.isnull().sum().sum()
+        print('number_of_nans', number_of_nans)
+        rows_with_nan = [index for index, row in self.df.iterrows() if row.isnull().any()]
+        print('rows_with_nan', rows_with_nan)
+        if number_of_nans < 10:
+            self.df = self.df.fillna(0)
+        else:
+            print('Too many NaNs. Cannot continue.')
+            return
+
         # self.dfx = self.df.iloc[:, 1:-14]
         self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(self.df.iloc[:, 2:-1],
                                                                                   self.df.iloc[:, -1],
@@ -77,10 +84,7 @@ class EdgeCoverageClassification:
         self.X_train = self.scaler.transform(self.X_train1)
         self.X_test = self.scaler.transform(self.X_test1)
 
-        # print(self.df.isnull().sum().sum())
-        # rows_with_nan = [index for index, row in self.df.iterrows() if row.isnull().any()]
-        # print(rows_with_nan)
-        # quit()
+
 
     def inference_model(self, model=None, model_path=None, predict_data_path=None):
         if model is None:
@@ -99,8 +103,9 @@ class EdgeCoverageClassification:
         mean_edge_coverage = df_new['PredictedDesignEdgeCoverage'].mean()
         mean_edge_coverage_probability = df_new['PredictedDesignEdgeCoverageProbability'].mean()
         print(f'Design edge coverage (edge test effectiveness) {mean_edge_coverage}')
-        print(f'Design edge coverage probability (edge test effectiveness probability) {mean_edge_coverage_probability}')
-        df_new.to_csv(predict_data_path[:-4]+'_predicted.csv', index=False)
+        print(
+            f'Design edge coverage probability (edge test effectiveness probability) {mean_edge_coverage_probability}')
+        df_new.to_csv(predict_data_path[:-4] + '_predicted.csv', index=False)
 
     def evaluate_model(self, model=None, model_path=None):
         if model is None:
@@ -116,7 +121,7 @@ class EdgeCoverageClassification:
         df['precision_score_micro'] = [precision_score(y_true, y_pred, average='micro')]
         df['recall_score_macro'] = [recall_score(y_true, y_pred, average='macro')]
         df['recall_score_micro'] = [recall_score(y_true, y_pred, average='micro')]
-        df['f1_score_macro']= [f1_score(y_true, y_pred, average='macro')]
+        df['f1_score_macro'] = [f1_score(y_true, y_pred, average='macro')]
         df['f1_score_micro'] = [f1_score(y_true, y_pred, average='micro')]
         df['fbeta_score_macro'] = [fbeta_score(y_true, y_pred, beta=0.5, average='macro')]
         df['fbeta_score_micro'] = [fbeta_score(y_true, y_pred, beta=0.5, average='micro')]
@@ -145,7 +150,7 @@ class EdgeCoverageClassification:
             cmap=plt.cm.Blues,
             normalize=None,
             # normalize='true',
-            )
+        )
         disp.ax_.set_title(title)
         print('Confusion matrix:')
         print(disp.confusion_matrix)
@@ -212,9 +217,9 @@ class EdgeCoverageClassification:
             clf_def = NuSVC(cache_size=500, max_iter=-1, shrinking=True)
             parameters = {
                 'kernel': ['linear', 'rbf', 'poly', 'sigmoid', ],
-                'degree': [1, 2,],
+                'degree': [1, 2, ],
                 'nu': [i * 0.1 for i in range(1, 10, 2)],
-                'C': [1.0, 2.0,]
+                'C': [1.0, 2.0, ]
             }
         elif model_number == 8:
             clf_def = GaussianProcessClassifier(random_state=0)
@@ -269,7 +274,7 @@ class EdgeCoverageClassification:
         # Plots
         self.compute_confusion_matrix(model=clf, model_path=model_path)
 
-        print('-'*25, 'Done!', '-'*25)
+        print('-' * 25, 'Done!', '-' * 25)
 
     def vote(self, model_path=None, dataset_number=1):
         print('Load and combine trained classifiers:')
@@ -290,10 +295,10 @@ class EdgeCoverageClassification:
         self.evaluate_model(model=voting_classifier, model_path=model_path)
 
 
-def train():
-    dataset_path = 'dataset_edges/66_openjms_EDGE.csv'
-    model_path = 'sklearn_models_edge_classify_1/'
-    ds_no = 1
+def train(ds_no=1):
+    # dataset_path = r'dataset_edges/66_openjms_EDGE.csv'
+    dataset_path = r'dataset_merged/sf110_edges_binary.csv'
+    model_path = 'sklearn_models_edge_classify1/'
     ecclf = EdgeCoverageClassification(df_path=dataset_path, selection_on=False)
     ecclf.classify(model_path=f'{model_path}DTC1_DS{ds_no}.joblib', model_number=1)
     ecclf.classify(model_path=f'{model_path}RFC1_DS{ds_no}.joblib', model_number=2)
