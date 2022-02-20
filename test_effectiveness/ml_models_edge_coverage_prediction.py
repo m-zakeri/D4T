@@ -303,13 +303,14 @@ def train(ds_no=1):
     ecclf.classify(model_path=f'{model_path}DTC1_DS{ds_no}.joblib', model_number=1)
     ecclf.classify(model_path=f'{model_path}RFC1_DS{ds_no}.joblib', model_number=2)
     # ecclf.classify(model_path=f'{model_path}GBC1_DS{ds_no}.joblib', model_number=3)
-    # ecclf.classify(model_path=f'{model_path}HGBC1_DS{ds_no}.joblib', model_number=4)
+    ecclf.classify(model_path=f'{model_path}HGBC1_DS{ds_no}.joblib', model_number=4)
     # ecclf.classify(model_path=f'{model_path}SGDC1_DS{ds_no}.joblib', model_number=5)
-    # ecclf.classify(model_path=f'{model_path}MLPC1_DS{ds_no}.joblib', model_number=6)
-    # ecclf.classify(model_path=f'{model_path}NuSVC1_DS{ds_no}.joblib', model_number=7)
-    # ecclf.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
+    ecclf.classify(model_path=f'{model_path}MLPC1_DS{ds_no}.joblib', model_number=6)
+    ecclf.classify(model_path=f'{model_path}NuSVC1_DS{ds_no}.joblib', model_number=7)
+    ecclf.classify(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
+    ecclf.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
 
-    # ecclf.classify(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
+
 
 
 if __name__ == '__main__':
