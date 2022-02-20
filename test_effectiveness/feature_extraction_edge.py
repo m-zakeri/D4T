@@ -155,9 +155,9 @@ class ModularDependencyGraphEdgeFeature(ModularDependencyGraph):
 
                 df = pd.concat([df, df_temp], ignore_index=True)
                 # print(df.values)
+            nns = nx.number_of_nodes(self.mdg_graph)
+            print(f"\rProgress {i}/{nns} ({round(i / nns, 4) * 100}%)", end="")
 
-            print(f"\rProgress {i}/{nx.number_of_nodes(self.mdg_graph)} ({i/nx.number_of_nodes(self.mdg_graph)*100}%)",
-                  end="")
         print(df)
         return df
 
@@ -196,5 +196,39 @@ def create_edge_level_dataset():
             # quit()
 
 
+def merge_dataset_edge():
+    csvs_path = 'dataset_edges/'
+    files = [f for f in os.listdir(csvs_path) if os.path.isfile(os.path.join(csvs_path, f))]
+    df_all = pd.DataFrame()
+    for f in files:
+        print(f'Processing csv file {f}:')
+        try:
+            df1 = pd.read_csv(csvs_path + f)
+        except:
+            continue
+        if not df1.empty:
+            df_all = df_all.append(df1, ignore_index=True)
+
+    results_path = 'dataset_merged/sf110_edges.csv'
+
+    df_all.to_csv(results_path, index=False)
+
+
+def preprocess():
+    input_path = 'dataset_merged/sf110_edges.csv'
+    df = pd.read_csv(input_path)
+    print(df.shape)
+    df = df[df['IsCovered'] != -1]
+
+    df.loc[df['IsCovered'] == 2, 'IsCovered'] = 1
+    print(df)
+    print(df[df['IsCovered'] == 1].shape[0])
+    print(df[df['IsCovered'] == 0].shape[0])
+    result_path = 'dataset_merged/sf110_edges_binary.csv'
+    df.to_csv(result_path, index=False)
+
+
 if __name__ == '__main__':
-    create_edge_level_dataset()
+    # create_edge_level_dataset()
+    # merge_dataset_edge()
+    preprocess()
