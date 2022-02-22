@@ -632,7 +632,7 @@ if __name__ == "__main__":
     java_project_address = config.projects_info['javaproject']['path']
     base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
-    index_dic = File.indexing_files_directory(files, 'class_index2.json', base_dirs)
+    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')

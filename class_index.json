@@ -1,26 +1,14 @@
 {
-    "com.adder-IAdder-IAdder": {
+    "src-Main-Main": {
         "index": 0,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\IAdder.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\Main.java"
     },
-    "com-Interface0-Interface0": {
+    "calculator-Calculator-Calculator": {
         "index": 1,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\Interface0.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\calculator\\Calculator.java"
     },
-    "com.creator-Creator-Creator": {
+    "calculator.adder-Adder-Adder": {
         "index": 2,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\creator\\Creator.java"
-    },
-    "com.functions-DecodedImage-DecodedImage": {
-        "index": 3,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\functions\\DecodedImage.java"
-    },
-    "com.products-GifReader-GifReader": {
-        "index": 4,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\products\\GifReader.java"
-    },
-    "com.products-JpegReader-JpegReader": {
-        "index": 5,
-        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\com\\products\\JpegReader.java"
+        "path": "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\calculator\\adder\\Adder.java"
     }
 }
