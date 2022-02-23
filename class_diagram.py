@@ -436,6 +436,8 @@ class StereotypeListener(JavaParserLabeledListener):
                     current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
+            print(current_type, method_name)
+            print(self.methods_information)
             if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
                 return 'use_def'
             else:
@@ -485,7 +487,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            #print('graph:', graph)
+            print('graph:', graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -629,8 +631,8 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    java_project_address = config.projects_info['xerces2j']['path']
+    base_dirs = config.projects_info['xerces2j']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

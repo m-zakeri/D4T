@@ -1,34 +1,45 @@
+BASE_DIR = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\'
+
+
 projects_info = {}
 
-# bigjavaporoject
-projects_info['bigJavaProject'] = {}
-java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java'
+# factory-pattern-example
+projects_info['factory-pattern-example'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\factory-pattern-example\\'
 base_dirs = []
-base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\bigJavaProject\\src\\main\\java\\')
-projects_info['bigJavaProject']['path'] = java_project_address
-projects_info['bigJavaProject']['base_dirs'] = base_dirs
+base_dirs.append(BASE_DIR + 'refactored_project\\factory-pattern-example\\')
+projects_info['factory-pattern-example']['path'] = java_project_address
+projects_info['factory-pattern-example']['base_dirs'] = base_dirs
+
+# xerces2j
+projects_info['xerces2j'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\xerces2j\\'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\xerces2j\\src\\')
+projects_info['xerces2j']['path'] = java_project_address
+projects_info['xerces2j']['base_dirs'] = base_dirs
 
 # simple_injection
 projects_info['simple_injection'] = {}
-java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection'
+java_project_address = BASE_DIR + 'refactored_project\\simple_injection'
 base_dirs = []
-base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\')
+base_dirs.append(BASE_DIR + 'refactored_project\\simple_injection\\')
 projects_info['simple_injection']['path'] = java_project_address
 projects_info['simple_injection']['base_dirs'] = base_dirs
 
 # javaproject
 projects_info['javaproject'] = {}
-java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject'
+java_project_address = BASE_DIR + 'refactored_project\\javaproject'
 base_dirs = []
-base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\javaproject\\')
+base_dirs.append(BASE_DIR + 'refactored_project\\javaproject\\')
 projects_info['javaproject']['path'] = java_project_address
 projects_info['javaproject']['base_dirs'] = base_dirs
 
 # nest_project
 projects_info['nest_project'] = {}
-java_project_address = 'E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\nest_project'
+java_project_address = BASE_DIR + 'refactored_project\\nest_project'
 base_dirs = []
-base_dirs.append('E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\nest_project\\')
+base_dirs.append(BASE_DIR + 'refactored_project\\nest_project\\')
 projects_info['nest_project']['path'] = java_project_address
 projects_info['nest_project']['base_dirs'] = base_dirs
 
