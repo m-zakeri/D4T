@@ -10,6 +10,9 @@ import json
 from utils import File, Path
 import config
 
+class ClassTypeListener(JavaParserLabeledListener):
+    def __init__(self):
+        pass
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
