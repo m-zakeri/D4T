@@ -11,8 +11,59 @@ from utils import File, Path
 import config
 
 class ClassTypeListener(JavaParserLabeledListener):
-    def __init__(self):
-        pass
+    def __init__(self, base_dirs, file_name, file):
+        self.file_info = {}
+        self.current_class = None
+        self.__package = None
+        self.in_nest_class = False
+        self.base_dirs = base_dirs
+        self.file_name = file_name
+        self.file = file
+
+    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
+        self.__package = ctx.qualifiedName().getText()
+
+    def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.current_class == None:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            type_declaration = ctx.parentCtx
+            _type = None
+            if type_declaration.classOrInterfaceModifier() != None:
+                if len(type_declaration.classOrInterfaceModifier()) == 1:
+                    if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
+                        _type = 'abstract'
+
+            if _type == None:
+                _type = 'normal'
+            self.file_info[self.current_class] = {'type':_type}
+        else:
+            self.in_nest_class = True
+
+    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_nest_class = False
+
+        if not self.in_nest_class:
+            self.current_class = None
+
+    def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.current_class == None:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            _type = 'interface'
+            self.file_info[self.current_class] = {'type':_type}
+        else:
+            self.in_nest_class = True
+
+    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_nest_class = False
+
+        if not self.in_nest_class:
+            self.current_class = None
 
 
 class ClassDiagramListener(JavaParserLabeledListener):
@@ -463,7 +514,7 @@ class ClassDiagram:
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
-        #self.stereotypes_name = ['create', 'use_consult', 'use_def']
+        nx.set_node_attributes(self.class_diagram_graph, ['normal', 'abstract', 'interface'], "type")
 
     def make_class_diagram(self, java_project_address, base_dirs, index_dic=None):
         files = File.find_all_file(java_project_address, 'java')
@@ -483,8 +534,20 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
+            type_listener = ClassTypeListener(base_dirs, file_name, f)
             listener = ClassDiagramListener(base_dirs, index_dic, file_name, f)
             walker = ParseTreeWalker()
+
+            walker.walk(
+                listener=type_listener,
+                t=tree
+            )
+            # add node to class_diagram
+            for c in type_listener.file_info:
+                index = index_dic[c]['index']
+                self.class_diagram_graph.add_node(index)
+                self.class_diagram_graph.nodes[index]['type'] = type_listener.file_info[c]['type']
+
             walker.walk(
                 listener=listener,
                 t=tree
@@ -614,6 +677,11 @@ class ClassDiagram:
         CDG = nx.DiGraph()
         relationships_name = ['parent', 'child', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(CDG, relationships_name, "relation_type")
+        nx.set_node_attributes(CDG, ['normal', 'abstract', 'interface'], "type")
+
+        for n in self.class_diagram_graph.nodes:
+            CDG.add_node(n)
+            CDG.nodes[n]['type'] = self.class_diagram_graph.nodes[n]['type']
 
         for edge in self.class_diagram_graph.edges:
             edge_info = self.class_diagram_graph.edges[edge]
@@ -634,17 +702,18 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['xerces2j']['path']
-    base_dirs = config.projects_info['xerces2j']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
-    cd.save('class_diagram.gml')
+
     cd.show(cd.class_diagram_graph)
 
     #cd.load('class_diagram.gml')
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
+    cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
     CDG = cd.get_CFG()

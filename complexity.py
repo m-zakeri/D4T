@@ -58,6 +58,7 @@ class Complexity():
         return candidates
 
 
+
 if __name__ == "__main__":
     cd = ClassDiagram()
     cd.class_diagram_graph = test_class_diagram
