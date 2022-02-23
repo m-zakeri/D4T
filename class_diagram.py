@@ -218,14 +218,12 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             if self.current_class == ctx.IDENTIFIER().getText():
                 self.in_sub_class = False
             self.current_class = None
-            #print('attributes :', self.attributes)
             self.attributes = {}
 
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         if self.current_class == None:
             self.current_class = ctx.IDENTIFIER().getText()
             self.file_info[self.current_class] = {'is_class':True, 'attributes':{}, 'methods':{}}
-            #print('class :', self.current_class)
         else:
             self.in_sub_class = True
 
@@ -234,7 +232,6 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             if self.current_class == ctx.IDENTIFIER().getText():
                 self.in_sub_class = False
             self.current_class = None
-            #print('attributes :', self.attributes)
             self.attributes = {}
 
     def enterInterfaceMethodDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
@@ -264,14 +261,11 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.is_modify_itself = False
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
-        #print(ctx.getText())
         for vd in ctx.variableDeclarators().variableDeclarator():
             _type = ctx.typeType().getText()
             identifier = vd.variableDeclaratorId().IDENTIFIER().getText()
-            #print(_type, identifier)
             self.attributes[identifier] = _type
             self.file_info[self.current_class]['attributes'][identifier] = _type
-            #print(self.attributes)
 
 
     def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
@@ -286,21 +280,18 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.parameters[identifier] = _type
 
     def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
-        #print('current_method:', self.current_method)
         if self.current_method != None:
             if ('expression' in dir(ctx.expression(0))):
                 try:
                     variable = ctx.expression(0).expression().getText()
                 except:
                     variable = ctx.expression(0).expression(0).getText()
-                #print('variable:', variable)
                 if variable == 'this':
                     self.is_modify_itself = True
                 elif self.is_class_attribute(variable):
                     self.is_modify_itself = True
             else:
                 variable = ctx.expression(0).getText()
-                #print('variable:', variable)
                 if self.is_class_attribute(variable):
                     self.is_modify_itself = True
 
@@ -389,13 +380,11 @@ class StereotypeListener(JavaParserLabeledListener):
             # detect package and file of each instance
             dependee_dic = {}
             for dependee in self.class_dic[self.current_class].keys():
-                #print(self.dependee_dic)
                 if dependee in self.dependee_dic.keys():
                     dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
             self.class_dic[self.current_class] = dependee_dic
 
             self.current_class = None
-            #print('field_variables:', self.field_variables)
             self.field_variables = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
@@ -457,7 +446,6 @@ class StereotypeListener(JavaParserLabeledListener):
         method_name = ctx.IDENTIFIER().getText()
         list_of_objects = []
         current_exp1 = ctx.parentCtx
-        #print('current_exp1:', current_exp1.getText())
         if "expression" in dir(current_exp1):
             while current_exp1.expression() != None:
                 current_exp1 = current_exp1.expression()
@@ -490,8 +478,6 @@ class StereotypeListener(JavaParserLabeledListener):
                     current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
-            print(current_type, method_name)
-            print(self.methods_information)
             if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
                 return 'use_def'
             else:
@@ -553,7 +539,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            print('graph:', graph)
+            #print('graph:', graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -600,7 +586,6 @@ class ClassDiagram:
                 listener=listener,
                 t=tree
             )
-            #print(listener.get_file_info())
             file_info = listener.get_file_info()
             file_name = Path.get_file_name_from_path(file)
             for c in file_info:
@@ -642,7 +627,6 @@ class ClassDiagram:
             index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
 
         methods_information = self.__find_methods_information(files, index_dic)
-        #print(json.dumps(methods_information, sort_keys = True, indent = 4))
         print('Start setting stereotype . . .')
         for f in files:
             file_name = Path.get_file_name_from_path(f)
@@ -663,7 +647,6 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            #print('graph:', graph)
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():

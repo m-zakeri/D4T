@@ -15,12 +15,12 @@ class Complexity():
 
     def calculate_interaction_complexity(self, source, target):
         complexity = 1
-        print(source, target)
+        #print(source, target)
         for path in nx.all_simple_paths(self.CDG, source=source, target=target):
             complexity *= self.__calculate_path_complexity(path)
-            print('\t' ,path, self.__calculate_path_complexity(path))
-        print('\t' ,complexity)
-        print('-----------------------')
+            #print('\t' ,path, self.__calculate_path_complexity(path))
+        #print('\t' ,complexity)
+        #print('-----------------------')
         return complexity
 
     def __calculate_path_complexity(self, path):
@@ -57,15 +57,51 @@ class Complexity():
                 candidates.add(edge[1])
         return candidates
 
+    def get_matrix(self):
+        node_list = list(self.CDG.nodes)
+        no_nodes = len(node_list)
 
+        matrix = []
+        for s in range(no_nodes):
+            matrix.append([])
+            for d in range(no_nodes):
+                if self.CDG.nodes[s]['type'] == "normal" and self.CDG.nodes[d]['type'] == "normal":
+                    complexity = self.calculate_interaction_complexity(s, d)
+                    matrix[s].append(complexity)
+                else:
+                    matrix[s].append(None)
+        return matrix
+
+
+import config
+from utils import File
 
 if __name__ == "__main__":
-    cd = ClassDiagram()
-    cd.class_diagram_graph = test_class_diagram
+    #cd = ClassDiagram()
+    #cd.class_diagram_graph = test_class_diagram
     #cd.show(cd.class_diagram_graph)
 
-    test_CDG = cd.get_CFG()
+    #test_CDG = cd.get_CFG()
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
+    files = File.find_all_file(java_project_address, 'java')
+    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    cd = ClassDiagram()
+    cd.make_class_diagram(java_project_address, base_dirs, index_dic)
 
-    c = Complexity(test_CDG)
-    c.calculate_interaction_complexity(8,7)
+    cd.show(cd.class_diagram_graph)
+
+    #cd.load('class_diagram.gml')
+    cd.set_stereotypes(java_project_address, base_dirs, index_dic)
+    cd.save('class_diagram.gml')
+    cd.show(cd.class_diagram_graph)
+
+    CDG = cd.get_CFG()
+    cd.show(CDG)
+
+    c = Complexity(CDG)
+    #c.calculate_interaction_complexity(8,7)
+    matrix = c.get_matrix()
+    for i in matrix:
+        print(i)
 
