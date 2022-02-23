@@ -3,4 +3,3 @@
 *.json
 refactored_project/*
 venv/*
-class_index*.json
