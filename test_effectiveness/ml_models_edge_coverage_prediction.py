@@ -12,7 +12,6 @@ import datetime
 
 from matplotlib import pyplot as plt
 
-
 import pandas as pd
 import joblib
 from joblib import dump, load
@@ -33,6 +32,9 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, H
 from sklearn import linear_model, feature_selection
 from sklearn.gaussian_process import GaussianProcessRegressor, GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, RationalQuadratic, Exponentiation
+
+from imblearn.over_sampling import SMOTE, ADASYN
+from imblearn.combine import SMOTEENN, SMOTETomek
 
 
 class EdgeCoverageClassification:
@@ -55,7 +57,24 @@ class EdgeCoverageClassification:
                                                                                   test_size=0.25,
                                                                                   random_state=111,
                                                                                   )
+        print(self.X_train1)
+        print('Before resampling')
+        print('Number of covered edges', self.X_train1[self.y_train == 1].shape[0])
+        print('Number of uncovered edges', self.X_train1[self.y_train == 0].shape[0])
+        if skewness:
+            sampler = SMOTE(random_state=11)
+            sampler = ADASYN(random_state=11)
+            sampler = SMOTETomek(random_state=11)
+            sampler = SMOTEENN(random_state=11, )
+            self.X_train1, self.y_train = sampler.fit_resample(self.X_train1, self.y_train)
 
+            df2 = pd.DataFrame(self.X_train1)
+            df2['IsCovered'] = self.y_train
+            print('After resampling')
+            print('Number of covered edges', df2[df2['IsCovered'] == 1].shape[0])
+            print('Number of uncovered edges', df2[df2['IsCovered'] == 0].shape[0])
+
+        # quit()
         if selection_on:
             # -- Feature selection (For DS2)
             selector = feature_selection.SelectKBest(feature_selection.f_regression, k=10)
@@ -84,8 +103,6 @@ class EdgeCoverageClassification:
         self.X_train = self.scaler.transform(self.X_train1)
         self.X_test = self.scaler.transform(self.X_test1)
 
-
-
     def inference_model(self, model=None, model_path=None, predict_data_path=None):
         if model is None:
             model = joblib.load(model_path)
@@ -107,7 +124,7 @@ class EdgeCoverageClassification:
             f'Design edge coverage probability (edge test effectiveness probability) {mean_edge_coverage_probability}')
         df_new.to_csv(predict_data_path[:-4] + '_predicted.csv', index=False)
 
-    def evaluate_model(self, model=None, model_path=None):
+    def evaluate_model(self, model=None, model_path=None, binary_mode=True):
         if model is None:
             model = joblib.load(model_path)
         y_true, y_pred = self.y_test, model.predict(self.X_test)
@@ -128,6 +145,9 @@ class EdgeCoverageClassification:
 
         df['log_loss'] = [log_loss(y_true, y_score)]
 
+        if binary_mode:
+            # y_score = y_score.reshape(-1, 1)
+            y_score = y_score[:, 1]
         df['roc_auc_score_ovr_macro'] = [roc_auc_score(y_true, y_score, multi_class='ovr', average='macro')]
         df['roc_auc_score_ovr_micro'] = [roc_auc_score(y_true, y_score, multi_class='ovr', average='weighted')]
         df['roc_auc_score_ovo_macro'] = [roc_auc_score(y_true, y_score, multi_class='ovo', average='macro')]
@@ -238,7 +258,7 @@ class EdgeCoverageClassification:
         scoring = ['balanced_accuracy', ]
         cv = ShuffleSplit(n_splits=5, test_size=0.20, random_state=101)
         # Find the best model using the grid-search with the cross-validation
-        clf = GridSearchCV(clf_def, param_grid=parameters, scoring=scoring, cv=cv, n_jobs=7, refit='balanced_accuracy')
+        clf = GridSearchCV(clf_def, param_grid=parameters, scoring=scoring, cv=cv, n_jobs=1, refit='balanced_accuracy')
         clf.fit(X=self.X_train, y=self.y_train)
 
         print('Writing the grid-search results ...')
@@ -295,11 +315,11 @@ class EdgeCoverageClassification:
         self.evaluate_model(model=voting_classifier, model_path=model_path)
 
 
-def train(ds_no=1):
+def train(ds_no=2):
     # dataset_path = r'dataset_edges/66_openjms_EDGE.csv'
     dataset_path = r'dataset_merged/sf110_edges_binary.csv'
-    model_path = 'sklearn_models_edge_classify1/'
-    ecclf = EdgeCoverageClassification(df_path=dataset_path, selection_on=False)
+    model_path = 'sklearn_models_edge_classify2/'
+    ecclf = EdgeCoverageClassification(df_path=dataset_path, selection_on=False, skewness=True)
     ecclf.classify(model_path=f'{model_path}DTC1_DS{ds_no}.joblib', model_number=1)
     ecclf.classify(model_path=f'{model_path}RFC1_DS{ds_no}.joblib', model_number=2)
     # ecclf.classify(model_path=f'{model_path}GBC1_DS{ds_no}.joblib', model_number=3)
@@ -309,8 +329,6 @@ def train(ds_no=1):
     ecclf.classify(model_path=f'{model_path}NuSVC1_DS{ds_no}.joblib', model_number=7)
     ecclf.classify(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
     ecclf.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
-
-
 
 
 if __name__ == '__main__':
