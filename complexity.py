@@ -82,22 +82,22 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['javaproject']['path']
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    java_project_address = config.projects_info['xerces2j']['path']
+    base_dirs = config.projects_info['xerces2j']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
 
-    cd.show(cd.class_diagram_graph)
+    #cd.show(cd.class_diagram_graph)
 
     #cd.load('class_diagram.gml')
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')
-    cd.show(cd.class_diagram_graph)
+    #cd.show(cd.class_diagram_graph)
 
     CDG = cd.get_CFG()
-    cd.show(CDG)
+    #cd.show(CDG)
 
     c = Complexity(CDG)
     #c.calculate_interaction_complexity(8,7)

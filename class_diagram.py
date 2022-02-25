@@ -108,10 +108,13 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
     def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
+        self.imports_star.append(self.__package)
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         if self.__package == None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
+            if self.__package not in self.imports_star:
+                self.imports_star.append(self.__package)
         if self.current_class == None:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
@@ -196,6 +199,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.is_modify_itself = False
         self.__package = None
         self.in_sub_class = False
+        self.in_sub_method = False
 
     def get_file_info(self):
         return self.file_info
@@ -213,10 +217,11 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         else:
             self.in_sub_class = True
 
-    def exitInterfaceMethodDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
+    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_sub_class = False
+
         if not self.in_sub_class:
-            if self.current_class == ctx.IDENTIFIER().getText():
-                self.in_sub_class = False
             self.current_class = None
             self.attributes = {}
 
@@ -228,9 +233,10 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.in_sub_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_sub_class = False
+
         if not self.in_sub_class:
-            if self.current_class == ctx.IDENTIFIER().getText():
-                self.in_sub_class = False
             self.current_class = None
             self.attributes = {}
 
@@ -249,16 +255,24 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         if not self.in_sub_class:
-            self.current_method = ctx.IDENTIFIER().getText()
-            self.file_info[self.current_class]['methods'][self.current_method] = {}
+            if self.current_method == None:
+                self.current_method = ctx.IDENTIFIER().getText()
+                self.file_info[self.current_class]['methods'][self.current_method] = {}
+            else:
+                self.in_sub_method = True
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
         if not self.in_sub_class:
-            self.file_info[self.current_class]['methods'][self.current_method]['is_modify_itself'] = self.is_modify_itself
-            self.current_method = None
-            self.local_variables = {}
-            self.parameters = {}
-            self.is_modify_itself = False
+            if self.current_method == ctx.IDENTIFIER().getText():
+                self.in_sub_method = False
+
+            if not self.in_sub_method:
+                #print(self.current_class, self.current_method)
+                self.file_info[self.current_class]['methods'][self.current_method]['is_modify_itself'] = self.is_modify_itself
+                self.current_method = None
+                self.local_variables = {}
+                self.parameters = {}
+                self.is_modify_itself = False
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
         for vd in ctx.variableDeclarators().variableDeclarator():
@@ -478,10 +492,11 @@ class StereotypeListener(JavaParserLabeledListener):
                     current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
-            if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
-                return 'use_def'
-            else:
-                return 'use_consult'
+            if current_type in self.index_dic:
+                if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
+                    return 'use_def'
+                else:
+                    return 'use_consult'
 
 
     def __get_object_type(self, object):
@@ -685,8 +700,8 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    java_project_address = config.projects_info['factory-pattern-example']['path']
+    base_dirs = config.projects_info['factory-pattern-example']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
