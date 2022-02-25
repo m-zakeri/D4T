@@ -307,7 +307,8 @@ class EdgeCoverageClassification:
             [(f'HGBC1_DS{dataset_number}', clf1),
              (f'RFC1_DS{dataset_number}', clf2),
              (f'MLPC1_DS{dataset_number}', clf3)],
-            weights=[3. / 6., 2. / 6., 1. / 6.]
+            weights=[3. / 6., 2. / 6., 1. / 6.],
+            voting='soft'
         )
 
         voting_classifier.fit(self.X_train, self.y_train)
