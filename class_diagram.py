@@ -493,10 +493,11 @@ class StereotypeListener(JavaParserLabeledListener):
 
             # detect use type
             if current_type in self.index_dic:
-                if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
-                    return 'use_def'
-                else:
-                    return 'use_consult'
+                if method_name in self.methods_information[current_type]['methods']:
+                    if self.methods_information[current_type]['methods'][method_name]['is_modify_itself']:
+                        return 'use_def'
+                    else:
+                        return 'use_consult'
 
 
     def __get_object_type(self, object):
@@ -544,6 +545,7 @@ class ClassDiagram:
                 t=tree
             )
             # add node to class_diagram
+            print(type_listener.file_info)
             for c in type_listener.file_info:
                 index = index_dic[c]['index']
                 self.class_diagram_graph.add_node(index)
@@ -602,6 +604,7 @@ class ClassDiagram:
                 t=tree
             )
             file_info = listener.get_file_info()
+            print(file_info)
             file_name = Path.get_file_name_from_path(file)
             for c in file_info:
                 if listener.get_package() == None:
@@ -700,8 +703,8 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['factory-pattern-example']['path']
-    base_dirs = config.projects_info['factory-pattern-example']['base_dirs']
+    java_project_address = config.projects_info['xerces2j']['path']
+    base_dirs = config.projects_info['xerces2j']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

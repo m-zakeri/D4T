@@ -82,8 +82,8 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['xerces2j']['path']
-    base_dirs = config.projects_info['xerces2j']['base_dirs']
+    java_project_address = config.projects_info['factory-pattern-example']['path']
+    base_dirs = config.projects_info['factory-pattern-example']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
