@@ -15,12 +15,12 @@ class Complexity():
 
     def calculate_interaction_complexity(self, source, target):
         complexity = 1
-        #print(source, target)
+        has_path = False
         for path in nx.all_simple_paths(self.CDG, source=source, target=target):
+            has_path = True
             complexity *= self.__calculate_path_complexity(path)
-            #print('\t' ,path, self.__calculate_path_complexity(path))
-        #print('\t' ,complexity)
-        #print('-----------------------')
+        if not has_path:
+            complexity = -1
         return complexity
 
     def __calculate_path_complexity(self, path):
@@ -83,14 +83,14 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['commons-codec']['path']
+    base_dirs = config.projects_info['commons-codec']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
 
-    #cd.show(cd.class_diagram_graph)
+    cd.show(cd.class_diagram_graph)
 
     #cd.load('class_diagram.gml')
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     CDG = cd.get_CFG()
-    #cd.show(CDG)
+    cd.show(CDG)
 
     c = Complexity(CDG)
     #c.calculate_interaction_complexity(8,7)

@@ -65,6 +65,23 @@ class ClassTypeListener(JavaParserLabeledListener):
         if not self.in_nest_class:
             self.current_class = None
 
+    def enterEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.current_class == None:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            _type = 'enum'
+            self.file_info[self.current_class] = {'type':_type}
+        else:
+            self.in_nest_class = True
+
+    def exitEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_nest_class = False
+
+        if not self.in_nest_class:
+            self.current_class = None
+
 
 class ClassDiagramListener(JavaParserLabeledListener):
     def __init__(self, base_dirs, index_dic, file_name, file):
@@ -123,6 +140,32 @@ class ClassDiagramListener(JavaParserLabeledListener):
             self.in_nest_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_nest_class = False
+
+        if not self.in_nest_class:
+            # detect package and file of each instance
+            dependee_dic = {}
+            for dependee in self.class_dic[self.current_class].keys():
+                if dependee in self.dependee_dic.keys():
+                    dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
+            self.class_dic[self.current_class] = dependee_dic
+
+            self.current_class = None
+
+    def enterEnumDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+            if self.__package not in self.imports_star:
+                self.imports_star.append(self.__package)
+        if self.current_class == None:
+            self.class_list.append(ctx.IDENTIFIER().getText())
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            self.class_dic[self.current_class] = {}
+        else:
+            self.in_nest_class = True
+
+    def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         if self.current_class == ctx.IDENTIFIER().getText():
             self.in_nest_class = False
 
@@ -233,6 +276,21 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.in_sub_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.current_class == ctx.IDENTIFIER().getText():
+            self.in_sub_class = False
+
+        if not self.in_sub_class:
+            self.current_class = None
+            self.attributes = {}
+
+    def enterEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.current_class == None:
+            self.current_class = ctx.IDENTIFIER().getText()
+            self.file_info[self.current_class] = {'is_class':True, 'attributes':{}, 'methods':{}}
+        else:
+            self.in_sub_class = True
+
+    def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         if self.current_class == ctx.IDENTIFIER().getText():
             self.in_sub_class = False
 

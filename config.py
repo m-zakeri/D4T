@@ -12,12 +12,12 @@ projects_info['10_water-simulator']['path'] = java_project_address
 projects_info['10_water-simulator']['base_dirs'] = base_dirs
 
 #commons-codec
-projects_info['10_water-simulator'] = {}
-java_project_address = BASE_DIR + 'refactored_project\\10_water-simulator\\src\\main\\java'
+projects_info['commons-codec'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\commons-codec\\src\\main\\java'
 base_dirs = []
-base_dirs.append(BASE_DIR + 'refactored_project\\10_water-simulator\\src\\main\\java\\')
-projects_info['10_water-simulator']['path'] = java_project_address
-projects_info['10_water-simulator']['base_dirs'] = base_dirs
+base_dirs.append(BASE_DIR + 'refactored_project\\commons-codec\\src\\main\\java\\')
+projects_info['commons-codec']['path'] = java_project_address
+projects_info['commons-codec']['base_dirs'] = base_dirs
 
 # factory-pattern-example
 projects_info['factory-pattern-example'] = {}

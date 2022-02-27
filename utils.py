@@ -10,15 +10,12 @@ import json
 class ClassDiagramListener(JavaParserLabeledListener):
     def __init__(self):
         self.__classes = []
-        self.__interfaces = []
         self.__package = None
         self.__current_class = None
+        self.__in_nest_class = False
 
     def get_classes(self):
         return self.__classes
-
-    def get_interfaces(self):
-        return self.__interfaces
 
     def get_package(self):
         return self.__package
@@ -30,12 +27,43 @@ class ClassDiagramListener(JavaParserLabeledListener):
         if self.__current_class == None:
             self.__current_class = ctx.IDENTIFIER().getText()
             self.__classes.append(ctx.IDENTIFIER().getText())
+        else:
+            self.__in_nest_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        self.__current_class = None
+        if self.__current_class == ctx.IDENTIFIER().getText():
+            self.__in_nest_class = False
 
-    def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        self.__interfaces.append(ctx.IDENTIFIER().getText())
+        if not self.__in_nest_class:
+            self.__current_class = None
+
+    def enterInterfaceDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.__current_class == None:
+            self.__current_class = ctx.IDENTIFIER().getText()
+            self.__classes.append(ctx.IDENTIFIER().getText())
+        else:
+            self.__in_nest_class = True
+
+    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.__current_class == ctx.IDENTIFIER().getText():
+            self.__in_nest_class = False
+
+        if not self.__in_nest_class:
+            self.__current_class = None
+
+    def enterEnumDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.__current_class == None:
+            self.__current_class = ctx.IDENTIFIER().getText()
+            self.__classes.append(ctx.IDENTIFIER().getText())
+        else:
+            self.__in_nest_class = True
+
+    def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+        if self.__current_class == ctx.IDENTIFIER().getText():
+            self.__in_nest_class = False
+
+        if not self.__in_nest_class:
+            self.__current_class = None
 
 class File:
     @staticmethod
@@ -73,7 +101,7 @@ class File:
                 package = Path.get_default_package(base_java_dirs, f)
             else:
                 package = listener.get_package()
-            for c in listener.get_classes() + listener.get_interfaces():
+            for c in listener.get_classes():
                 index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
                 index += 1
 
