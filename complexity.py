@@ -60,13 +60,14 @@ class Complexity():
     def get_matrix(self):
         node_list = list(self.CDG.nodes)
         no_nodes = len(node_list)
+        node_list.sort()
 
         matrix = []
         for s in range(no_nodes):
             matrix.append([])
             for d in range(no_nodes):
-                if self.CDG.nodes[s]['type'] == "normal" and self.CDG.nodes[d]['type'] == "normal":
-                    complexity = self.calculate_interaction_complexity(s, d)
+                if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]]['type'] == "normal":
+                    complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
                     matrix[s].append(complexity)
                 else:
                     matrix[s].append(None)
@@ -82,8 +83,8 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['factory-pattern-example']['path']
-    base_dirs = config.projects_info['factory-pattern-example']['base_dirs']
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

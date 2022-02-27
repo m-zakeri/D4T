@@ -651,8 +651,9 @@ class ClassDiagram:
             print('\t' + f)
             try:
                 stream = FileStream(f)
-            except:
+            except Exception as e:
                 print('\t' + f, 'can not read')
+                print(e)
                 continue
             lexer = JavaLexer(stream)
             tokens = CommonTokenStream(lexer)
@@ -703,8 +704,8 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['xerces2j']['path']
-    base_dirs = config.projects_info['xerces2j']['base_dirs']
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

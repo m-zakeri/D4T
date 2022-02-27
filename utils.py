@@ -55,8 +55,9 @@ class File:
             file_name = Path.get_file_name_from_path(f)
             try:
                 stream = FileStream(f)
-            except:
+            except Exception as e:
                 print(f, 'can not read')
+                print(e)
                 continue
             lexer = JavaLexer(stream)
             tokens = CommonTokenStream(lexer)
