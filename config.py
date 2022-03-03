@@ -19,6 +19,14 @@ base_dirs.append(BASE_DIR + 'refactored_project\\commons-codec\\src\\main\\java\
 projects_info['commons-codec']['path'] = java_project_address
 projects_info['commons-codec']['base_dirs'] = base_dirs
 
+#ant
+projects_info['ant'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\ant\\src\\main'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\ant\\src\\main\\')
+projects_info['ant']['path'] = java_project_address
+projects_info['ant']['base_dirs'] = base_dirs
+
 # factory-pattern-example
 projects_info['factory-pattern-example'] = {}
 java_project_address = BASE_DIR + 'refactored_project\\factory-pattern-example\\'

@@ -10,78 +10,6 @@ import json
 from utils import File, Path
 import config
 
-class ClassTypeListener(JavaParserLabeledListener):
-    def __init__(self, base_dirs, file_name, file):
-        self.file_info = {}
-        self.current_class = None
-        self.__package = None
-        self.in_nest_class = False
-        self.base_dirs = base_dirs
-        self.file_name = file_name
-        self.file = file
-
-    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
-        self.__package = ctx.qualifiedName().getText()
-
-    def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if self.__package == None:
-            self.__package = Path.get_default_package(self.base_dirs, self.file)
-        if self.current_class == None:
-            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
-            type_declaration = ctx.parentCtx
-            _type = None
-            if type_declaration.classOrInterfaceModifier() != None:
-                if len(type_declaration.classOrInterfaceModifier()) == 1:
-                    if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
-                        _type = 'abstract'
-
-            if _type == None:
-                _type = 'normal'
-            self.file_info[self.current_class] = {'type':_type}
-        else:
-            self.in_nest_class = True
-
-    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
-
-        if not self.in_nest_class:
-            self.current_class = None
-
-    def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        if self.__package == None:
-            self.__package = Path.get_default_package(self.base_dirs, self.file)
-        if self.current_class == None:
-            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
-            _type = 'interface'
-            self.file_info[self.current_class] = {'type':_type}
-        else:
-            self.in_nest_class = True
-
-    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
-
-        if not self.in_nest_class:
-            self.current_class = None
-
-    def enterEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        if self.__package == None:
-            self.__package = Path.get_default_package(self.base_dirs, self.file)
-        if self.current_class == None:
-            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
-            _type = 'enum'
-            self.file_info[self.current_class] = {'type':_type}
-        else:
-            self.in_nest_class = True
-
-    def exitEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
-
-        if not self.in_nest_class:
-            self.current_class = None
-
 
 class ClassDiagramListener(JavaParserLabeledListener):
     def __init__(self, base_dirs, index_dic, file_name, file):
@@ -100,7 +28,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.file_name = file_name
         self.class_list = []
         self.file = file
-        self.in_nest_class = False
+        self.__depth = 0
 
     def get_package(self):
         return self.__package
@@ -120,63 +48,53 @@ class ClassDiagramListener(JavaParserLabeledListener):
             if index_dic_dependee in self.index_dic.keys():
                 return i
 
-        return None
-
-
     def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
         self.imports_star.append(self.__package)
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        self.__depth += 1
         if self.__package == None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
             if self.__package not in self.imports_star:
                 self.imports_star.append(self.__package)
-        if self.current_class == None:
+        if self.__depth == 1:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             self.class_dic[self.current_class] = {}
-        else:
-            self.in_nest_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
+        self.__depth -= 1
 
-        if not self.in_nest_class:
+        if self.__depth == 0:
             # detect package and file of each instance
             dependee_dic = {}
             for dependee in self.class_dic[self.current_class].keys():
                 if dependee in self.dependee_dic.keys():
                     dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
             self.class_dic[self.current_class] = dependee_dic
-
             self.current_class = None
 
     def enterEnumDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        self.__depth += 1
         if self.__package == None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
             if self.__package not in self.imports_star:
                 self.imports_star.append(self.__package)
-        if self.current_class == None:
+        if self.__depth == 1:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             self.class_dic[self.current_class] = {}
-        else:
-            self.in_nest_class = True
 
     def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
-
-        if not self.in_nest_class:
+        self.__depth -= 1
+        if self.__depth == 0:
             # detect package and file of each instance
             dependee_dic = {}
             for dependee in self.class_dic[self.current_class].keys():
                 if dependee in self.dependee_dic.keys():
                     dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
             self.class_dic[self.current_class] = dependee_dic
-
             self.current_class = None
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
@@ -241,8 +159,8 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.parameters = {}
         self.is_modify_itself = False
         self.__package = None
-        self.in_sub_class = False
-        self.in_sub_method = False
+        self.__method_depth = 0
+        self.__class_depth = 0
 
     def get_file_info(self):
         return self.file_info
@@ -254,57 +172,51 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
-        if self.current_class == None:
+        self.__class_depth += 1
+        if self.__class_depth == 1:
             self.current_class = ctx.IDENTIFIER().getText()
             self.file_info[self.current_class] = {'is_class':False, 'attributes':{}, 'methods':{}}
-        else:
-            self.in_sub_class = True
 
     def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_sub_class = False
-
-        if not self.in_sub_class:
+        self.__class_depth -= 1
+        if self.__class_depth == 0:
             self.current_class = None
             self.attributes = {}
 
     def enterClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == None:
+        self.__class_depth += 1
+        if self.__class_depth == 1:
             self.current_class = ctx.IDENTIFIER().getText()
             self.file_info[self.current_class] = {'is_class':True, 'attributes':{}, 'methods':{}}
-        else:
-            self.in_sub_class = True
+
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_sub_class = False
-
-        if not self.in_sub_class:
+        self.__class_depth -= 1
+        if self.__class_depth == 0:
             self.current_class = None
             self.attributes = {}
 
     def enterEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == None:
+        self.__class_depth += 1
+        if self.__class_depth == 1:
             self.current_class = ctx.IDENTIFIER().getText()
             self.file_info[self.current_class] = {'is_class':True, 'attributes':{}, 'methods':{}}
-        else:
-            self.in_sub_class = True
 
     def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_sub_class = False
-
-        if not self.in_sub_class:
+        self.__class_depth -= 1
+        if self.__class_depth == 0:
             self.current_class = None
             self.attributes = {}
 
     def enterInterfaceMethodDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
-        if not self.in_sub_class:
+        if self.__class_depth == 1:
+            self.__method_depth += 1
             self.current_method = ctx.IDENTIFIER().getText()
             self.file_info[self.current_class]['methods'][self.current_method] = {}
 
     def exitInterfaceMethodDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
-        if not self.in_sub_class:
+        if self.__class_depth == 1:
+            self.__method_depth -= 1
             self.file_info[self.current_class]['methods'][self.current_method]['is_modify_itself'] = None
             self.current_method = None
             self.local_variables = {}
@@ -312,20 +224,16 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.is_modify_itself = False
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        if not self.in_sub_class:
-            if self.current_method == None:
+        if self.__class_depth == 1:
+            self.__method_depth += 1
+            if self.__method_depth == 1:
                 self.current_method = ctx.IDENTIFIER().getText()
                 self.file_info[self.current_class]['methods'][self.current_method] = {}
-            else:
-                self.in_sub_method = True
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        if not self.in_sub_class:
-            if self.current_method == ctx.IDENTIFIER().getText():
-                self.in_sub_method = False
-
-            if not self.in_sub_method:
-                #print(self.current_class, self.current_method)
+        if self.__class_depth == 1:
+            self.__method_depth -= 1
+            if self.__method_depth == 0:
                 self.file_info[self.current_class]['methods'][self.current_method]['is_modify_itself'] = self.is_modify_itself
                 self.current_method = None
                 self.local_variables = {}
@@ -408,7 +316,8 @@ class StereotypeListener(JavaParserLabeledListener):
         self.local_variables = {}
         self.field_variables = {}
         self.formal_parameters = {}
-        self.in_nest_class = False
+        self.__class_depth = 0
+        self.__method_depth = 0
 
     def get_package(self):
         return self.__package
@@ -435,20 +344,17 @@ class StereotypeListener(JavaParserLabeledListener):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        self.__class_depth += 1
         if self.__package == None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
-        if self.current_class == None:
+        if self.__class_depth == 1:
             self.class_list.append(ctx.IDENTIFIER().getText())
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             self.class_dic[self.current_class] = {}
-        else:
-            self.in_nest_class = True
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.current_class == ctx.IDENTIFIER().getText():
-            self.in_nest_class = False
-
-        if not self.in_nest_class:
+        self.__class_depth -= 1
+        if self.__class_depth == 0:
             # detect package and file of each instance
             dependee_dic = {}
             for dependee in self.class_dic[self.current_class].keys():
@@ -460,12 +366,16 @@ class StereotypeListener(JavaParserLabeledListener):
             self.field_variables = {}
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        self.current_method = ctx.IDENTIFIER().getText()
+        self.__method_depth += 1
+        if self.__method_depth == 1:
+            self.current_method = ctx.IDENTIFIER().getText()
 
     def exitMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
-        self.current_method = None
-        self.local_variables = {}
-        self.formal_parameters = {}
+        self.__method_depth -= 1
+        if self.__method_depth == 0:
+            self.current_method = None
+            self.local_variables = {}
+            self.formal_parameters = {}
 
 
     def enterImportDeclaration(self, ctx:JavaParserLabeled.ImportDeclarationContext):
@@ -581,6 +491,12 @@ class ClassDiagram:
         if index_dic == None:
             index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
 
+        # add nodes to class_diagram
+        for c in index_dic:
+            index = index_dic[c]['index']
+            self.class_diagram_graph.add_node(index)
+            self.class_diagram_graph.nodes[index]['type'] = index_dic[c]['type']
+
         print('Start making class diagram . . .')
         for f in files:
             file_name = Path.get_file_name_from_path(f)
@@ -594,20 +510,8 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            type_listener = ClassTypeListener(base_dirs, file_name, f)
             listener = ClassDiagramListener(base_dirs, index_dic, file_name, f)
             walker = ParseTreeWalker()
-
-            walker.walk(
-                listener=type_listener,
-                t=tree
-            )
-            # add node to class_diagram
-            print(type_listener.file_info)
-            for c in type_listener.file_info:
-                index = index_dic[c]['index']
-                self.class_diagram_graph.add_node(index)
-                self.class_diagram_graph.nodes[index]['type'] = type_listener.file_info[c]['type']
 
             walker.walk(
                 listener=listener,
@@ -615,6 +519,7 @@ class ClassDiagram:
             )
             graph = listener.class_dic
             #print('graph:', graph)
+            # add edges to class_diagram
             for c in graph:
                 for i in graph[c]:
                     if i in index_dic.keys():
@@ -762,16 +667,17 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['xerces2j']['path']
+    base_dirs = config.projects_info['xerces2j']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
 
     cd.show(cd.class_diagram_graph)
-
     #cd.load('class_diagram.gml')
+    cd.save('class_diagram.gml')
+
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)

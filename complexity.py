@@ -20,7 +20,7 @@ class Complexity():
             has_path = True
             complexity *= self.__calculate_path_complexity(path)
         if not has_path:
-            complexity = -1
+            complexity = None
         return complexity
 
     def __calculate_path_complexity(self, path):
@@ -83,13 +83,13 @@ if __name__ == "__main__":
     #cd.show(cd.class_diagram_graph)
 
     #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['commons-codec']['path']
-    base_dirs = config.projects_info['commons-codec']['base_dirs']
+    java_project_address = config.projects_info['ant']['path']
+    base_dirs = config.projects_info['ant']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
     cd.make_class_diagram(java_project_address, base_dirs, index_dic)
-
+    cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
     #cd.load('class_diagram.gml')

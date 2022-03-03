@@ -7,63 +7,66 @@ import os
 import json
 
 
-class ClassDiagramListener(JavaParserLabeledListener):
-    def __init__(self):
-        self.__classes = []
+class ClassTypeListener(JavaParserLabeledListener):
+    def __init__(self, base_dirs, file_name, file):
+        self.file_info = {}
+        self.current_class = None
         self.__package = None
-        self.__current_class = None
-        self.__in_nest_class = False
-
-    def get_classes(self):
-        return self.__classes
-
-    def get_package(self):
-        return self.__package
+        self.__depth = 0
+        self.base_dirs = base_dirs
+        self.file_name = file_name
+        self.file = file
 
     def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == None:
-            self.__current_class = ctx.IDENTIFIER().getText()
-            self.__classes.append(ctx.IDENTIFIER().getText())
-        else:
-            self.__in_nest_class = True
+        self.__depth += 1
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.__depth == 1:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            type_declaration = ctx.parentCtx
+            _type = 'normal'
+            if type_declaration.classOrInterfaceModifier() != None:
+                if len(type_declaration.classOrInterfaceModifier()) == 1:
+                    if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
+                        _type = 'abstract'
+
+            self.file_info[self.current_class] = {'type':_type}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == ctx.IDENTIFIER().getText():
-            self.__in_nest_class = False
+        self.__depth -= 1
+        if self.__depth == 0:
+            self.current_class = None
 
-        if not self.__in_nest_class:
-            self.__current_class = None
+    def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        self.__depth += 1
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.__depth == 1:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            _type = 'interface'
+            self.file_info[self.current_class] = {'type':_type}
 
-    def enterInterfaceDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == None:
-            self.__current_class = ctx.IDENTIFIER().getText()
-            self.__classes.append(ctx.IDENTIFIER().getText())
-        else:
-            self.__in_nest_class = True
+    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        self.__depth -= 1
+        if self.__depth == 0:
+            self.current_class = None
 
-    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == ctx.IDENTIFIER().getText():
-            self.__in_nest_class = False
+    def enterEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        self.__depth += 1
+        if self.__package == None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+        if self.__depth == 1:
+            self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
+            _type = 'enum'
+            self.file_info[self.current_class] = {'type':_type}
 
-        if not self.__in_nest_class:
-            self.__current_class = None
-
-    def enterEnumDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == None:
-            self.__current_class = ctx.IDENTIFIER().getText()
-            self.__classes.append(ctx.IDENTIFIER().getText())
-        else:
-            self.__in_nest_class = True
-
-    def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
-        if self.__current_class == ctx.IDENTIFIER().getText():
-            self.__in_nest_class = False
-
-        if not self.__in_nest_class:
-            self.__current_class = None
+    def exitEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+        self.__depth -= 1
+        if self.__depth == 0:
+            self.current_class = None
 
 class File:
     @staticmethod
@@ -91,18 +94,14 @@ class File:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = ClassDiagramListener()
+            listener = ClassTypeListener(base_java_dirs, file_name, f)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
                 t=tree
             )
-            if listener.get_package() == None:
-                package = Path.get_default_package(base_java_dirs, f)
-            else:
-                package = listener.get_package()
-            for c in listener.get_classes():
-                index_dic[package + "-" + file_name + "-" + c] = {'index':index, 'path':f}
+            for c in listener.file_info:
+                index_dic[c] = {'index':index, 'path':f, 'type':listener.file_info[c]['type']}
                 index += 1
 
         with open(save_dir, "w") as write_file:
