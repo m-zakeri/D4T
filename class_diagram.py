@@ -29,6 +29,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.class_list = []
         self.file = file
         self.__depth = 0
+        self.relations = []
 
     def get_package(self):
         return self.__package
@@ -65,14 +66,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.__depth -= 1
-
         if self.__depth == 0:
-            # detect package and file of each instance
-            dependee_dic = {}
-            for dependee in self.class_dic[self.current_class].keys():
-                if dependee in self.dependee_dic.keys():
-                    dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
-            self.class_dic[self.current_class] = dependee_dic
             self.current_class = None
 
     def enterEnumDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
@@ -89,12 +83,6 @@ class ClassDiagramListener(JavaParserLabeledListener):
     def exitEnumDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.__depth -= 1
         if self.__depth == 0:
-            # detect package and file of each instance
-            dependee_dic = {}
-            for dependee in self.class_dic[self.current_class].keys():
-                if dependee in self.dependee_dic.keys():
-                    dependee_dic[self.dependee_dic[dependee]] = self.class_dic[self.current_class][dependee]
-            self.class_dic[self.current_class] = dependee_dic
             self.current_class = None
 
     def enterMethodDeclaration(self, ctx:JavaParserLabeled.MethodDeclarationContext):
@@ -126,6 +114,18 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 self.current_relationship = 'create'
 
             dependee = text[:-1]
+            self.relations.append((self.current_class, dependee, self.current_relationship))
+
+    # this method is for detecting interface relationships
+    def enterTypeDeclaration(self, ctx:JavaParserLabeled.TypeDeclarationContext):
+        if ctx.classDeclaration() != None:
+            if ctx.classDeclaration().IMPLEMENTS() != None:
+                self.no_implements = len(ctx.classDeclaration().typeList().typeType())
+            if ctx.classDeclaration().EXTENDS() != None:
+                self.has_extends = True
+
+    def exitCompilationUnit(self, ctx:JavaParserLabeled.CompilationUnitContext):
+        for current_class, dependee, current_relationship in self.relations:
             if not (dependee in self.dependee_dic.keys()):
                 if dependee in self.class_list:
                     file_name = self.file_name
@@ -136,16 +136,15 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
-            self.class_dic[self.current_class][dependee] = self.current_relationship
+            self.class_dic[current_class][dependee] = current_relationship
 
-
-    # this method is for detecting interface relationships
-    def enterTypeDeclaration(self, ctx:JavaParserLabeled.TypeDeclarationContext):
-        if ctx.classDeclaration() != None:
-            if ctx.classDeclaration().IMPLEMENTS() != None:
-                self.no_implements = len(ctx.classDeclaration().typeList().typeType())
-            if ctx.classDeclaration().EXTENDS() != None:
-                self.has_extends = True
+        for current_class in self.class_dic:
+            # detect package and file of each instance
+            dependee_dic = {}
+            for dependee in self.class_dic[current_class].keys():
+                if dependee in self.dependee_dic.keys():
+                    dependee_dic[self.dependee_dic[dependee]] = self.class_dic[current_class][dependee]
+            self.class_dic[current_class] = dependee_dic
 
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
@@ -524,7 +523,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            #print('graph:', graph)
+            print('graph:', graph)
             # add edges to class_diagram
             for c in graph:
                 for i in graph[c]:
