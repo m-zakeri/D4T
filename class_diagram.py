@@ -423,6 +423,12 @@ class StereotypeListener(JavaParserLabeledListener):
                 identifier = i.variableDeclaratorId().getText()
                 self.local_variables[identifier] = _type
 
+    def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
+        current_exp1 = ctx.expression(0)
+        while "expression" in dir(current_exp1):
+            current_exp1 = current_exp1.getChild(0)
+        dependee = self.__get_object_type(current_exp1.getText())
+        self.class_dic[self.current_class][dependee] = 'use_def'
 
     def enterMethodCall0(self, ctx:JavaParserLabeled.MethodCall0Context):
         method_name = ctx.IDENTIFIER().getText()
@@ -546,6 +552,24 @@ class ClassDiagram:
     def dfs(self):
         return nx.dfs_postorder_nodes(self.class_diagram_graph)
 
+    def __get_extend_graph(self):
+        graph = {}
+        for edge in self.class_diagram_graph.edges:
+            if self.class_diagram_graph.edges[edge]['relation_type'] == "extends":
+                if edge[1] in graph:
+                    graph[edge[1]].append(edge[0])
+                else:
+                    graph[edge[1]] = [edge[0]]
+        return graph
+
+
+    def __find_extend_roots(self):
+        pass
+
+    def __handle_extends_methods_information(self, method_information):
+        print(self.__get_extend_graph())
+        return method_information
+
     def __find_methods_information(self, files, index_dic):
         print('start finding methods information . . .')
         methods_info = {}
@@ -577,6 +601,7 @@ class ClassDiagram:
                 #class_index = index_dic[]['index']
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
         methods_info = self.__calculate_interface_modification_type(methods_info, index_dic)
+        methods_info = self.__handle_extends_methods_information(methods_info)
         print("finish finding methods information !")
         return methods_info
 
@@ -667,8 +692,8 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['xerces2j']['path']
-    base_dirs = config.projects_info['xerces2j']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()

@@ -78,13 +78,20 @@ import config
 from utils import File
 
 if __name__ == "__main__":
-    #cd = ClassDiagram()
-    #cd.class_diagram_graph = test_class_diagram
-    #cd.show(cd.class_diagram_graph)
+    '''
+    cd = ClassDiagram()
+    cd.class_diagram_graph = test_class_diagram
+    cd.show(cd.class_diagram_graph)
 
-    #test_CDG = cd.get_CFG()
-    java_project_address = config.projects_info['ant']['path']
-    base_dirs = config.projects_info['ant']['base_dirs']
+    test_CDG = cd.get_CFG()
+    c = Complexity(test_CDG)
+    matrix = c.get_matrix()
+    for i in matrix:
+        print(i)
+    '''
+
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram()
@@ -101,8 +108,10 @@ if __name__ == "__main__":
     cd.show(CDG)
 
     c = Complexity(CDG)
-    #c.calculate_interaction_complexity(8,7)
+
     matrix = c.get_matrix()
     for i in matrix:
         print(i)
+    print(c.calculate_interaction_complexity(2, 3))
+
 
