@@ -301,22 +301,27 @@ class EdgeCoverageClassification:
 
     def vote(self, model_path=None, dataset_number=1):
         print('Load and combine trained classifiers:')
-        clf1 = load(f'sklearn_models_edge_classify2/HGBC1_DS{dataset_number}.joblib')
-        clf2 = load(f'sklearn_models_edge_classify2/RFC1_DS{dataset_number}.joblib')
+        clf0 = load(f'sklearn_models_edge_classify2/DTC1_DS{dataset_number}.joblib')
+        clf1 = load(f'sklearn_models_edge_classify2/RFC1_DS{dataset_number}.joblib')
+        clf2 = load(f'sklearn_models_edge_classify2/HGBC1_DS{dataset_number}.joblib')
         clf3 = load(f'sklearn_models_edge_classify2/MLPC1_DS{dataset_number}.joblib')
         # clf4 = load(f'sklearn_models_edge_classify_1/SGDC1_DS{dataset_number}.joblib')
 
         voting_classifier = VotingClassifier(
-            [(f'HGBC1_DS{dataset_number}', clf1),
-             (f'RFC1_DS{dataset_number}', clf2),
-             (f'MLPC1_DS{dataset_number}', clf3)],
-            weights=[3. / 6., 2. / 6., 1. / 6.],
+            [
+                (f'DTC1_DS{dataset_number}', clf0),
+                (f'RFC1_DS{dataset_number}', clf1),
+                (f'HGBC1_DS{dataset_number}', clf2),
+                (f'MLPC1_DS{dataset_number}', clf3)
+            ],
+            weights=[0.3, 0.4, 0.2, 0.1],
             voting='soft'
         )
 
         voting_classifier.fit(self.X_train, self.y_train)
         dump(voting_classifier, model_path)
         self.evaluate_model(model=voting_classifier, model_path=model_path)
+        self.compute_confusion_matrix(model=voting_classifier, model_path=model_path)
 
 
 def train(ds_no=2):
@@ -324,16 +329,36 @@ def train(ds_no=2):
     dataset_path = r'dataset_merged/sf110_edges_binary.csv'
     model_path = 'sklearn_models_edge_classify2/'
     ecclf = EdgeCoverageClassification(df_path=dataset_path, selection_on=False, skewness=True)
-    ecclf.classify(model_path=f'{model_path}DTC1_DS{ds_no}.joblib', model_number=1)
-    ecclf.classify(model_path=f'{model_path}RFC1_DS{ds_no}.joblib', model_number=2)
+    # ecclf.classify(model_path=f'{model_path}DTC1_DS{ds_no}.joblib', model_number=1)
+    # ecclf.classify(model_path=f'{model_path}RFC1_DS{ds_no}.joblib', model_number=2)
     # ecclf.classify(model_path=f'{model_path}GBC1_DS{ds_no}.joblib', model_number=3)
-    ecclf.classify(model_path=f'{model_path}HGBC1_DS{ds_no}.joblib', model_number=4)
+    # ecclf.classify(model_path=f'{model_path}HGBC1_DS{ds_no}.joblib', model_number=4)
     # ecclf.classify(model_path=f'{model_path}SGDC1_DS{ds_no}.joblib', model_number=5)
-    ecclf.classify(model_path=f'{model_path}MLPC1_DS{ds_no}.joblib', model_number=6)
-    ecclf.classify(model_path=f'{model_path}NuSVC1_DS{ds_no}.joblib', model_number=7)
-    ecclf.classify(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
-    ecclf.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
+    # ecclf.classify(model_path=f'{model_path}MLPC1_DS{ds_no}.joblib', model_number=6)
+    # ecclf.classify(model_path=f'{model_path}NuSVC1_DS{ds_no}.joblib', model_number=7)
+    # ecclf.classify(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
+    ecclf.vote(model_path=f'{model_path}VR2_DS{ds_no}.joblib', dataset_number=2)
+
+
+def compute_permutation_importance(model_path=None, model=None, n_repeats=31, scoring='balanced_accuracy'):
+    dataset_path = r'dataset_merged/sf110_edges_binary.csv'
+    model_path = 'sklearn_models_edge_classify2/RFC1_DS2.joblib'
+    ecclf = EdgeCoverageClassification(df_path=dataset_path, selection_on=False, skewness=True)
+    if model is None:
+        model = load(model_path)
+    result = permutation_importance(model,  ecclf.X_test,  ecclf.y_test,
+                                    scoring=scoring,
+                                    n_repeats=n_repeats,
+                                    random_state=71,
+                                    n_jobs=2)
+    perm_sorted_idx = result.importances_mean.argsort()
+    result_top_features = result.importances[perm_sorted_idx].T
+    print('Top 15 metrics:\n', result_top_features[:, -15:])
+    df1 = pd.DataFrame(data=result_top_features, columns=ecclf.X_test1.columns[perm_sorted_idx])
+    df1.to_csv(f'vc_model_feature_importance_{scoring}_{n_repeats}.csv', index=False)
+    print('Finished.')
 
 
 if __name__ == '__main__':
-    train()
+    # train()
+    compute_permutation_importance()
