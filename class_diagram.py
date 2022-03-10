@@ -492,22 +492,30 @@ class StereotypeListener(JavaParserLabeledListener):
 
 
 class ClassDiagram:
-    def __init__(self):
+    def __init__(self, java_project_address, base_dirs, index_dic=None):
+        print(java_project_address)
+        self.java_project_address = java_project_address
+        self.base_dirs = base_dirs
+        if index_dic == None:
+            files = File.find_all_file(self.java_project_address, 'java')
+            self.index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+        else:
+            self.index_dic = index_dic
+
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
         nx.set_node_attributes(self.class_diagram_graph, ['normal', 'abstract', 'interface'], "type")
 
-    def make_class_diagram(self, java_project_address, base_dirs, index_dic=None):
-        files = File.find_all_file(java_project_address, 'java')
-        if index_dic == None:
-            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    def make_class_diagram(self):
+        print(self.java_project_address)
+        files = File.find_all_file(self.java_project_address, 'java')
 
         # add nodes to class_diagram
-        for c in index_dic:
-            index = index_dic[c]['index']
+        for c in self.index_dic:
+            index = self.index_dic[c]['index']
             self.class_diagram_graph.add_node(index)
-            self.class_diagram_graph.nodes[index]['type'] = index_dic[c]['type']
+            self.class_diagram_graph.nodes[index]['type'] = self.index_dic[c]['type']
 
         print('Start making class diagram . . .')
         for f in files:
@@ -522,7 +530,7 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = ClassDiagramListener(base_dirs, index_dic, file_name, f)
+            listener = ClassDiagramListener(self.base_dirs, self.index_dic, file_name, f)
             walker = ParseTreeWalker()
 
             walker.walk(
@@ -534,9 +542,9 @@ class ClassDiagram:
             # add edges to class_diagram
             for c in graph:
                 for i in graph[c]:
-                    if i in index_dic.keys():
-                        n1 = index_dic[c]['index']
-                        n2 = index_dic[i]['index']
+                    if i in self.index_dic.keys():
+                        n1 = self.index_dic[c]['index']
+                        n2 = self.index_dic[i]['index']
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph.add_edge(n1, n2)
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
@@ -546,8 +554,8 @@ class ClassDiagram:
         nx.write_gml(self.class_diagram_graph, address)
 
     def save_index(self, address):
-        with open(address, 'w', encoding='UTF8') as f:
-            pass
+        with open(address, 'w', encoding='utf-8') as f:
+            json.dump(self.index_dic, f, ensure_ascii=False, indent=4)
 
     def load(self, address):
         self.class_diagram_graph = nx.read_gml(address)
@@ -598,10 +606,10 @@ class ClassDiagram:
                     method_info[index_list[parent]]['methods'][method]
         return method_info
 
-    def __handle_extends_methods_information(self, method_information, index_dic):
+    def __handle_extends_methods_information(self, method_information):
         extends_graph = self.__get_extend_graph()
         roots = self.__find_extend_roots(extends_graph)
-        index_list = list(index_dic.keys())
+        index_list = list(self.index_dic.keys())
         print(extends_graph)
         print(roots)
         q = queue.Queue()
@@ -617,10 +625,9 @@ class ClassDiagram:
                                                                                    method_information,
                                                                                    index_list)
                     q.put(child)
-
         return method_information
 
-    def __find_methods_information(self, files, index_dic):
+    def __find_methods_information(self, files):
         print('start finding methods information . . .')
         methods_info = {}
         for file in files:
@@ -651,22 +658,22 @@ class ClassDiagram:
                 #class_index = index_dic[]['index']
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
         print(methods_info)
-        methods_info = self.__handle_extends_methods_information(methods_info, index_dic)
-        methods_info = self.__calculate_interface_modification_type(methods_info, index_dic)
+        methods_info = self.__handle_extends_methods_information(methods_info)
+        methods_info = self.__calculate_interface_modification_type(methods_info)
         print(methods_info)
         print("finish finding methods information !")
         return methods_info
 
-    def __calculate_interface_modification_type(self, method_info, index_dic):
-        index_list = list(index_dic.keys())
+    def __calculate_interface_modification_type(self, method_info):
+        index_list = list(self.index_dic.keys())
         for c in method_info:
             if not method_info[c]['is_class']:
                 implemented_classes = []
                 all_depended_classes = list(self.class_diagram_graph.predecessors(1))
                 # check if relationship between 2 nodes is implements
                 for node in all_depended_classes:
-                    if (node, index_dic[c]['index']) in self.class_diagram_graph.edges:
-                        if self.class_diagram_graph.edges[(node, index_dic[c]['index'])]['relation_type'] == 'implements':
+                    if (node, self.index_dic[c]['index']) in self.class_diagram_graph.edges:
+                        if self.class_diagram_graph.edges[(node, self.index_dic[c]['index'])]['relation_type'] == 'implements':
                             implemented_classes.append(node)
 
                 for m in method_info[c]['methods']:
@@ -679,12 +686,9 @@ class ClassDiagram:
                             method_info[c]['methods'][m]['is_modify_itself'] = False
         return method_info
 
-    def set_stereotypes(self, java_project_address, base_dirs, index_dic=None):
-        files = File.find_all_file(java_project_address, 'java')
-        if index_dic == None:
-            index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-
-        methods_information = self.__find_methods_information(files, index_dic)
+    def set_stereotypes(self):
+        files = File.find_all_file(self.java_project_address, 'java')
+        methods_information = self.__find_methods_information(files)
         print('Start setting stereotype . . .')
         for f in files:
             file_name = Path.get_file_name_from_path(f)
@@ -699,7 +703,7 @@ class ClassDiagram:
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
-            listener = StereotypeListener(methods_information, base_dirs, index_dic, file_name, f)
+            listener = StereotypeListener(methods_information, self.base_dirs, self.index_dic, file_name, f)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
@@ -708,9 +712,9 @@ class ClassDiagram:
             graph = listener.class_dic
             for c in graph:
                 for i in graph[c]:
-                    if i in index_dic.keys():
-                        n1 = index_dic[c]['index']
-                        n2 = index_dic[i]['index']
+                    if i in self.index_dic.keys():
+                        n1 = self.index_dic[c]['index']
+                        n2 = self.index_dic[i]['index']
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
         print('End setting stereotype !')
@@ -745,17 +749,19 @@ class ClassDiagram:
 
 if __name__ == "__main__":
     java_project_address = config.projects_info['javaproject']['path']
+    print(1, java_project_address)
     base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd = ClassDiagram()
-    cd.make_class_diagram(java_project_address, base_dirs, index_dic)
+    print(2, java_project_address)
+    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    cd.make_class_diagram()
 
     cd.show(cd.class_diagram_graph)
     #cd.load('class_diagram.gml')
     cd.save('class_diagram.gml')
 
-    cd.set_stereotypes(java_project_address, base_dirs, index_dic)
+    cd.set_stereotypes()
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
