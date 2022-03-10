@@ -102,7 +102,7 @@ if __name__ == "__main__":
     #cd.load('class_diagram.gml')
     cd.set_stereotypes(java_project_address, base_dirs, index_dic)
     cd.save('class_diagram.gml')
-    #cd.show(cd.class_diagram_graph)
+    cd.show(cd.class_diagram_graph)
 
     CDG = cd.get_CFG()
     cd.show(CDG)

@@ -5,7 +5,7 @@ from gen.JavaLexer import JavaLexer
 
 import networkx as nx
 import matplotlib.pyplot as plt
-import json
+import queue
 
 from utils import File, Path
 import config
@@ -562,11 +562,47 @@ class ClassDiagram:
         return graph
 
 
-    def __find_extend_roots(self):
-        pass
+    def __find_extend_roots(self, extends_graph):
+        roots = list(extends_graph.keys())
+        for d in extends_graph:
+            for s in extends_graph[d]:
+                if s in roots:
+                    roots.remove(s)
+        return roots
 
-    def __handle_extends_methods_information(self, method_information):
-        print(self.__get_extend_graph())
+    def __add_extends_attributes_and_methods(self, parent, child, method_info, index_list):
+        print((parent, child))
+        for attribute in method_info[index_list[parent]]['attributes']:
+            if not(attribute in method_info[index_list[child]]['attributes']):
+                method_info[index_list[child]]['attributes'][attribute] = method_info[index_list[parent]]['attributes'][attribute]
+
+        for method in method_info[index_list[parent]]['methods']:
+            if not(method in method_info[index_list[child]]['methods']):
+                method_info[index_list[child]]['methods'][method] = method_info[index_list[parent]]['methods'][method]
+        return method_info
+
+        return method_info
+
+    def __handle_extends_methods_information(self, method_information, index_dic):
+        extends_graph = self.__get_extend_graph()
+        roots = self.__find_extend_roots(extends_graph)
+        index_list = list(index_dic.keys())
+        print(extends_graph)
+        print(roots)
+        q = queue.Queue()
+        for root in roots:
+            q.put(root)
+
+        while not q.empty():
+            parent = q.get()
+            if parent in extends_graph:
+                for child in extends_graph[parent]:
+                    method_information = self.__add_extends_attributes_and_methods(parent,
+                                                                                   child,
+                                                                                   method_information,
+                                                                                   index_list)
+                    q.put(child)
+
         return method_information
 
     def __find_methods_information(self, files, index_dic):
@@ -599,8 +635,10 @@ class ClassDiagram:
                     package = listener.get_package()
                 #class_index = index_dic[]['index']
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
+        print(methods_info)
+        methods_info = self.__handle_extends_methods_information(methods_info, index_dic)
         methods_info = self.__calculate_interface_modification_type(methods_info, index_dic)
-        methods_info = self.__handle_extends_methods_information(methods_info)
+        print(methods_info)
         print("finish finding methods information !")
         return methods_info
 
