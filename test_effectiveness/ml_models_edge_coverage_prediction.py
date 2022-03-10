@@ -9,6 +9,7 @@ __author__ = 'Morteza Zakeri'
 import os
 import math
 import datetime
+from copy import deepcopy
 
 from matplotlib import pyplot as plt
 
@@ -57,8 +58,9 @@ class EdgeCoverageClassification:
                                                                                   test_size=0.25,
                                                                                   random_state=111,
                                                                                   )
-        print(self.X_train1)
+
         print('Before resampling')
+        print(self.X_train1)
         print('Number of covered edges', self.X_train1[self.y_train == 1].shape[0])
         print('Number of uncovered edges', self.X_train1[self.y_train == 0].shape[0])
         if skewness:
@@ -68,9 +70,10 @@ class EdgeCoverageClassification:
             sampler = SMOTEENN(random_state=11, )
             self.X_train1, self.y_train = sampler.fit_resample(self.X_train1, self.y_train)
 
-            df2 = pd.DataFrame(self.X_train1)
-            df2['IsCovered'] = self.y_train
+            df2 = pd.DataFrame(deepcopy(self.X_train1))
+            df2['IsCovered'] = deepcopy(self.y_train)
             print('After resampling')
+            print('X train 2', self.X_train1)
             print('Number of covered edges', df2[df2['IsCovered'] == 1].shape[0])
             print('Number of uncovered edges', df2[df2['IsCovered'] == 0].shape[0])
 
@@ -298,9 +301,9 @@ class EdgeCoverageClassification:
 
     def vote(self, model_path=None, dataset_number=1):
         print('Load and combine trained classifiers:')
-        clf1 = load(f'sklearn_models_edge_classify_1/HGBC1_DS{dataset_number}.joblib')
-        clf2 = load(f'sklearn_models_edge_classify_1/RFC1_DS{dataset_number}.joblib')
-        clf3 = load(f'sklearn_models_edge_classify_1/MLPC1_DS{dataset_number}.joblib')
+        clf1 = load(f'sklearn_models_edge_classify2/HGBC1_DS{dataset_number}.joblib')
+        clf2 = load(f'sklearn_models_edge_classify2/RFC1_DS{dataset_number}.joblib')
+        clf3 = load(f'sklearn_models_edge_classify2/MLPC1_DS{dataset_number}.joblib')
         # clf4 = load(f'sklearn_models_edge_classify_1/SGDC1_DS{dataset_number}.joblib')
 
         voting_classifier = VotingClassifier(
