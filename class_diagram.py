@@ -6,6 +6,7 @@ from gen.JavaLexer import JavaLexer
 import networkx as nx
 import matplotlib.pyplot as plt
 import queue
+import json
 
 from utils import File, Path
 import config
@@ -291,7 +292,12 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             is_local_variable = True
         if variable in self.attributes:
             is_attribute = True
-        return is_attribute and (not(is_parameter or is_local_variable))
+
+        if not (is_attribute or is_parameter or is_local_variable):
+            self.attributes[variable]= None
+            self.file_info[self.current_class]['attributes'][variable] = None
+        return (is_attribute and (not(is_parameter or is_local_variable))) or \
+               (not (is_attribute or is_parameter or is_local_variable))
 
 
 class StereotypeListener(JavaParserLabeledListener):
@@ -462,7 +468,8 @@ class StereotypeListener(JavaParserLabeledListener):
 
             if len(list_of_objects) > 1:
                 for object in list_of_objects[1:]:
-                    current_type = self.methods_information[current_type]['attributes'][object]
+                    if current_type in self.index_dic:
+                        current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
             if current_type in self.index_dic:
@@ -538,6 +545,10 @@ class ClassDiagram:
     def save(self, address):
         nx.write_gml(self.class_diagram_graph, address)
 
+    def save_index(self, address):
+        with open(address, 'w', encoding='UTF8') as f:
+            pass
+
     def load(self, address):
         self.class_diagram_graph = nx.read_gml(address)
 
@@ -574,13 +585,17 @@ class ClassDiagram:
         print((parent, child))
         for attribute in method_info[index_list[parent]]['attributes']:
             if not(attribute in method_info[index_list[child]]['attributes']):
-                method_info[index_list[child]]['attributes'][attribute] = method_info[index_list[parent]]['attributes'][attribute]
+                method_info[index_list[child]]['attributes'][attribute] = \
+                    method_info[index_list[parent]]['attributes'][attribute]
+            else:
+                if method_info[index_list[child]]['attributes'][attribute] == None:
+                    method_info[index_list[child]]['attributes'][attribute] = \
+                    method_info[index_list[parent]]['attributes'][attribute]
 
         for method in method_info[index_list[parent]]['methods']:
             if not(method in method_info[index_list[child]]['methods']):
-                method_info[index_list[child]]['methods'][method] = method_info[index_list[parent]]['methods'][method]
-        return method_info
-
+                method_info[index_list[child]]['methods'][method] = \
+                    method_info[index_list[parent]]['methods'][method]
         return method_info
 
     def __handle_extends_methods_information(self, method_information, index_dic):

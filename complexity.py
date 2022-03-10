@@ -2,6 +2,7 @@ from class_diagram import ClassDiagram
 from config import test_class_diagram
 
 import networkx as nx
+import csv
 
 class Complexity():
     def __init__(self, CDG):
@@ -73,6 +74,30 @@ class Complexity():
                     matrix[s].append(None)
         return matrix
 
+    def save_csv(self, path):
+        node_list = list(self.CDG.nodes)
+        no_nodes = len(node_list)
+        node_list.sort()
+        header = ['src', 'dest', 'complexity']
+
+        with open(path, 'w', encoding='UTF8') as f:
+            writer = csv.writer(f)
+
+            # write the header
+            no_row = 0
+            writer.writerow(header)
+            for s in range(no_nodes):
+                for d in range(no_nodes):
+                    if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]][
+                        'type'] == "normal":
+                        complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
+                        if complexity != None:
+                            writer.writerow([s, d, complexity])
+                        no_row += 1
+                        print(no_row)
+
+
+
 
 import config
 from utils import File
@@ -109,9 +134,10 @@ if __name__ == "__main__":
 
     c = Complexity(CDG)
 
-    matrix = c.get_matrix()
-    for i in matrix:
-        print(i)
-    print(c.calculate_interaction_complexity(2, 3))
+    #matrix = c.get_matrix()
+    #for i in matrix:
+    #    print(i)
+    #print(c.calculate_interaction_complexity(2, 3))
+    c.save_csv(java_project_address + '\\' + 'complexity.csv')
 
 
