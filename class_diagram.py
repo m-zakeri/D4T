@@ -433,7 +433,11 @@ class StereotypeListener(JavaParserLabeledListener):
         while "expression" in dir(current_exp1):
             current_exp1 = current_exp1.getChild(0)
         dependee = self.__get_object_type(current_exp1.getText())
-        self.class_dic[self.current_class][dependee] = 'use_def'
+        try:
+            self.class_dic[self.current_class][dependee] = 'use_def'
+        except Exception as e:
+            print(self.current_class, dependee)
+            print(e)
 
     def enterMethodCall0(self, ctx:JavaParserLabeled.MethodCall0Context):
         method_name = ctx.IDENTIFIER().getText()

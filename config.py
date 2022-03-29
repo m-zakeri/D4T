@@ -11,7 +11,7 @@ base_dirs.append(BASE_DIR + 'refactored_project\\10_water-simulator\\src\\main\\
 projects_info['10_water-simulator']['path'] = java_project_address
 projects_info['10_water-simulator']['base_dirs'] = base_dirs
 
-#commons-codec
+#commons-codec --does not work
 projects_info['commons-codec'] = {}
 java_project_address = BASE_DIR + 'refactored_project\\commons-codec\\src\\main\\java'
 base_dirs = []
@@ -67,7 +67,38 @@ base_dirs.append(BASE_DIR + 'refactored_project\\nest_project\\')
 projects_info['nest_project']['path'] = java_project_address
 projects_info['nest_project']['base_dirs'] = base_dirs
 
+#61_noen does not work
+projects_info['61_noen'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\61_noen\\src\\main\\java\\fi'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\61_noen\\src\\main\\java\\fi\\')
+projects_info['61_noen']['path'] = java_project_address
+projects_info['61_noen']['base_dirs'] = base_dirs
 
+
+#88_jopenchart does not work
+projects_info['88_jopenchart'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\88_jopenchart\\src\\main\\java\\de'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\88_jopenchart\\src\\main\\java\\de\\')
+projects_info['88_jopenchart']['path'] = java_project_address
+projects_info['88_jopenchart']['base_dirs'] = base_dirs
+
+#JSON
+projects_info['JSON'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\JSON\\src\\main\\java\\org'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\JSON\\src\\main\\java\\org\\')
+projects_info['JSON']['path'] = java_project_address
+projects_info['JSON']['base_dirs'] = base_dirs
+
+#rhino-Rhino1_7_12_Release
+projects_info['rhino-Rhino1_7_12_Release'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\rhino-Rhino1_7_12_Release\\src\\org'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\rhino-Rhino1_7_12_Release\\src\\org\\')
+projects_info['rhino-Rhino1_7_12_Release']['path'] = java_project_address
+projects_info['rhino-Rhino1_7_12_Release']['base_dirs'] = base_dirs
 
 # *************************************
 # complexity
