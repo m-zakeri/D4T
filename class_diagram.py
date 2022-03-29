@@ -35,21 +35,6 @@ class ClassDiagramListener(JavaParserLabeledListener):
     def get_package(self):
         return self.__package
 
-    def __find_package_of_dependee(self, dependee):
-        splitted_dependee = dependee.split('.')
-        # for normal import
-        for i in self.imports:
-            splitted_import = i.split('.')
-            if splitted_dependee[0] == splitted_import[-1]:
-                return '.'.join(i.split('.')[:-1])
-
-        # for import star
-        class_name = splitted_dependee[-1]
-        for i in self.imports_star:
-            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
-            if index_dic_dependee in self.index_dic.keys():
-                return i
-
     def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
         self.imports_star.append(self.__package)
@@ -133,7 +118,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
                     package = self.__package
                 else:
                     file_name = dependee
-                    package = self.__find_package_of_dependee(dependee)
+                    package = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
@@ -327,24 +312,6 @@ class StereotypeListener(JavaParserLabeledListener):
     def get_package(self):
         return self.__package
 
-    def __find_package_of_dependee(self, dependee):
-        splitted_dependee = dependee.split('.')
-        # for normal import
-        for i in self.imports:
-            splitted_import = i.split('.')
-            if splitted_dependee[0] == splitted_import[-1]:
-                return '.'.join(i.split('.')[:-1])
-
-        # for import star
-        class_name = splitted_dependee[-1]
-        for i in self.imports_star:
-            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
-            if index_dic_dependee in self.index_dic.keys():
-                return i
-
-        return None
-
-
     def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
 
@@ -402,7 +369,7 @@ class StereotypeListener(JavaParserLabeledListener):
                     package = self.__package
                 else:
                     file_name = dependee
-                    package = self.__find_package_of_dependee(dependee)
+                    package = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
@@ -656,7 +623,7 @@ class ClassDiagram:
             file_name = Path.get_file_name_from_path(file)
             for c in file_info:
                 if listener.get_package() == None:
-                    package = Path.get_default_package(base_dirs, file)
+                    package = Path.get_default_package(self.base_dirs, file)
                 else:
                     package = listener.get_package()
                 #class_index = index_dic[]['index']
@@ -752,9 +719,9 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
+    java_project_address = config.projects_info['10_water-simulator']['path']
     print(1, java_project_address)
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     print(2, java_project_address)

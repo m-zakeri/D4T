@@ -116,6 +116,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         self.imports_star = []
         self.imports = []
         self.state = None
+        self.no_constructor_formal_parameter = 0
         self.initiate_constructor()
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
@@ -156,13 +157,27 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             self.class_dic[self.currentClass]['field_variables'][name] = {'type':_type,
                                                                           'can_inject':False,
                                                                           'ctx':ctx}
-            print(self.class_dic)
+            #print(self.class_dic)
 
     def enterVariableDeclarator(self, ctx:JavaParserLabeled.VariableDeclaratorContext):
+        #print(ctx.getText())
         if ctx.ASSIGN() != None:
             name = ctx.variableDeclaratorId().IDENTIFIER().getText()
             if name in self.class_dic[self.currentClass]['field_variables'].keys():
                 self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
+
+    def enterExpression21(self, ctx:JavaParserLabeled.Expression21Context):
+        if self.state == 'in constructor':
+            #print('expression21:', ctx.getText())
+            if ctx.ASSIGN() != None:
+                name = ctx.expression()[0].getText()
+                if name in self.class_dic[self.currentClass]['field_variables'].keys():
+                    self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
+                    self.class_dic[self.currentClass]['field_variables'][name]['ctx2'] = ctx
+
+    def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
+        if self.state == "in constructor":
+            self.no_constructor_formal_parameter += 1
 
     def enterConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
         self.state = 'in constructor'
@@ -212,20 +227,35 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         formal_variable_text = ''
         assign_text = ''
         can_edit_constructor = False
+        #print("field_variables", self.class_dic[self.currentClass]['field_variables'])
         for v in self.class_dic[self.currentClass]['field_variables']:
             v_info = self.class_dic[self.currentClass]['field_variables'][v]
             if v_info['can_inject']:
                 can_edit_constructor = True
                 ctx = v_info['ctx']
                 # delete field variable instantiation
+                #print('edit_constructor:', ctx.getText())
                 self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                   from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
                                                   to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
                                                   )
+                if 'ctx2' in v_info:
+                    ctx2 = v_info['ctx2']
+                    self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                                                      from_idx=ctx2.parentCtx.start.tokenIndex,
+                                                      to_idx=ctx2.parentCtx.stop.tokenIndex + 1
+                                                      )
+
                 instantiate_text += f"private {'I' + v_info['type']} {v};\n\t"
                 formal_variable_text += f"{'I' + v_info['type']} {v},"
-                assign_text += f"\n\t\tthis.{v} = {v};"
+                if 'ctx2' in v_info:
+                    assign_text += f"\n\tthis.{v} = {v};"
+                else:
+                    assign_text += f"\n\t\tthis.{v} = {v};"
         formal_variable_text = formal_variable_text[:-1]
+        if self.no_constructor_formal_parameter > 0:
+            formal_variable_text = ', ' + formal_variable_text
+        #print("formal_variable_text", formal_variable_text)
         assign_text = assign_text[2:] + '\n\t'
 
         if can_edit_constructor:
@@ -237,7 +267,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
             self.token_stream_rewriter.insertAfter(
                 self.current_constructor_info['formal_parameter_token_index'] - 1,
-                ', ' + formal_variable_text,
+                formal_variable_text,
                 program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
             )
 
@@ -249,6 +279,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
 class Injection:
     def detect_and_fix(self, index_dic, class_diagram):
+        print('Start injection refactoring . . .')
         index_dic_keys = list(index_dic.keys())
         parents = list((v for v, d in class_diagram.in_degree() if d >= 0))
         for p in parents:
@@ -262,6 +293,7 @@ class Injection:
                         stream = FileStream(r"" + child_path)
                     except:
                         print(child_path, 'can not read')
+                        continue
                     lexer = JavaLexer(stream)
                     tokens = CommonTokenStream(lexer)
                     parser = JavaParserLabeled(tokens)
@@ -297,8 +329,7 @@ class Injection:
                 listener=listener,
                 t=tree
             )
-
-            #print(listener.token_stream_rewriter.getDefaultText())
+        print('End injection refactoring !')
 
 
 from utils import File
@@ -310,8 +341,9 @@ if __name__ == "__main__":
     base_dirs = config.projects_info['simple_injection']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd = ClassDiagram()
-    cd.make_class_diagram(java_project_address, base_dirs, index_dic)
+    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    cd.make_class_diagram()
+    cd.set_stereotypes()
     #cd.save('class_diagram.gml')
     #cd.load('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
@@ -326,8 +358,9 @@ if __name__ == "__main__":
 
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd2 = ClassDiagram()
-    cd2.make_class_diagram(java_project_address, base_dirs, index_dic)
+    cd2 = ClassDiagram(java_project_address, base_dirs, index_dic)
+    cd2.make_class_diagram()
+    cd2.set_stereotypes()
     cd2.show(cd2.class_diagram_graph)
     g = cd2.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
