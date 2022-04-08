@@ -175,6 +175,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             self.class_dic[self.currentClass]['field_variables'][name] = {'type':_type,
                                                                           'can_inject':False,
                                                                           'ctx':ctx}
+
             if _type not in self.dependee_dic:
                 package = Path.find_package_of_dependee(_type, self.imports,
                                                         self.imports_star,
@@ -199,6 +200,8 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             #print('expression21:', ctx.getText())
             if ctx.ASSIGN() != None:
                 name = ctx.expression()[0].getText()
+                if name[:4] == 'this':
+                    name = name[5:]
                 if name in self.class_dic[self.currentClass]['field_variables'].keys():
                     self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
                     self.class_dic[self.currentClass]['field_variables'][name]['ctx2'] = ctx
@@ -267,19 +270,20 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                       to_idx=ctx2.parentCtx.stop.tokenIndex + 1
                                                       )
 
-                if self.dependee_dic[v_info['type']]['type'] == 'normal':
-                    instantiate_text += f"private {'I' + v_info['type']} {v};\n\t"
-                    formal_variable_text += f"{'I' + v_info['type']} {v},"
-                else:
-                    instantiate_text += f"private {v_info['type']} {v};\n\t"
-                    formal_variable_text += f"{v_info['type']} {v},"
+                if v_info['type'] in self.dependee_dic:
+                    if self.dependee_dic[v_info['type']]['type'] == 'normal':
+                        instantiate_text += f"private {'I' + v_info['type']} {v};\n\t"
+                        formal_variable_text += f"{'I' + v_info['type']} {v},"
+                    else:
+                        instantiate_text += f"private {v_info['type']} {v};\n\t"
+                        formal_variable_text += f"{v_info['type']} {v},"
 
                 if 'ctx2' in v_info:
                     assign_text += f"\n\tthis.{v} = {v};"
                 else:
                     assign_text += f"\n\t\tthis.{v} = {v};"
         formal_variable_text = formal_variable_text[:-1]
-        if self.no_constructor_formal_parameter > 0:
+        if self.no_constructor_formal_parameter > 0 and formal_variable_text != '':
             formal_variable_text = ', ' + formal_variable_text
         #print("formal_variable_text", formal_variable_text)
         assign_text = assign_text[2:] + '\n\t'
