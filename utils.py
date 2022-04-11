@@ -85,7 +85,7 @@ class File:
         for f in files:
             file_name = Path.get_file_name_from_path(f)
             try:
-                stream = FileStream(f)
+                stream = FileStream(f, encoding='utf8')
             except Exception as e:
                 print(f, 'can not read')
                 print(e)

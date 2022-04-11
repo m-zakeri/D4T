@@ -2047,7 +2047,7 @@ public class ScenarioDesignWizard {
         dataPanel.add(panel2,null);
       }
 
-    private JLabel labelMean = new JLabel("Mean value (ì) - (m3):");
+    private JLabel labelMean = new JLabel("Mean value () - (m3):");
             {
               labelMean.setFont(new java.awt.Font("Dialog", 1, 12));
               labelMean.setHorizontalAlignment(SwingConstants.CENTER);
@@ -2065,7 +2065,7 @@ public class ScenarioDesignWizard {
         dataPanel.add(panel3,null);
       }
 
-    private JLabel labelDev = new JLabel("Deviation (ó^2) :");
+    private JLabel labelDev = new JLabel("Deviation (2^2) :");
             {
               labelDev.setFont(new java.awt.Font("Dialog", 1, 12));
               labelDev.setHorizontalAlignment(SwingConstants.CENTER);

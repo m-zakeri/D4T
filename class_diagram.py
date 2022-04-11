@@ -440,6 +440,7 @@ class StereotypeListener(JavaParserLabeledListener):
             if len(list_of_objects) > 1:
                 for object in list_of_objects[1:]:
                     if current_type in self.index_dic:
+                        print(current_type, object)
                         current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
@@ -493,7 +494,7 @@ class ClassDiagram:
             file_name = Path.get_file_name_from_path(f)
             print('\t' + f)
             try:
-                stream = FileStream(f)
+                stream = FileStream(f, encoding='utf8')
             except:
                 print('\t' + f, 'can not read')
                 continue
@@ -603,7 +604,7 @@ class ClassDiagram:
         methods_info = {}
         for file in files:
             try:
-                stream = FileStream(file)
+                stream = FileStream(file, encoding='utf8')
                 print('\t' + file)
             except:
                 print(file, 'can not read')
@@ -665,7 +666,7 @@ class ClassDiagram:
             file_name = Path.get_file_name_from_path(f)
             print('\t' + f)
             try:
-                stream = FileStream(f)
+                stream = FileStream(f, encoding='utf8')
             except Exception as e:
                 print('\t' + f, 'can not read')
                 print(e)

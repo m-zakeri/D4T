@@ -100,6 +100,14 @@ base_dirs.append(BASE_DIR + 'refactored_project\\rhino-Rhino1_7_12_Release\\src\
 projects_info['rhino-Rhino1_7_12_Release']['path'] = java_project_address
 projects_info['rhino-Rhino1_7_12_Release']['base_dirs'] = base_dirs
 
+#crona warn up project 1
+projects_info['crona_warn_up1'] = {}
+java_project_address = BASE_DIR + 'refactored_project\\cwa-server\\common\\persistence\\src\\main\\java'
+base_dirs = []
+base_dirs.append(BASE_DIR + 'refactored_project\\cwa-server\\common\\persistence\\src\\main\\java')
+projects_info['crona_warn_up1']['path'] = java_project_address
+projects_info['crona_warn_up1']['base_dirs'] = base_dirs
+
 # *************************************
 # complexity
 import networkx as nx

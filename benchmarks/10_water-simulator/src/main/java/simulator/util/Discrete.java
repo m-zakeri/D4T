@@ -18,7 +18,7 @@ public class Discrete extends Function{
     private Float[] v;
 
     public Discrete(){
-       super("DISCRETE"," Y = { Xi } , i å {0,1, ... T} ");
+       super("DISCRETE"," Y = { Xi } , i  {0,1, ... T} ");
        this.setFunctionConstant(period);
        this.setFunctionConstant(values);
     }

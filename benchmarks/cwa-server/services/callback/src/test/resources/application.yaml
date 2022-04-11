@@ -1,0 +1,56 @@
+---
+logging:
+  level:
+    org:
+      springframework: off
+    root: INFO
+spring:
+  main:
+    banner-mode: off
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration, classpath:/db/specific/{vendor}
+    mixed: true
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:11.8:///databasename?TC_TMPFS=/testtmpfs:rw?TC_INITSCRIPT=file:src/test/java/V0__init_db.sql
+  test:
+    database:
+      # Use datasource as defined above.
+      replace: none
+
+services:
+  callback:
+    source-system: EFGS
+    connection-pool-size: 200
+    monitoring:
+      batch-size: 5
+    cert-cn: localhost
+    register-on-startup: false
+    endpoint-url: url
+
+federation-gateway:
+  base-url: http://localhost:1234
+  connection-pool-size: 200
+  ssl:
+    key-password: 123456
+    key-store: ../../docker-compose-test-secrets/ssl.p12
+    key-store-password: 123456
+    trust-store: ../../docker-compose-test-secrets/contains_efgs_truststore.jks
+    trust-store-password: 123456
+
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 500
+        read-timeout: 500
+
+server:
+  ssl:
+    key-password: 123456
+    key-store: ../../docker-compose-test-secrets/ssl.p12
+    key-store-password: 123456
+    trust-store: ../../docker-compose-test-secrets/contains_efgs_truststore.jks
+    trust-store-password: 123456
+    client-auth: need

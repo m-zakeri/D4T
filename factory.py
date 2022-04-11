@@ -325,7 +325,7 @@ class Factory:
                     child_class_name = child.split('-')[1]
                     try:
                         print('child path : ', child_path)
-                        stream = FileStream(r"" + child_path)
+                        stream = FileStream(r"" + child_path, encoding='utf8')
                     except:
                         print(child_path, 'can not read')
                     lexer = JavaLexer(stream)

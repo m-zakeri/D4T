@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     class_path = "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\benchmarks\\simple_injection\\src\\calculator\\Calculator.java"
     class_path = "E:\\sadegh\\iust\\compiler\\compiler projects\\main_project\\refactored_project\\simple_injection\\src\\calculator\\adder\\Adder.java"
-    stream = FileStream(r"" + class_path)
+    stream = FileStream(r"" + class_path, encoding='utf8')
     lexer = JavaLexer(stream)
     tokens = CommonTokenStream(lexer)
     parser = JavaParserLabeled(tokens)
