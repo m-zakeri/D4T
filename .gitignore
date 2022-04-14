@@ -2,3 +2,4 @@
 *.gml
 *.json
 refactored_project/*
+venv/*

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<izpack:shortcuts version="5.0" xmlns:izpack="http://izpack.org/schema/shortcuts">
+
+  <programGroup defaultName="Art of Illusion"
+                location="applications"/>
+  <shortcut
+    name="Start Art of Illusion"
+    target="$INSTALL_PATH\Art of Illusion.exe"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="Start Art of Illusion"
+    iconFile="$INSTALL_PATH\aoi.ico"
+    iconIndex="0"
+    initialState="normal"
+    programGroup="yes"
+    desktop="yes"
+    applications="no"
+    startMenu="no"
+    startup="no"/>
+  <shortcut
+    name="Uninstall Art of Illusion"
+    target="$INSTALL_PATH\RemoveAoI.exe"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="Uninstall the Art of Illusion application and its components"
+    iconFile=""
+    iconIndex="0"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no"/>
+</izpack:shortcuts>
