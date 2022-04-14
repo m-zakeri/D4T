@@ -243,7 +243,7 @@ class Injection:
                     print('\t', child_path)
                     #child_class_name = child.split('-')[1]
                     try:
-                        stream = FileStream(r"" + child_path, encoding='utf8')
+                        stream = FileStream(r"" + child_path, encoding='utf8', errors='ignore')
                     except:
                         print(child_path, 'can not read')
                         continue
@@ -260,8 +260,6 @@ class Injection:
 
                     #print(listener.token_stream_rewriter.getDefaultText())
                     with open(r"" + child_path, mode='w', newline='') as f:
-                        if listener.token_stream_rewriter.getDefaultText() == None:
-                            print('this text is None!')
                         f.write(listener.token_stream_rewriter.getDefaultText())
 
                     for dependee in listener.dependee_dic:
@@ -298,7 +296,7 @@ class Injection:
         print('End injection refactoring !')
 
     def __create_injection_interface(self, path):
-        stream = FileStream(r"" + path, encoding='utf8')
+        stream = FileStream(r"" + path, encoding='utf8', errors='ignore')
         lexer = JavaLexer(stream)
         tokens = CommonTokenStream(lexer)
         parser = JavaParserLabeled(tokens)
@@ -323,8 +321,8 @@ import config
 from class_diagram import ClassDiagram
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['commons-codec']['path']
-    base_dirs = config.projects_info['commons-codec']['base_dirs']
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
