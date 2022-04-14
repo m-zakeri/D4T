@@ -1,3 +1,0 @@
-services:
-  callback:
-    cert-cn: invalid-cert-cn
