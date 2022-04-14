@@ -7,8 +7,19 @@ refactored_project/*
 /venv/
 .idea
 .idea/
-benchmark_projects/JSON/src/main/java/org/json/*.class
-benchmark_projects/refactored/
+benchmark_projects/JSON/
+benchmark_projects/10_water-simulator/
+benchmark_projects/61_noen/
+benchmark_projects/88_jopenchart/
+benchmark_projects/ant/
+benchmark_projects/ArtOfIllusion/
+benchmark_projects/commons-codec/
+benchmark_projects/cwa-server/
+benchmark_projects/factory-pattern-example/
+benchmark_projects/nest_project/
+benchmark_projects/simple_injection/
+benchmark_projects/tabula-java/
+
 codart.egg-info
 dist
 
