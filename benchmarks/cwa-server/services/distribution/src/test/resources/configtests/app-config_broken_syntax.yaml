@@ -1,0 +1,5 @@
+min-risk-score:
+  100 # illegal line break
+attenuation-duration: !include attenuation-duration_ok.yaml
+  risk-score-classes: !include risk-score-class_ok.yaml # illegal indentation
+exposure-config: !include exposure-config_ok.yaml

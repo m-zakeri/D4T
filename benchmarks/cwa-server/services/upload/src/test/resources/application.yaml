@@ -1,0 +1,53 @@
+---
+logging:
+  level:
+    org:
+      springframework: off
+    root: INFO
+
+federation-gateway:
+  base-url: fake-url
+  connection-pool-size: 200
+  ssl:
+    key-password: 123456
+    key-store: ../../docker-compose-test-secrets/ssl.p12
+    key-store-password: 123456
+    trust-store: ../../docker-compose-test-secrets/contains_efgs_truststore.jks
+    trust-store-password: 123456
+
+services:
+  upload:
+    expiry-policy-minutes: 120
+    min-batch-key-count: 140
+    max-batch-key-count: 4000
+    retention-days: 14
+    privatekey: classpath:testprivatekey.pem
+    certificate: classpath:testpublickey.pem
+    privatekey-password: testpass
+    efgs-transmission:
+      enable-dsos: true
+      enable-report-type: true
+      default-dsos: 1
+      default-report-type: UNKNOWN
+    signature:
+      # The ASN.1 OID for algorithm identifier.
+      algorithm-oid: 1.2.840.10045.4.3.2
+      # The algorithm name.
+      algorithm-name: SHA256withECDSA
+      # The security provider.
+      security-provider: BC
+
+spring:
+  main:
+    banner-mode: off
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration, classpath:/db/specific/{vendor}
+    mixed: true
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:11.8:///databasename?TC_TMPFS=/testtmpfs:rw?TC_INITSCRIPT=file:src/test/java/V0__init_db.sql
+  test:
+    database:
+      # Use datasource as defined above.
+      replace: none
