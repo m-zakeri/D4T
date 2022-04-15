@@ -1,10 +1,20 @@
-from gen.JavaParserLabeled import JavaParserLabeled
-from gen.JavaParserLabeledListener import JavaParserLabeledListener
-from antlr4 import *
-from gen.JavaLexer import JavaLexer
+"""
+The utility module
+
+"""
+
+__version__ = '0.1.1'
+__author__ = 'Sadegh Jafari, Morteza Zakeri'
+
 
 import os
 import json
+
+from antlr4 import *
+
+from gen.JavaLexer import JavaLexer
+from gen.JavaParserLabeled import JavaParserLabeled
+from gen.JavaParserLabeledListener import JavaParserLabeledListener
 
 
 class ClassTypeListener(JavaParserLabeledListener):
@@ -17,64 +27,65 @@ class ClassTypeListener(JavaParserLabeledListener):
         self.file_name = file_name
         self.file = file
 
-    def enterPackageDeclaration(self, ctx:JavaParserLabeled.PackageDeclarationContext):
+    def enterPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.__depth += 1
-        if self.__package == None:
+        if self.__package is None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
         if self.__depth == 1:
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             type_declaration = ctx.parentCtx
             _type = 'normal'
-            if type_declaration.classOrInterfaceModifier() != None:
+            if type_declaration.classOrInterfaceModifier() is not None:
                 if len(type_declaration.classOrInterfaceModifier()) == 1:
                     if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
                         _type = 'abstract'
 
-            self.file_info[self.current_class] = {'type':_type}
+            self.file_info[self.current_class] = {'type': _type}
 
-    def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
+    def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.__depth -= 1
         if self.__depth == 0:
             self.current_class = None
 
-    def enterInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+    def enterInterfaceDeclaration(self, ctx: JavaParserLabeled.InterfaceDeclarationContext):
         self.__depth += 1
-        if self.__package == None:
+        if self.__package is None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
         if self.__depth == 1:
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             _type = 'interface'
-            self.file_info[self.current_class] = {'type':_type}
+            self.file_info[self.current_class] = {'type': _type}
 
-    def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+    def exitInterfaceDeclaration(self, ctx: JavaParserLabeled.InterfaceDeclarationContext):
         self.__depth -= 1
         if self.__depth == 0:
             self.current_class = None
 
-    def enterEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+    def enterEnumDeclaration(self, ctx: JavaParserLabeled.InterfaceDeclarationContext):
         self.__depth += 1
-        if self.__package == None:
+        if self.__package is None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
         if self.__depth == 1:
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             _type = 'enum'
-            self.file_info[self.current_class] = {'type':_type}
+            self.file_info[self.current_class] = {'type': _type}
 
-    def exitEnumDeclaration(self, ctx:JavaParserLabeled.InterfaceDeclarationContext):
+    def exitEnumDeclaration(self, ctx: JavaParserLabeled.InterfaceDeclarationContext):
         self.__depth -= 1
         if self.__depth == 0:
             self.current_class = None
 
+
 class File:
     @staticmethod
-    def find_all_file(address, type):
+    def find_all_file(address, type_):
         all_files = []
         for root, dirs, files in os.walk(address):
             for file in files:
-                if file.endswith('.' + type):
+                if file.endswith('.' + type_):
                     all_files.append(os.path.join(root, file))
         return all_files
 
@@ -84,29 +95,22 @@ class File:
         index_dic = {}
         for f in files:
             file_name = Path.get_file_name_from_path(f)
-            try:
-                stream = FileStream(f, encoding='utf8')
-            except Exception as e:
-                print(f, 'can not read')
-                print(e)
-                continue
+            stream = FileStream(f, encoding='utf-8', errors='ignore')
             lexer = JavaLexer(stream)
             tokens = CommonTokenStream(lexer)
             parser = JavaParserLabeled(tokens)
             tree = parser.compilationUnit()
             listener = ClassTypeListener(base_java_dirs, file_name, f)
             walker = ParseTreeWalker()
-            walker.walk(
-                listener=listener,
-                t=tree
-            )
+            walker.walk(listener=listener,t=tree)
             for c in listener.file_info:
-                index_dic[c] = {'index':index, 'path':f, 'type':listener.file_info[c]['type']}
+                index_dic[c] = {'index': index, 'path': f, 'type': listener.file_info[c]['type']}
                 index += 1
 
-        with open(save_dir, "w") as write_file:
+        with open(save_dir, mode="w", encoding='utf-8', errors='ignore') as write_file:
             json.dump(index_dic, write_file, indent=4)
         return index_dic
+
 
 class Path:
     @staticmethod
@@ -130,7 +134,7 @@ class Path:
         for base_dir in base_dirs:
             if base_dir == file_path[:len(base_dir)]:
                 target_dir = file_path[len(base_dir):]
-                splitted_targer_dir = target_dir.split("\\")
+                splitted_targer_dir = target_dir.split("/")
                 package = '.'.join(splitted_targer_dir[:-1])
                 return package
 
@@ -149,24 +153,27 @@ class Path:
     def convert_str_paths_to_list_paths(str_paths):
         list_paths = []
         for str_path in str_paths:
-            list_paths.append(str_path.split('\\'))
+            list_paths.append(str_path.split('/'))
         return list_paths
 
     @staticmethod
     def detect_path(paths):
         if len(paths) == 1:
-            return '\\'.join(paths[0][-2])
+            return '/'.join(paths[0][-2])
         max_path_length = max([len(list_path) for list_path in paths])
         for i in range(max_path_length):
             x = set([j[i] for j in paths])
-            if len(x) > 1 :
-                return '\\'.join(paths[0][:i])
+            if len(x) > 1:
+                return '/'.join(paths[0][:i])
+
 
 class List:
     @staticmethod
     def compare_similarity_of_two_list(list1, list2):
         return list(set(list1) & set(list2))
 
+
 if __name__ == "__main__":
-    File.indexing_files_directory(File.find_all_file('E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\bigJavaProject', 'java'),
-                                  'index.json')
+    File.indexing_files_directory(
+        File.find_all_file('E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\bigJavaProject', 'java'),
+        'index.json')
