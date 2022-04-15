@@ -136,7 +136,10 @@ class Path:
 
     @staticmethod
     def get_file_name_from_path(path):
-        path = path.split('\\')
+        """
+        Use Python built-in functions instead of this
+        """
+        path = path.split('/')
         class_name = path[-1]
         class_name = class_name.split('.')
         class_name = class_name[0]
