@@ -1,8 +1,0 @@
----
-spring:
-  flyway:
-    locations: classpath:/db/migration, classpath:/db/specific/{vendor}, classpath:/db/testdata-download-via-callback
-
-services:
-  download:
-    enforce-date-based-download: false

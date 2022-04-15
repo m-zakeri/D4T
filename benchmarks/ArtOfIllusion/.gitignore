@@ -1,9 +1,0 @@
-#build artifacts of various types
-*.class
-*.jar
-
-#Windows and Mac image thumbnail stores and directory caches
-Thumbs.db
-**/.xvpics/
-.DS_Store
-

@@ -1,2 +1,0 @@
-ALTER TABLE federation_batch_info
-  ADD COLUMN IF NOT EXISTS source_system VARCHAR(10) DEFAULT 'EFGS' NOT NULL;
