@@ -3,9 +3,8 @@ The module implements dependency injection patterns
 """
 
 __version__ = '0.1.1'
-__author__ = 'Jafari, Zakeri'
+__author__ = 'Sadegh Jafari, Morteza Zakeri'
 
-import json
 import networkx as nx
 
 from antlr4 import *
@@ -25,14 +24,14 @@ from class_diagram import ClassDiagram
 class ConstructorEditorListener(JavaParserLabeledListener):
     def __init__(self, index_dic, common_token_stream: CommonTokenStream = None):
         self.currentClass = None
-        self.class_dic = {}
-        self.imports_star = []
-        self.imports = []
+        self.class_dic = dict()
+        self.imports_star = list()
+        self.imports = list()
         self.state = None
         self.no_constructor_formal_parameter = 0
-        self.imports = []
-        self.imports_star = []
-        self.dependee_dic = {}
+        self.imports = list()
+        self.imports_star = list()
+        self.dependee_dic = dict()
         self.__method_depth = 0
         self.__class_depth = 0
         self.index_dic = index_dic
@@ -42,6 +41,9 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
         else:
             raise TypeError('common_token_stream is None')
+
+        self.current_constructor_info = None
+        self.initiate_constructor()
 
     def initiate_constructor(self):
         self.current_constructor_info = {'token_index': None,
@@ -70,7 +72,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         self.__class_depth -= 1
         if self.__class_depth == 0:
             if self.class_dic[self.currentClass]['field_variables'] != {}:
-                if self.current_constructor_info['formal_parameter_token_index'] == None:
+                if self.current_constructor_info['formal_parameter_token_index'] is None:
                     self.generate_constructor()
                 else:
                     self.edit_constructor()
@@ -87,7 +89,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         if self.__class_depth == 1:
             self.current_constructor_info['token_index'] = ctx.parentCtx.parentCtx.start.tokenIndex - 1
 
-            if ctx.typeType().classOrInterfaceType() != None:
+            if ctx.typeType().classOrInterfaceType() is not None:
                 _type = ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].getText()
                 name = ctx.variableDeclarators().variableDeclarator()[0].variableDeclaratorId().IDENTIFIER().getText()
                 self.class_dic[self.currentClass]['field_variables'][name] = {'type': _type,
@@ -99,7 +101,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                             self.imports_star,
                                                             self.index_dic
                                                             )
-                    if package != None:
+                    if package is not None:
                         if package + '-' + _type + '-' + _type in self.index_dic:
                             self.dependee_dic[_type] = {}
                             object_type = self.index_dic[package + '-' + _type + '-' + _type]['type']
@@ -108,7 +110,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
     def enterVariableDeclarator(self, ctx: JavaParserLabeled.VariableDeclaratorContext):
         if self.__class_depth == 1:
-            if ctx.ASSIGN() != None and self.currentClass != None:
+            if ctx.ASSIGN() is not None and self.currentClass is not None:
                 name = ctx.variableDeclaratorId().IDENTIFIER().getText()
                 if name in self.class_dic[self.currentClass]['field_variables'].keys():
                     self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
@@ -116,7 +118,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
     def enterExpression21(self, ctx: JavaParserLabeled.Expression21Context):
         if self.__class_depth == 1:
             if self.state == 'in constructor':
-                if ctx.ASSIGN() != None:
+                if ctx.ASSIGN() is not None:
                     name = ctx.expression()[0].getText()
                     if name[:4] == 'this':
                         name = name[5:]
@@ -154,6 +156,9 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                   from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
                                                   to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
                                                   )
+                # print('@@@@@@@@@@@@@@@@@@@@@@')
+                # print(self.token_stream_rewriter.getDefaultText())
+
                 text += f"private {'I' + v_info['type']} {v};\n\t"
                 formal_variable_text += f"{'I' + v_info['type']} {v},"
                 assign_text += f"\n\t\tthis.{v} = {v};"
@@ -168,6 +173,9 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                    program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
 
     def edit_constructor(self):
+        """
+
+        """
         instantiate_text = ''
         formal_variable_text = ''
         assign_text = ''
@@ -184,12 +192,21 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                   from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
                                                   to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
                                                   )
+
+                if "PricingPolicyFrame" in self.currentClass:
+                    print('@@@@@ 1')
+                    print(self.token_stream_rewriter.getDefaultText())
+
                 if 'ctx2' in v_info:
                     ctx2 = v_info['ctx2']
                     self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                       from_idx=ctx2.parentCtx.start.tokenIndex,
                                                       to_idx=ctx2.parentCtx.stop.tokenIndex + 1
                                                       )
+
+                if "PricingPolicyFrame" in self.currentClass:
+                    print('@@@@@ 2')
+                    print(self.token_stream_rewriter.getDefaultText())
 
                 if v_info['type'] in self.dependee_dic:
                     if self.dependee_dic[v_info['type']]['type'] == 'normal':
@@ -272,8 +289,8 @@ class Injection:
                     )
 
                     # print(listener.token_stream_rewriter.getDefaultText())
-                    with open(r"" + child_path, mode='w', newline='') as f:
-                        if listener.token_stream_rewriter.getDefaultText() == None:
+                    with open(r"" + child_path, mode='w', encoding='utf-8', newline='') as f:
+                        if listener.token_stream_rewriter.getDefaultText() is None:
                             print('this text is None!')
                         f.write(listener.token_stream_rewriter.getDefaultText())
 
@@ -282,28 +299,6 @@ class Injection:
                             key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
                             interfaces.add(index_dic[key]['path'])
 
-            '''
-            # refactor dependee class
-            parent = index_dic_keys[int(p)]
-            parent_path = index_dic[parent]['path']
-            #parent_class_name = parent.split('-')[1]
-            # try:
-            stream = FileStream(r"" + parent_path)
-            # except:
-            #    print(parent_path, 'can not read')
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
-            tree = parser.compilationUnit()
-            listener = DependeeEditorListener(
-                common_token_stream=tokens
-            )
-            walker = ParseTreeWalker()
-            walker.walk(
-                listener=listener,
-                t=tree
-            )
-            '''
         # create interfaces
         print(interfaces)
         for path in interfaces:
@@ -333,11 +328,11 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['commons-codec']['path']
-    base_dirs = config.projects_info['commons-codec']['base_dirs']
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
-    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    cd = ClassDiagram(java_project_address, base_dirs, index_dic_)
     cd.make_class_diagram()
     cd.set_stereotypes()
     # cd.save('class_diagram.gml')
@@ -349,12 +344,12 @@ if __name__ == "__main__":
         print(i)
     # g = cd.class_diagram_graph
     # print(len(list(nx.weakly_connected_components(g))))
-    f = Injection()
-    f.detect_and_fix(index_dic, cd.class_diagram_graph)
+    injection = Injection()
+    injection.detect_and_fix(index_dic_, cd.class_diagram_graph)
 
     files = File.find_all_file(java_project_address, 'java')
-    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd2 = ClassDiagram(java_project_address, base_dirs, index_dic)
+    index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    cd2 = ClassDiagram(java_project_address, base_dirs, index_dic_)
     cd2.make_class_diagram()
     cd2.set_stereotypes()
     cd2.show(cd2.class_diagram_graph)
@@ -362,3 +357,4 @@ if __name__ == "__main__":
     print(len(list(nx.weakly_connected_components(g))))
     for i in nx.weakly_connected_components(g):
         print(i)
+
