@@ -272,11 +272,7 @@ class Injection:
                     child_path = index_dic[child]['path']
                     print('\t', child_path)
                     # child_class_name = child.split('-')[1]
-                    try:
-                        stream = FileStream(child_path, encoding='utf8', errors='ignore')
-                    except:
-                        print(child_path, 'can not read')
-                        continue
+                    stream = FileStream(child_path, encoding='utf8', errors='ignore')
                     lexer = JavaLexer(stream)
                     tokens = CommonTokenStream(lexer)
                     parser = JavaParserLabeled(tokens)
