@@ -273,7 +273,7 @@ class Injection:
                     print('\t', child_path)
                     # child_class_name = child.split('-')[1]
                     try:
-                        stream = FileStream(r"" + child_path, encoding='utf8')
+                        stream = FileStream(child_path, encoding='utf8', errors='ignore')
                     except:
                         print(child_path, 'can not read')
                         continue
@@ -306,7 +306,7 @@ class Injection:
         print('End injection refactoring !')
 
     def __create_injection_interface(self, path):
-        stream = FileStream(r"" + path, encoding='utf8')
+        stream = FileStream(path, encoding='utf8', errors='ignore')
         lexer = JavaLexer(stream)
         tokens = CommonTokenStream(lexer)
         parser = JavaParserLabeled(tokens)
