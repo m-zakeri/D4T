@@ -86,7 +86,7 @@ class File:
         for root, dirs, files in os.walk(address):
             for file in files:
                 if file.endswith('.' + type_):
-                    all_files.append(os.path.join(root, file))
+                    all_files.append(os.path.join(root, file).replace("\\", "/"))
         return all_files
 
     @staticmethod
@@ -175,5 +175,5 @@ class List:
 
 if __name__ == "__main__":
     File.indexing_files_directory(
-        File.find_all_file('E:\\sadegh\\iust\\compiler\\compiler projects\\java_projects\\bigJavaProject', 'java'),
+        File.find_all_file('E:/sadegh/iust/compiler/compiler projects/java_projects/bigJavaProject', 'java'),
         'index.json')

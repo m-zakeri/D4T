@@ -317,7 +317,7 @@ class Injection:
         print(interface_info)
         interface_info['name'] = 'I' + interface_info['name']
         path_list = Path.convert_str_paths_to_list_paths([path])
-        interface_info['path'] = '\\'.join(path_list[0][:-1])
+        interface_info['path'] = '/'.join(path_list[0][:-1])
         ic = InterfaceCreator(interface_info)
         ic.save()
         ic.add_implement_statement_to_class(path)
@@ -327,6 +327,7 @@ if __name__ == "__main__":
     java_project_address = config.projects_info['10_water-simulator']['path']
     base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
+    print(files)
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic_)
     cd.make_class_diagram()
