@@ -19,6 +19,11 @@ benchmark_projects/factory-pattern-example/
 benchmark_projects/nest_project/
 benchmark_projects/simple_injection/
 benchmark_projects/tabula-java/
+benchmarks/10_water-simulator/
+benchmarks/61_noen/
+benchmarks/88_jopenchart/
+benchmarks/commons-codec/
+benchmarks/tabula-java/
 
 codart.egg-info
 dist
