@@ -5,6 +5,8 @@ The module implements dependency injection patterns
 __version__ = '0.1.1'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
+import json
+
 import networkx as nx
 
 from antlr4 import *
@@ -328,12 +330,14 @@ if __name__ == "__main__":
     base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     print(files)
-    index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    #index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    with open('class_index.json') as f:
+        index_dic_ = json.load(f)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic_)
-    cd.make_class_diagram()
-    cd.set_stereotypes()
+    #cd.make_class_diagram()
+    #cd.set_stereotypes()
     # cd.save('class_diagram.gml')
-    # cd.load('class_diagram.gml')
+    cd.load('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
