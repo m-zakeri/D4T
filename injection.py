@@ -111,22 +111,29 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                             self.dependee_dic[_type]['type'] = object_type
 
     def enterVariableDeclarator(self, ctx: JavaParserLabeled.VariableDeclaratorContext):
-        if self.__class_depth == 1:
-            if ctx.ASSIGN() is not None and self.currentClass is not None:
-                name = ctx.variableDeclaratorId().IDENTIFIER().getText()
-                if name in self.class_dic[self.currentClass]['field_variables'].keys():
-                    self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
+        if self.__class_depth == 1 and (ctx.variableInitializer() is not None):
+            if 'expression' in dir(ctx.variableInitializer()):
+                if 'NEW' in dir(ctx.variableInitializer().expression()):
+                    if (ctx.ASSIGN() is not None) and \
+                            (self.currentClass is not None) and \
+                            (ctx.variableInitializer().expression().NEW() is not None):
+                        name = ctx.variableDeclaratorId().IDENTIFIER().getText()
+                        if name in self.class_dic[self.currentClass]['field_variables'].keys():
+                            self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
 
     def enterExpression21(self, ctx: JavaParserLabeled.Expression21Context):
         if self.__class_depth == 1:
             if self.state == 'in constructor':
-                if ctx.ASSIGN() is not None:
-                    name = ctx.expression()[0].getText()
-                    if name[:4] == 'this':
-                        name = name[5:]
-                    if name in self.class_dic[self.currentClass]['field_variables'].keys():
-                        self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
-                        self.class_dic[self.currentClass]['field_variables'][name]['ctx2'] = ctx
+                if 'NEW' in dir(ctx.expression()[1]):
+                    if (ctx.ASSIGN() is not None) and \
+                            (ctx.expression()[1].NEW() is not None):
+                        name = ctx.expression()[0].getText()
+                        print('name:', name)
+                        if name[:4] == 'this':
+                            name = name[5:]
+                        if name in self.class_dic[self.currentClass]['field_variables'].keys():
+                            self.class_dic[self.currentClass]['field_variables'][name]['can_inject'] = True
+                            self.class_dic[self.currentClass]['field_variables'][name]['ctx2'] = ctx
 
     def enterFormalParameter(self, ctx: JavaParserLabeled.FormalParameterContext):
         if self.__class_depth == 1:
@@ -148,11 +155,13 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         formal_variable_text = ''
         assign_text = ''
         can_make_constructor = False
+        print("field_variables", self.class_dic[self.currentClass]['field_variables'])
         for v in self.class_dic[self.currentClass]['field_variables']:
             v_info = self.class_dic[self.currentClass]['field_variables'][v]
             if v_info['can_inject']:
                 can_make_constructor = True
                 ctx = v_info['ctx']
+                print('ctx:', ctx.getText())
                 # delete field variable instantiation
                 self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                   from_idx=ctx.parentCtx.parentCtx.start.tokenIndex,
@@ -182,12 +191,13 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         formal_variable_text = ''
         assign_text = ''
         can_edit_constructor = False
-        # print("field_variables", self.class_dic[self.currentClass]['field_variables'])
+        print("field_variables", self.class_dic[self.currentClass]['field_variables'])
         for v in self.class_dic[self.currentClass]['field_variables']:
             v_info = self.class_dic[self.currentClass]['field_variables'][v]
             if v_info['can_inject']:
                 can_edit_constructor = True
                 ctx = v_info['ctx']
+                print('ctx:', ctx.getText())
                 # delete field variable instantiation
                 # print('edit_constructor:', ctx.getText())
                 self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
@@ -195,20 +205,21 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                                                   to_idx=ctx.parentCtx.parentCtx.stop.tokenIndex + 1
                                                   )
 
-                if "PricingPolicyFrame" in self.currentClass:
-                    print('@@@@@ 1')
-                    print(self.token_stream_rewriter.getDefaultText())
+                #if "PricingPolicyFrame" in self.currentClass:
+                    # print('@@@@@ 1')
+                    # print(self.token_stream_rewriter.getDefaultText())
 
                 if 'ctx2' in v_info:
                     ctx2 = v_info['ctx2']
+                    print('ctx2:', ctx2.getText())
                     self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                       from_idx=ctx2.parentCtx.start.tokenIndex,
                                                       to_idx=ctx2.parentCtx.stop.tokenIndex + 1
                                                       )
 
-                if "PricingPolicyFrame" in self.currentClass:
-                    print('@@@@@ 2')
-                    print(self.token_stream_rewriter.getDefaultText())
+                # if "PricingPolicyFrame" in self.currentClass:
+                #     print('@@@@@ 2')
+                #     print(self.token_stream_rewriter.getDefaultText())
 
                 if v_info['type'] in self.dependee_dic:
                     if self.dependee_dic[v_info['type']]['type'] == 'normal':
@@ -249,6 +260,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
     def exitCompilationUnit(self, ctx: JavaParserLabeled.CompilationUnitContext):
         import_text = ''
+        print('self.dependee_dic:', self.dependee_dic)
         for dependee in self.dependee_dic:
             if self.dependee_dic[dependee]['type'] == 'normal':
                 import_text += f'\nimport {self.dependee_dic[dependee]["package"]}.I{dependee};'
@@ -258,6 +270,73 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             import_text,
             program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
         )
+
+class ConstructorEditorListener_v2(JavaParserLabeledListener):
+    def __init__(self, index_dic, common_token_stream: CommonTokenStream = None):
+        self.currentClass = None
+        self.imports = list()
+        self.imports_star = list()
+        self.__method_depth = 0
+        self.__class_depth = 0
+        self.index_dic = index_dic
+        if common_token_stream is not None:
+            self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
+        else:
+            raise TypeError('common_token_stream is None')
+
+        self.current_constructor_info = None
+
+    def enterPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
+        self.last_import_token_index = ctx.stop.tokenIndex
+
+    def enterImportDeclaration(self, ctx: JavaParserLabeled.ImportDeclarationContext):
+        self.last_import_token_index = ctx.stop.tokenIndex
+        if '*' in ctx.getText():
+            self.imports_star.append(ctx.qualifiedName().getText())
+        else:
+            self.imports.append(ctx.qualifiedName().getText())
+
+    def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        self.__class_depth += 1
+        if self.__class_depth == 1:
+            self.currentClass = ctx.IDENTIFIER().getText()
+
+
+    def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        self.__class_depth -= 1
+        if self.__class_depth == 0:
+            self.currentClass = None
+
+    def enterClassBody(self, ctx: JavaParserLabeled.ClassBodyContext):
+        if self.__class_depth == 1:
+            pass
+
+    def enterFieldDeclaration(self, ctx: JavaParserLabeled.FieldDeclarationContext):
+        if self.__class_depth == 1:
+            classBodyDeclaration = ctx.parentCtx.parentCtx
+            for i in classBodyDeclaration.modifier():
+                print(i)
+
+    def enterVariableDeclarator(self, ctx: JavaParserLabeled.VariableDeclaratorContext):
+        if self.__class_depth == 1:
+            pass
+
+    def enterExpression21(self, ctx: JavaParserLabeled.Expression21Context):
+        if self.__class_depth == 1:
+            pass
+
+    def enterFormalParameter(self, ctx: JavaParserLabeled.FormalParameterContext):
+        if self.__class_depth == 1:
+            pass
+
+    def enterConstructorDeclaration(self, ctx: JavaParserLabeled.ConstructorDeclarationContext):
+        if self.__class_depth == 1:
+            pass
+
+    def enterMethodDeclaration(self, ctx: JavaParserLabeled.MethodDeclarationContext):
+        if self.__class_depth == 1:
+            pass
+
 
 
 class Injection:
@@ -326,18 +405,18 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['commons-codec']['path']
+    base_dirs = config.projects_info['commons-codec']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     print(files)
-    #index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    with open('class_index.json') as f:
-        index_dic_ = json.load(f)
+    index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+    #with open('class_index.json') as f:
+    #    index_dic_ = json.load(f)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic_)
-    #cd.make_class_diagram()
-    #cd.set_stereotypes()
+    cd.make_class_diagram()
+    cd.set_stereotypes()
     # cd.save('class_diagram.gml')
-    cd.load('class_diagram.gml')
+    #cd.load('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
     g = cd.class_diagram_graph
     print(len(list(nx.weakly_connected_components(g))))
