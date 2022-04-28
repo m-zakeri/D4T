@@ -17,10 +17,11 @@ from gen.JavaLexer import JavaLexer
 from gen.JavaParserLabeled import JavaParserLabeled
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 
-from utils import Path, File
+from utils import Path, File, Struct
 from interface import InterfaceCreator, InterfaceInfoListener
 import config
 from class_diagram import ClassDiagram
+
 
 
 class ConstructorEditorListener(JavaParserLabeledListener):
@@ -278,19 +279,29 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
         self.imports_star = list()
         self.__method_depth = 0
         self.__class_depth = 0
+        self.field_variables = dict()
         self.index_dic = index_dic
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
         else:
             raise TypeError('common_token_stream is None')
 
-        self.current_constructor_info = None
+    def __get_field_variable_struct(self):
+        field_variable = {
+            'modifiers':[],
+            'identifier':None,
+            'type':None,
+            'declaration_location':None,
+            'initiation_location':None,
+            'object_type':None
+        }
+        return Struct(**field_variable)
+
 
     def enterPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
-        self.last_import_token_index = ctx.stop.tokenIndex
+        pass
 
     def enterImportDeclaration(self, ctx: JavaParserLabeled.ImportDeclarationContext):
-        self.last_import_token_index = ctx.stop.tokenIndex
         if '*' in ctx.getText():
             self.imports_star.append(ctx.qualifiedName().getText())
         else:
@@ -314,8 +325,21 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
     def enterFieldDeclaration(self, ctx: JavaParserLabeled.FieldDeclarationContext):
         if self.__class_depth == 1:
             classBodyDeclaration = ctx.parentCtx.parentCtx
-            for i in classBodyDeclaration.modifier():
-                print(i)
+            modifiers = []
+            _type = ctx.typeType().getText()
+            declaration_location = (ctx.start.tokenIndex, ctx.stop.tokenIndex + 1)
+            for modifier in classBodyDeclaration.modifier():
+                modifiers.append(modifier.getText())
+
+            for identifier in ctx.variableDeclarators().variableDeclarator():
+                field_variable = self.__get_field_variable_struct()
+                field_variable.modifiers = modifiers
+                field_variable.identifier = identifier.getText()
+                field_variable.type = _type
+                field_variable.declaration_location = declaration_location
+                print(field_variable.__dict__)
+
+            #TODO: add initiate_location and object_type
 
     def enterVariableDeclarator(self, ctx: JavaParserLabeled.VariableDeclaratorContext):
         if self.__class_depth == 1:
@@ -358,7 +382,8 @@ class Injection:
                     tokens = CommonTokenStream(lexer)
                     parser = JavaParserLabeled(tokens)
                     tree = parser.compilationUnit()
-                    listener = ConstructorEditorListener(index_dic, common_token_stream=tokens)
+                    #listener = ConstructorEditorListener(index_dic, common_token_stream=tokens)
+                    listener = ConstructorEditorListener_v2(index_dic, common_token_stream=tokens)
                     walker = ParseTreeWalker()
                     walker.walk(
                         listener=listener,
@@ -371,15 +396,15 @@ class Injection:
                             print('this text is None!')
                         f.write(listener.token_stream_rewriter.getDefaultText())
 
-                    for dependee in listener.dependee_dic:
-                        if listener.dependee_dic[dependee]['type'] == 'normal':
-                            key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
-                            interfaces.add(index_dic[key]['path'])
+                    # for dependee in listener.dependee_dic:
+                    #     if listener.dependee_dic[dependee]['type'] == 'normal':
+                    #         key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
+                    #         interfaces.add(index_dic[key]['path'])
 
         # create interfaces
-        print(interfaces)
-        for path in interfaces:
-            self.__create_injection_interface(path)
+        # print(interfaces)
+        # for path in interfaces:
+        #     self.__create_injection_interface(path)
         print('End injection refactoring !')
 
     def __create_injection_interface(self, path):
@@ -405,8 +430,8 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['commons-codec']['path']
-    base_dirs = config.projects_info['commons-codec']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    base_dirs = config.projects_info['javaproject']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     print(files)
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)

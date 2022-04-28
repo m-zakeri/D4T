@@ -16,6 +16,9 @@ from gen.JavaLexer import JavaLexer
 from gen.JavaParserLabeled import JavaParserLabeled
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 
+class Struct:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
 
 class ClassTypeListener(JavaParserLabeledListener):
     def __init__(self, base_dirs, file_name, file):
