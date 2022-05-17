@@ -81,7 +81,6 @@ class ClassTypeListener(JavaParserLabeledListener):
         if self.__depth == 0:
             self.current_class = None
 
-
 class File:
     @staticmethod
     def find_all_file(address, type_):
@@ -178,5 +177,5 @@ class List:
 
 if __name__ == "__main__":
     File.indexing_files_directory(
-        File.find_all_file('E:/sadegh/iust/compiler/compiler projects/java_projects/bigJavaProject', 'java'),
-        'index.json')
+        File.find_all_file('E:/sadegh/iust/compiler/compiler projects/java_projects/javaproject', 'java'),
+        'index.json', ['E:/sadegh/iust/compiler/compiler projects/java_projects/javaproject'])

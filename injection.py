@@ -8,6 +8,7 @@ __author__ = 'Sadegh Jafari, Morteza Zakeri'
 import json
 
 import networkx as nx
+from csv import writer
 
 from antlr4 import *
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
@@ -273,7 +274,12 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         )
 
 class ConstructorEditorListener_v2(JavaParserLabeledListener):
-    def __init__(self, index_dic, common_token_stream: CommonTokenStream = None):
+    def __init__(self, base_dirs, file, index_dic, roots_long_name, common_token_stream: CommonTokenStream = None):
+        self.base_dirs = base_dirs
+        self.file = file
+        self.file_name = Path.get_file_name_from_path(file)
+        self.roots_long_name = roots_long_name
+        self.current_constructor = None
         self.currentClass = None
         self.imports = list()
         self.imports_star = list()
@@ -284,6 +290,9 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
         self.constructors = list()
         self.index_dic = index_dic
         self.generate_constructor_location = None
+        self.no_constructor_injection_cases = 0
+        self.statistics = {}
+        self.package = None
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
         else:
@@ -311,6 +320,7 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
     def __get_constructor_struct(self):
         constructor = {
             'formal_parameters':list(),
+            'formal_parameters_start_location': None,
             'stop_location':None
         }
         return Struct(**constructor)
@@ -323,6 +333,41 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
         }
         return Struct(**formal_parameter)
 
+    def __edit_variable_type(self, variable_type, location):
+        self.token_stream_rewriter.replace(
+            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+            from_idx=location,
+            to_idx=location,
+            text=variable_type
+        )
+
+    def __delete_new(self, start, stop):
+        self.token_stream_rewriter.delete(
+            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+            from_idx=start,
+            to_idx=stop
+        )
+
+    def __add_formal_parameter(self, text, location):
+        self.token_stream_rewriter.insertAfter(
+            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+            index=location,
+            text=text
+        )
+
+    def __edit_formal_parameter(self):
+        pass
+
+    def __add_assignment(self, text, location):
+        self.token_stream_rewriter.insertAfter(
+            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+            index=location,
+            text=text
+        )
+
+    def __edit_assignment(self):
+        pass
+
     def __check_modifiers(self, modifiers):
         if 'final' not in modifiers or \
             'static' not in modifiers:
@@ -331,10 +376,49 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
 
     def __check_constructor_injection_case1(self, field_variable):
         if field_variable.initiation_place == 'fieldDeclaration' and \
-            self.__check_modifiers(field_variable.modifiers):
+            self.__check_modifiers(field_variable.modifiers) and \
+            field_variable.type in self.dependees and \
+            field_variable.initiation_location:
             return True
         return False
 
+    def __check_constructor_injection_case2(self, field_variable):
+        if field_variable.initiation_place == 'constructor' and \
+            self.__check_modifiers(field_variable.modifiers) and \
+            field_variable.type in self.dependees and \
+            field_variable.initiation_location:
+            return True
+        return False
+
+    def __check_constructor_injection_case3(self, field_variable, constructor):
+        print(field_variable.__dict__)
+        if field_variable.initiation_place == 'constructor' and \
+            self.__check_modifiers(field_variable.modifiers) and \
+            field_variable.type in self.dependees and \
+            not field_variable.initiation_location:
+            for formal_parameter in constructor.formal_parameters:
+                if field_variable.type == formal_parameter.type:
+                    if self.dependees[field_variable.type].type == 'normal':
+                        return True
+        return False
+
+    def get_statistics(self):
+        result = {'total_case':0, 'case1':0, 'case2':0, 'case3':0}
+        for v in self.field_variables:
+            if self.__check_constructor_injection_case1(self.field_variables[v]):
+                result['total_case'] += 1
+                result['case1'] += 1
+
+            elif self.__check_constructor_injection_case2(self.field_variables[v]):
+                result['total_case'] += 1
+                result['case2'] += 1
+
+            for constructor in self.constructors:
+                if self.__check_constructor_injection_case3(self.field_variables[v], constructor):
+                    result['total_case'] += 1
+                    result['case3'] += 1
+                    break
+        return result
 
     def __generate_constructor(self):
         text = ''
@@ -343,22 +427,14 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
         for v in self.field_variables:
             v_info = self.field_variables[v]
             if self.__check_constructor_injection_case1(v_info):
-                print('generate constructor:', v_info.__dict__)
                 # delete field variable instantiation
-                self.token_stream_rewriter.delete(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                                                  from_idx=v_info.initiation_location[0],
-                                                  to_idx=v_info.initiation_location[1]
-                                                  )
+                self.__delete_new(v_info.initiation_location[0], v_info.initiation_location[1])
+
                 variable_type = v_info.type
                 if self.dependees[v_info.type].type == 'normal':
                     variable_type = 'I' + v_info.type
                     location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
-                    self.token_stream_rewriter.replace(
-                        program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                        from_idx=location,
-                        to_idx=location,
-                        text = variable_type
-                    )
+                    self.__edit_variable_type(variable_type, location)
 
                 #text += f"private {'I' + v_info['type']} {v};\n\t"
                 formal_variable_text += f"{variable_type} {v},"
@@ -367,17 +443,38 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
         assign_text = '{' + assign_text + '\n\t}'
 
         text += f"{self.currentClass} ({formal_variable_text})\n\t{assign_text}\n\n\t"
-        print(text)
+        self.token_stream_rewriter.insertAfter(
+            self.generate_constructor_location,
+            text,
+            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
+        )
 
-        self.token_stream_rewriter.insertAfter(self.generate_constructor_location,
-                                               text,
-                                               program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME)
 
     def __edit_constructors(self):
-        pass
+        for v in self.field_variables:
+            v_info = self.field_variables[v]
+            for c in self.constructors:
+                if self.__check_constructor_injection_case1(v_info):
+                    self.__delete_new(v_info.initiation_location[0], v_info.initiation_location[1])
+                    variable_type = v_info.type
+                    if self.dependees[v_info.type].type == 'normal':
+                        variable_type = 'I' + v_info.type
+                        location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
+                        self.__edit_variable_type(variable_type, location)
+
+                    assignment_text = f"\n\t\tthis.{v} = {v};"
+                    assignment_location = c.stop_location - 2
+                    self.__add_assignment(assignment_text, assignment_location)
+
+                    formal_parameter_text = f"{variable_type} {v}"
+                    formal_parameter_location = c.formal_parameters_start_location
+                    if len(c.formal_parameters) > 0:
+                        formal_parameter_text = ', ' + formal_parameter_text
+                        formal_parameter_location = c.formal_parameters[-1].location[1]
+                    self.__add_formal_parameter(formal_parameter_text, formal_parameter_location)
 
     def enterPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
-        pass
+        self.package = ctx.qualifiedName().getText()
 
     def enterImportDeclaration(self, ctx: JavaParserLabeled.ImportDeclarationContext):
         if '*' in ctx.getText():
@@ -386,6 +483,8 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
             self.imports.append(ctx.qualifiedName().getText())
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
+        if self.package == None:
+            self.package = Path.get_default_package(self.base_dirs, self.file)
         self.__class_depth += 1
         if self.__class_depth == 1:
             self.currentClass = ctx.IDENTIFIER().getText()
@@ -394,10 +493,15 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
     def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.__class_depth -= 1
         if self.__class_depth == 0:
-            if len(self.constructors) == 0: #only can case 1 happen
-                self.__generate_constructor()
-            else:
-                self.__edit_constructors()
+            long_name = f"{self.package}-{self.file_name}-{self.currentClass}"
+            if long_name not in self.roots_long_name:
+                # if len(self.constructors) == 0: #only can case 1 happen
+                #     self.__generate_constructor()
+                # else:
+                #     self.__edit_constructors()
+
+                self.statistics[long_name] = self.get_statistics()
+
             self.currentClass = None
 
     def enterClassBody(self, ctx: JavaParserLabeled.ClassBodyContext):
@@ -420,9 +524,10 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
                     self.index_dic
                 )
                 if dependee.package is not None:
-                    dependee.type = self.index_dic[f"{dependee.package}-{dependee.name}-{dependee.name}"]["type"]
-                    print(dependee.__dict__)
-                    self.dependees[_type] = dependee
+                    long_name = f"{dependee.package}-{dependee.name}-{dependee.name}"
+                    if long_name in self.index_dic:
+                        dependee.type = self.index_dic[long_name]["type"]
+                        self.dependees[_type] = dependee
             start_declaration_location = ctx.start.tokenIndex
 
             for modifier in classBodyDeclaration.modifier():
@@ -478,19 +583,16 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
                 if identifier in self.field_variables:
                     self.field_variables[identifier].initiation_location = \
                         (ctx.start.tokenIndex, ctx.stop.tokenIndex)
-                    self.field_variables[identifier].initiation_place = 'constructor'
+                    if self.current_constructor:
+                        self.field_variables[identifier].initiation_place = 'constructor'
                     print('initializer2:')
-                    # print(self.token_stream_rewriter.getText(
-                    #     program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                    #     start=ctx.start.tokenIndex,
-                    #     stop=ctx.stop.tokenIndex
-                    # ))
                     print(self.field_variables[identifier].__dict__)
 
     def enterConstructorDeclaration(self, ctx: JavaParserLabeled.ConstructorDeclarationContext):
         if self.__class_depth == 1:
             constructor = self.__get_constructor_struct()
             constructor.stop_location = ctx.stop.tokenIndex
+            constructor.formal_parameters_start_location = ctx.formalParameters().start.tokenIndex
             if ctx.formalParameters().formalParameterList() is not None:
                 for formal_parameter in ctx.formalParameters().formalParameterList().formalParameter():
                     formal_parameter_s = self.__get_formal_parameter_struct()
@@ -504,6 +606,11 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
                     constructor.formal_parameters.append(formal_parameter_s)
             #print(constructor.__dict__)
             self.constructors.append(constructor)
+            self.current_constructor = constructor
+
+    def exitConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
+        if self.__class_depth == 1:
+            self.current_constructor = None
 
 
 
@@ -513,7 +620,28 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
 
     def enterExpression21(self, ctx: JavaParserLabeled.Expression21Context):
         if self.__class_depth == 1:
-            pass
+            identifier_list = ctx.children[0].getText()
+            identifier_list = identifier_list.split('.')
+            if len(identifier_list) == 1:
+                identifier = identifier_list[0]
+            elif len(identifier_list) == 2 and identifier_list[0] == 'this':
+                identifier = identifier_list[1]
+            else:
+                identifier = None
+
+            right_value_list = ctx.children[-1].getText()
+            right_value_list = right_value_list.split('.')
+            if len(right_value_list) == 1:
+                right_value = right_value_list[0]
+            else:
+                right_value = None
+
+            if (identifier is not None) and (right_value is not None):
+                if identifier in self.field_variables:
+                    if self.current_constructor:
+                        self.field_variables[identifier].initiation_place = 'constructor'
+                    print('initializer3:')
+                    print(self.field_variables[identifier].__dict__)
 
     def enterFormalParameter(self, ctx: JavaParserLabeled.FormalParameterContext):
         if self.__class_depth == 1:
@@ -569,6 +697,47 @@ class Injection:
         #     self.__create_injection_interface(path)
         print('End injection refactoring !')
 
+    def refactor(self, base_dirs, index_dic, files, class_diagram, statistic_path):
+        print('Start injection refactoring . . .')
+        # Import DictWriter class from CSV module
+        statistic_file = open(statistic_path, 'w')
+        writer_object = writer(statistic_file)
+        # list of column names
+        field_names = ['long_name', 'total_case', 'case1', 'case2', 'case3']
+        writer_object.writerow(field_names)
+
+        index_list = list(index_dic)
+        roots_long_name = [index_list[n] for n,d in class_diagram.in_degree() if d==0]
+
+        for f in files:
+            stream = FileStream(f, encoding='utf-8', errors='ignore')
+            lexer = JavaLexer(stream)
+            tokens = CommonTokenStream(lexer)
+            parser = JavaParserLabeled(tokens)
+            tree = parser.compilationUnit()
+            listener = ConstructorEditorListener_v2(
+                base_dirs,
+                f,
+                index_dic,
+                roots_long_name,
+                common_token_stream=tokens
+            )
+            walker = ParseTreeWalker()
+            walker.walk(listener=listener,t=tree)
+            print(listener.statistics)
+            for c in listener.statistics:
+                statistic_row = list()
+                statistic_row.append(c)
+                for field in field_names[1:]:
+                    statistic_row.append(listener.statistics[c][field])
+                print(statistic_row)
+                print(field_names)
+                writer_object.writerow(statistic_row)
+
+        statistic_file.close()
+
+        print('End injection refactoring !')
+
     def __create_injection_interface(self, path):
         stream = FileStream(path, encoding='utf8', errors='ignore')
         lexer = JavaLexer(stream)
@@ -592,8 +761,8 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    java_project_address = config.projects_info['xerces2j']['path']
+    base_dirs = config.projects_info['xerces2j']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     print(files)
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
@@ -612,7 +781,7 @@ if __name__ == "__main__":
     # g = cd.class_diagram_graph
     # print(len(list(nx.weakly_connected_components(g))))
     injection = Injection()
-    injection.detect_and_fix(index_dic_, cd.class_diagram_graph)
+    injection.refactor(base_dirs, index_dic_, files, cd.class_diagram_graph, f"{java_project_address}/injection_statistic.csv")
 
     files = File.find_all_file(java_project_address, 'java')
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)

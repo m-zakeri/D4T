@@ -25,6 +25,7 @@ benchmarks/88_jopenchart/
 benchmarks/commons-codec/
 benchmarks/tabula-java/
 benchmarks/javaproject/
+benchmarks/xerces2j/
 
 codart.egg-info
 dist
