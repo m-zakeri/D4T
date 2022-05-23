@@ -465,7 +465,6 @@ class StereotypeListener(JavaParserLabeledListener):
 
 class ClassDiagram:
     def __init__(self, java_project_address, base_dirs, index_dic=None):
-        print(java_project_address)
         self.java_project_address = java_project_address
         self.base_dirs = base_dirs
         if index_dic == None:

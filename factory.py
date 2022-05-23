@@ -72,7 +72,8 @@ class FixCreatorListener(JavaParserLabeledListener):
                                                           0).ASSIGN().symbol.tokenIndex,
                                                       ctx.stop.tokenIndex])
             except:
-                print('Exception occurred.')
+                #print('Exception occurred.')
+                pass
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -130,7 +131,7 @@ class FixProductsListener(JavaParserLabeledListener):
                 self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
             except Exception as e:
                 self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
-                print(e)
+                #print(e)
             self.currentClass = ctx.IDENTIFIER().symbol.text
 
     def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
@@ -171,7 +172,8 @@ class FixProductsListener(JavaParserLabeledListener):
                 method_body += "{\n\t\t" + "return new " + self.currentClass + "(" + parameter_ + ");\n\t}\n"
                 self.productConstructorMethod.append(method_body)
             except:
-                print("Exception occurred.")
+                pass
+                #print("Exception occurred.")
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -321,7 +323,7 @@ class Factory:
         result['products']['classes'] = products_class_list
         return result
 
-    def detect_and_fix(self, sensitivity, index_dic, class_diagram, base_dirs):
+    def refactor(self, sensitivity, index_dic, class_diagram, base_dirs):
         index_dic_keys = list(index_dic.keys())
         roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
         for r in roots:
