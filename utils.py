@@ -97,10 +97,7 @@ class File:
         index_dic = {}
         for f in files:
             file_name = Path.get_file_name_from_path(f)
-            stream = FileStream(f, encoding='utf-8', errors='ignore')
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
+            parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = ClassTypeListener(base_java_dirs, file_name, f)
             walker = ParseTreeWalker()
@@ -174,6 +171,19 @@ class List:
     def compare_similarity_of_two_list(list1, list2):
         return list(set(list1) & set(list2))
 
+def get_parser(path):
+    stream = FileStream(path, encoding='utf8', errors='ignore')
+    lexer = JavaLexer(stream)
+    tokens = CommonTokenStream(lexer)
+    parser = JavaParserLabeled(tokens)
+    return parser
+
+def get_parser_and_tokens(path):
+    stream = FileStream(path, encoding='utf8', errors='ignore')
+    lexer = JavaLexer(stream)
+    tokens = CommonTokenStream(lexer)
+    parser = JavaParserLabeled(tokens)
+    return parser, tokens
 
 if __name__ == "__main__":
     File.indexing_files_directory(

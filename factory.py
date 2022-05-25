@@ -8,6 +8,7 @@ from gen.JavaParserLabeledListener import JavaParserLabeledListener
 from gen.JavaParserLabeled import JavaParserLabeled
 
 from interface import InterfaceAdapter, InterfaceCreator
+from utils import get_parser, get_parser_and_tokens
 
 
 class FixCreatorListener(JavaParserLabeledListener):
@@ -182,11 +183,7 @@ class ProductCreatorDetectorListener(JavaParserLabeledListener):
 class Factory:
     def __fix_creator(self, creator_path, interface_import_text, interface_name, creator_identifier,
                       products_identifier):
-        stream = FileStream(creator_path, encoding='utf8')
-        lexer = JavaLexer(stream)
-        token_stream = CommonTokenStream(lexer)
-        parser = JavaParserLabeled(token_stream)
-        parser.getTokenStream()
+        parser, token_stream = get_parser_and_tokens(creator_path)
         parse_tree = parser.compilationUnit()
         my_listener = FixCreatorListener(interface_name=interface_name,
                                          interface_import_text=interface_import_text,
@@ -201,11 +198,7 @@ class Factory:
 
     def __fix_product(self, product_path, interface_import_text, interface_name, creator_identifier,
                       products_identifier):
-        stream = FileStream(product_path, encoding='utf8')
-        lexer = JavaLexer(stream)
-        token_stream = CommonTokenStream(lexer)
-        parser = JavaParserLabeled(token_stream)
-        parser.getTokenStream()
+        parser, token_stream = get_parser_and_tokens(product_path)
         parse_tree = parser.compilationUnit()
         my_listener = FixProductsListener(interface_name=interface_name,
                                           interface_import_text=interface_import_text,
@@ -282,10 +275,8 @@ class Factory:
                     child_path = index_dic[child]['path']
                     child_class_name = child.split('-')[1]
                     print('child path: ', child_path)
-                    stream = FileStream(child_path, encoding='utf8', errors='ignore')
-                    lexer = JavaLexer(stream)
-                    tokens = CommonTokenStream(lexer)
-                    parser = JavaParserLabeled(tokens)
+                    parser = get_parser(child_path)
+
                     tree = parser.compilationUnit()
                     listener = ProductCreatorDetectorListener(child_class_name)
                     walker = ParseTreeWalker()
