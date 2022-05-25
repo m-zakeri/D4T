@@ -63,7 +63,8 @@ class FixCreatorListener(JavaParserLabeledListener):
 
     def enterFieldDeclaration(self, ctx: JavaParserLabeled.FieldDeclarationContext):
         if self.inCreator:
-            try:
+            if (ctx.typeType().classOrInterfaceType() is not None) and \
+                    (ctx.variableDeclarators().variableDeclarator(0).ASSIGN() is not None):
                 variable_type = ctx.typeType().classOrInterfaceType().IDENTIFIER(0)
                 if variable_type.symbol.text in self.products_identifier:
                     self.productVarTypeIndex.append(variable_type.symbol.tokenIndex)
@@ -71,9 +72,6 @@ class FixCreatorListener(JavaParserLabeledListener):
                                                       ctx.variableDeclarators().variableDeclarator(
                                                           0).ASSIGN().symbol.tokenIndex,
                                                       ctx.stop.tokenIndex])
-            except:
-                #print('Exception occurred.')
-                pass
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -127,9 +125,9 @@ class FixProductsListener(JavaParserLabeledListener):
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         if ctx.IDENTIFIER().getText() in self.products_identifier:
             self.inProducts = True
-            try:
+            if ctx.typeType().classOrInterfaceType().IDENTIFIER() is not None:
                 self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
-            except Exception as e:
+            else:
                 self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
                 #print(e)
             self.currentClass = ctx.IDENTIFIER().symbol.text
@@ -152,28 +150,26 @@ class FixProductsListener(JavaParserLabeledListener):
 
     def enterConstructorDeclaration(self, ctx: JavaParserLabeled.ConstructorDeclarationContext):
         if self.inProducts:
-            try:
-                parameter_ = ""
-                if ctx.formalParameters().children.__len__() > 0:
-                    parameter_child = ctx.formalParameters().children[1]
+            parameter_ = ""
+            if ctx.formalParameters().children.__len__() > 0:
+                parameter_child = ctx.formalParameters().children[1]
+                print(type(parameter_child))
+                if str(type(parameter_child)) != "<class 'antlr4.tree.Tree.TerminalNodeImpl'>":
                     for i in range(0, parameter_child.children.__len__(), 2):
                         parameter_ += parameter_child.children[i].stop.text + ","
-                    parameter_ = parameter_[:-1]
+                parameter_ = parameter_[:-1]
 
-                self.productConstructorParam[self.currentClass] = parameter_
+            self.productConstructorParam[self.currentClass] = parameter_
 
-                parameters_list = self.token_stream_rewriter.getText(
-                    program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                    start=ctx.formalParameters().LPAREN().symbol.tokenIndex,
-                    stop=ctx.formalParameters().RPAREN().symbol.tokenIndex)
+            parameters_list = self.token_stream_rewriter.getText(
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                start=ctx.formalParameters().LPAREN().symbol.tokenIndex,
+                stop=ctx.formalParameters().RPAREN().symbol.tokenIndex)
 
-                method_body = "\t" + self.interfaceName
-                method_body += " create" + self.currentClass + parameters_list
-                method_body += "{\n\t\t" + "return new " + self.currentClass + "(" + parameter_ + ");\n\t}\n"
-                self.productConstructorMethod.append(method_body)
-            except:
-                pass
-                #print("Exception occurred.")
+            method_body = "\t" + self.interfaceName
+            method_body += " create" + self.currentClass + parameters_list
+            method_body += "{\n\t\t" + "return new " + self.currentClass + "(" + parameter_ + ");\n\t}\n"
+            self.productConstructorMethod.append(method_body)
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
