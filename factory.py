@@ -214,7 +214,7 @@ class Factory:
     def __compare_similarity_of_two_list(self, list1, list2):
         return list(set(list1) & set(list2))
 
-    def __find_products(self, parent_class, method_class_dic, percentage):
+    def __find_products(self, parent_class, method_class_dic, sensitivity):
         result = {'factory': int(parent_class), 'products': {'classes': [], 'methods': []}}
 
         for c1 in method_class_dic.keys():
@@ -228,7 +228,7 @@ class Factory:
                 if max(len_c1_methods, len_c2_methods) == 0:
                     continue
 
-                if len(method_list_help) / max(len_c1_methods, len_c2_methods) >= percentage:
+                if len(method_list_help) / max(len_c1_methods, len_c2_methods) >= sensitivity:
                     method_list = method_list_help.copy()
                     class_list.append(c2)
 
