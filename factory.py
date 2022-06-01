@@ -264,6 +264,7 @@ class Factory:
         return result
 
     def refactor(self, sensitivity, index_dic, class_diagram, base_dirs):
+        reports = []
         index_dic_keys = list(index_dic.keys())
         roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
         for r in roots:
@@ -290,6 +291,8 @@ class Factory:
                 if len(result['products']['classes']) > 1:
                     print('--------------------------------------------------')
                     print(json.dumps(result, indent=4))
+                    reports.append(result)
+
                     interface_name = 'Interface' + str(result['factory'])
                     result = self.__find_class_info_from_id(result, index_dic)
                     # make interface for
@@ -315,3 +318,4 @@ class Factory:
                                            creator_class_name,
                                            products_class_name)
                     print('--------------------------------------------------')
+        return reports
