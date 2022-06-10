@@ -14,7 +14,7 @@ class Report:
     @staticmethod
     def get_factory_report(java_project, sensitivity):
         report = {
-            "java_project_address":java_project,
+            "java_project":java_project,
             "sensitivity":sensitivity,
             "cases":None
         }
@@ -34,6 +34,7 @@ class Report:
         index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
         cd2 = ClassDiagram(java_project_address, base_dirs, index_dic)
         cd2.make_class_diagram()
+
 
 
 if __name__ == "__main__":

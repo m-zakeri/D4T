@@ -263,7 +263,7 @@ class Factory:
         result['products']['classes'] = products_class_list
         return result
 
-    def refactor(self, sensitivity, index_dic, class_diagram, base_dirs):
+    def refactor(self, sensitivity, index_dic, class_diagram, base_dirs, edit=True):
         reports = []
         index_dic_keys = list(index_dic.keys())
         roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
@@ -301,7 +301,8 @@ class Factory:
                                                                                              interface_name
                                                                                              )
                     interface_creator = InterfaceCreator(interface_info)
-                    interface_creator.save()
+                    if edit:
+                        interface_creator.save()
                     creator_path = result['factory']['path']
                     creator_class_name = result['factory']['class_name']
                     products_path = []
@@ -311,11 +312,12 @@ class Factory:
                         products_class_name.append(product_info['class_name'])
 
                     interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
-                    self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
-                                       products_class_name)
-                    for product_path in products_path:
-                        self.__fix_product(product_path, interface_import_text, interface_name,
-                                           creator_class_name,
+                    if edit:
+                        self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
                                            products_class_name)
+                        for product_path in products_path:
+                            self.__fix_product(product_path, interface_import_text, interface_name,
+                                               creator_class_name,
+                                               products_class_name)
                     print('--------------------------------------------------')
         return reports
