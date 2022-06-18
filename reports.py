@@ -1,15 +1,50 @@
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 from class_diagram import ClassDiagram
-from factory import Factory
+from factory import Factory, FastFactory
+from complexity import Complexity
 from utils import File
 import config
 
 class Report:
+    def __init__(self, java_project):
+        self.java_project = java_project
+        self.java_project_address = config.projects_info[java_project]['path']
+        self.base_dirs = config.projects_info[java_project]['base_dirs']
+        self.files = File.find_all_file(self.java_project_address, 'java')
+        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
+        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
+        self.cd.make_class_diagram()
+        self.cdg = self.cd.get_CDG()
+
     def reload_from_disk(self):
-        pass
+        self.files = File.find_all_file(self.java_project_address, 'java')
+        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
+        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
+        self.cd.make_class_diagram()
+        self.cdg = self.cd.get_CDG()
+
+    def restore_java_project(self):
+        os.chdir(f"{config.BASE_DIR}{self.java_project}")
+        os.popen("git restore .")
+        os.popen("git clean -f -d")
+        path = os.getcwd()
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        os.chdir(path)
+
+    def get_code_changes_rate(self):
+        os.chdir(f"{config.BASE_DIR}{self.java_project}")
+        tmp = os.popen("git diff --shortstat").read()
+        tmp = tmp.split()
+        path = os.getcwd()
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        os.chdir(path)
+        return {"insertion":int(tmp[3]), "deletion":int(tmp[5])}
 
     def get_json_report(self, sensitivity, save=True, edit=True):
         pass
@@ -20,32 +55,59 @@ class Report:
 
 
 class FactoryReport(Report):
-    def __init__(self, java_project):
-        self.java_project = java_project
-        self.java_project_address = config.projects_info[java_project]['path']
-        self.base_dirs = config.projects_info[java_project]['base_dirs']
-        self.files = File.find_all_file(self.java_project_address, 'java')
-        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
-        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
-        self.cd.make_class_diagram()
+    def get_single_report(self, sensitivity, edit=True):
+        report = {
+                "java_project":self.java_project,
+                "sensitivity":sensitivity,
+                "complexity": {"before": None, "after": None},
+                "code_changes_rate": 0,
+                "cases":None
+            }
 
-    def reload_from_disk(self):
-        self.java_project_address = config.projects_info[self.java_project]['path']
-        self.base_dirs = config.projects_info[self.java_project]['base_dirs']
-        self.files = File.find_all_file(self.java_project_address, 'java')
-        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
-        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
-        self.cd.make_class_diagram()
+        c = Complexity(self.cdg)
+        matrix = c.get_matrix()
+        report["complexity"]["before"] = Complexity.get_avg_of_matrix(matrix)
+        f = Factory()
+        report["cases"] = f.refactor(
+            sensitivity,
+            self.index_dic,
+            self.cd.class_diagram_graph,
+            self.base_dirs,
+            edit=edit
+        )
 
-    def get_json_report(self, sensitivity, save=True, edit=True):
+        if edit:
+            self.reload_from_disk()
+            c = Complexity(self.cdg)
+            matrix = c.get_matrix()
+            report["complexity"]["after"] = Complexity.get_avg_of_matrix(matrix)
+
+            code_changes_rate = self.get_code_changes_rate()
+            report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
+
+        with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
+            json.dump(report, f, indent=4)
+
+        return report
+
+    def get_list_of_report(self, save=True, edit=True):
+        reports = list()
+        for sensitivity in range(10):
+            reports.append(self.get_single_report(sensitivity / 10, edit=edit))
+
+        if save:
+            with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
+                json.dump(reports, f, indent=4)
+        return reports
+
+    def get_json_report_fast(self, sensitivity, fast_factory, save=True, edit=True):
         report = {
             "java_project":java_project,
             "sensitivity":sensitivity,
             "cases":None
         }
 
-        f = Factory()
-        report["cases"] = f.refactor(
+        report["cases"] = fast_factory.refactor(
             sensitivity,
             self.index_dic,
             self.cd.class_diagram_graph,
@@ -131,6 +193,31 @@ class FactoryReport(Report):
         if show:
             plt.show()
 
+    def show_avg_no_of_products_vs_sensitivity_chart_fast(self, show=True, save=False):
+        sensitivity_list = list()
+        avg_of_common_methods_list = list()
+        f = FastFactory(self.index_dic)
+        for sensitivity in range(10):
+            json_report = self.get_json_report_fast(
+                sensitivity / 10,
+                f,
+                edit=False,
+                save=False
+            )
+
+            sensitivity_list.append(sensitivity / 10)
+            print("json_report:", json_report)
+            avg_of_common_methods_list.append(self.__get_avg_no_products(json_report))
+
+        plt.plot(sensitivity_list, avg_of_common_methods_list)
+        plt.title(self.java_project)
+        plt.xlabel('sensitivity')
+        plt.ylabel('average number of products')
+        if save:
+            plt.savefig(self.java_project_address + "/avg_number_of_products_vs_sensitivity_chart_fast.png")
+        if show:
+            plt.show()
+
     def __get_avg_no_methods(self, json_report):
         a = 0
         b = 0
@@ -151,8 +238,10 @@ class FactoryReport(Report):
 if __name__ == "__main__":
     java_project = "10_water-simulator"
     fr = FactoryReport(java_project)
-    #json_report = fr.get_json_report(0.1, edit=False)
+    json_report = fr.get_single_report(0.1, edit=True)
     #pandas_report = fr.get_pandas_report(json_report)
     #fr.show_cases_vs_sensitivity_chart()
     #fr.show_avg_of_common_methods_vs_sensitivity_chart(show=False, save=True)
-    fr.show_avg_no_of_products_vs_sensitivity_chart(show=False, save=True)
+    #fr.show_avg_no_of_products_vs_sensitivity_chart(show=False, save=True)
+    #fr.show_avg_no_of_products_vs_sensitivity_chart_fast(show=False, save=True)
+    #subprocess.Popen(["cd", "diff", "--shortstat"], stdout=subprocess.PIPE)

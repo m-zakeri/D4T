@@ -690,7 +690,7 @@ class ClassDiagram:
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
         print('End setting stereotype !')
 
-    def get_CFG(self):
+    def get_CDG(self):
         CDG = nx.DiGraph()
         relationships_name = ['parent', 'child', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(CDG, relationships_name, "relation_type")

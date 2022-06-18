@@ -86,6 +86,17 @@ class Complexity():
                     matrix[s].append(None)
         return matrix
 
+    @staticmethod
+    def get_avg_of_matrix(matrix):
+        n = 0
+        s = 0
+        for i in matrix:
+            for j in i:
+                if j is not None:
+                    n += 1
+                    s += j
+        return s / n
+
     def save_csv(self, path):
         node_list = list(self.CDG.nodes)
         no_nodes = len(node_list)
@@ -117,20 +128,19 @@ import config
 from utils import File
 
 if __name__ == "__main__":
-    '''
-    cd = ClassDiagram()
-    cd.class_diagram_graph = test_class_diagram
-    cd.show(cd.class_diagram_graph)
+    # cd = ClassDiagram()
+    # cd.class_diagram_graph = test_class_diagram
+    # cd.show(cd.class_diagram_graph)
+    #
+    # test_CDG = cd.get_CFG()
+    # c = Complexity(test_CDG)
+    # matrix = c.get_matrix()
+    # for i in matrix:
+    #     print(i)
 
-    test_CDG = cd.get_CFG()
-    c = Complexity(test_CDG)
-    matrix = c.get_matrix()
-    for i in matrix:
-        print(i)
-    '''
-    '''
-    java_project_address = config.projects_info['rhino-Rhino1_7_12_Release']['path']
-    base_dirs = config.projects_info['rhino-Rhino1_7_12_Release']['base_dirs']
+
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
@@ -143,46 +153,53 @@ if __name__ == "__main__":
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
-    CDG = cd.get_CFG()
+    CDG = cd.get_CDG()
     cd.show(CDG)
 
     c = Complexity(CDG)
 
-    #matrix = c.get_matrix()
-    #for i in matrix:
-    #    print(i)
-    #print(c.calculate_interaction_complexity(2, 3))
-    cd.save(java_project_address + '\\' + 'class_diagram.gml')
-    cd.save_index(java_project_address + '\\' + 'index_dic.json')
-    '''
-    java_project_address = config.projects_info['rhino-Rhino1_7_12_Release']['path']
-    base_dirs = config.projects_info['rhino-Rhino1_7_12_Release']['base_dirs']
-    with open(java_project_address + '\\' + 'index_dic.json') as f:
-        index_dic = json.load(f)
-    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
-    cd.load(java_project_address + '\\' + 'class_diagram.gml')
-    CDG = cd.get_CFG()
-    #cd.show(CDG)
-    c = Complexity(CDG)
-    #print((2, 0), c.calculate_interaction_complexity("2", "0"))
-    print(10, 110)
-    x = 0
-    print(len(cd.class_diagram_graph.edges))
+    matrix = c.get_matrix()
+    print(Complexity.get_avg_of_matrix(matrix))
+    for i in matrix:
+       print(i)
 
-    for path in nx.all_simple_paths(cd.class_diagram_graph, source="10", target="110"):
-        x += 1
-        print(x)
-    '''
-    print((10, 110), c.calculate_interaction_complexity("10", "110"))
-    for i in range(10, 276):
-        for j in range(276):
-            print(i, j)
-            complexity = c.calculate_interaction_complexity(str(i), str(j))
-            #if complexity != None :
-                #if complexity > 1:
-            print((i, j), complexity)
+    #print(c.calculate_interaction_complexity(2, 3))
+    # cd.save(java_project_address + '\\' + 'class_diagram.gml')
+    # cd.save_index(java_project_address + '\\' + 'index_dic.json')
+
+
+
+
+    # java_project_address = config.projects_info['rhino-Rhino1_7_12_Release']['path']
+    # base_dirs = config.projects_info['rhino-Rhino1_7_12_Release']['base_dirs']
+    # with open(java_project_address + '\\' + 'index_dic.json') as f:
+    #     index_dic = json.load(f)
+    # cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    # cd.load(java_project_address + '\\' + 'class_diagram.gml')
+    # CDG = cd.get_CDG()
+    # #cd.show(CDG)
+    # c = Complexity(CDG)
+    # #print((2, 0), c.calculate_interaction_complexity("2", "0"))
+    # print(10, 110)
+    # x = 0
+    # print(len(cd.class_diagram_graph.edges))
+    #
+    # for path in nx.all_simple_paths(cd.class_diagram_graph, source="10", target="110"):
+    #     x += 1
+    #     print(x)
+
+
+
+    # print((10, 110), c.calculate_interaction_complexity("10", "110"))
+    # for i in range(10, 276):
+    #     for j in range(276):
+    #         print(i, j)
+    #         complexity = c.calculate_interaction_complexity(str(i), str(j))
+    #         #if complexity != None :
+    #             #if complexity > 1:
+    #         print((i, j), complexity)
     #c.save_csv(java_project_address + '\\' + 'complexity.csv')
-    '''
+
 
 
 
