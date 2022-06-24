@@ -14,15 +14,10 @@ class Report:
         self.java_project = java_project
         self.java_project_address = config.projects_info[java_project]['path']
         self.base_dirs = config.projects_info[java_project]['base_dirs']
-        self.files = File.find_all_file(self.java_project_address, 'java')
-        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
-        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
-        self.cd.make_class_diagram()
-        self.cdg = self.cd.get_CDG()
+        self.reload_from_disk()
 
     def reload_from_disk(self):
         self.files = File.find_all_file(self.java_project_address, 'java')
-        print(self.files)
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
         self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
         self.cd.make_class_diagram()
@@ -30,8 +25,8 @@ class Report:
 
     def restore_java_project(self):
         os.chdir(f"{config.BASE_DIR}{self.java_project}")
-        os.popen("git restore .")
-        os.popen("git clean -f -d")
+        os.popen("git restore .").close()
+        os.popen("git clean -f -d").close()
         path = os.getcwd()
         path = os.path.abspath(os.path.join(path, os.pardir))
         path = os.path.abspath(os.path.join(path, os.pardir))
