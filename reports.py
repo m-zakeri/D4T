@@ -83,10 +83,10 @@ class FactoryReport(Report):
 
         return report
 
-    def get_list_of_report(self, save=True, edit=True):
+    def get_list_of_report(self, no_of_samples, save=True, edit=True):
         reports = list()
-        for sensitivity in range(2):
-            reports.append(self.get_single_report(sensitivity / 10, edit=edit))
+        for sensitivity in range(no_of_samples - 1):
+            reports.append(self.get_single_report(sensitivity / no_of_samples, edit=edit))
             self.restore_java_project()
             self.reload_from_disk()
 
@@ -95,7 +95,7 @@ class FactoryReport(Report):
                 json.dump(reports, f, indent=4)
         return reports
 
-    def get_json_report_fast(self, sensitivity, fast_factory, save=True, edit=True):
+    def get_single_report_fast(self, sensitivity, fast_factory, save=True):
         report = {
             "java_project":java_project,
             "sensitivity":sensitivity,
@@ -107,84 +107,82 @@ class FactoryReport(Report):
             self.index_dic,
             self.cd.class_diagram_graph,
             self.base_dirs,
-            edit=edit
+            edit=False
         )
 
         if save:
-            with open(self.java_project_address + "/factory_report.json", 'w') as f:
+            with open(f"{config.BASE_DIR}/{self.java_project}/factory_report_fast.json", 'w') as f:
                 json.dump(report, f, indent=4)
         return report
 
     def get_pandas_report(self, json_report, save=True):
         pandas_report = {
+            "project":[],
             "package": [],
             "path": [],
             "class": [],
             "sensitivity": []
         }
-
-        for case in json_report["cases"]:
-            factory = case["factory"]
-            pandas_report["package"].append(factory["package"])
-            pandas_report["path"].append(factory["path"])
-            pandas_report["class"].append(factory["class_name"])
-            pandas_report["sensitivity"].append(json_report["sensitivity"])
+        for report in json_report:
+            for case in report["cases"]:
+                factory = case["factory"]
+                pandas_report["project"].append(report["java_project"])
+                pandas_report["creator_package"].append(factory["package"])
+                pandas_report["creator_path"].append(factory["path"])
+                pandas_report["creator_class"].append(factory["class_name"])
+                pandas_report["sensitivity"].append(report["sensitivity"])
 
         df = pd.DataFrame(pandas_report)
 
         if save:
-            df.to_csv(self.java_project_address + "/factory_report.csv", index=False)
+            df.to_csv(f"{config.BASE_DIR}/{self.java_project}/factory_report.csv", index=False)
         return df
 
-    def show_cases_vs_sensitivity_chart(self, show=True, save=False):
+    def show_cases_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
         no_cases_list = list()
-        for sensitivity in range(10):
-            json_report = self.get_json_report(sensitivity / 10, edit=False, save=False)
-            pandas_report = self.get_pandas_report(json_report, save=False)
-            sensitivity_list.append(sensitivity / 10)
-            no_cases_list.append(pandas_report.shape[0])
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            no_cases_list.append(len(report["cases"]))
 
         plt.plot(sensitivity_list, no_cases_list)
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('number of cases')
         if save:
-            plt.savefig(self.java_project_address + "/cases_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/cases_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
-    def show_avg_of_common_methods_vs_sensitivity_chart(self, show=True, save=False):
+    def show_avg_of_common_methods_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
         avg_of_common_methods_list = list()
-        for sensitivity in range(10):
-            json_report = self.get_json_report(sensitivity / 10, edit=False, save=False)
-            sensitivity_list.append(sensitivity / 10)
-            avg_of_common_methods_list.append(self.__get_avg_no_methods(json_report))
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            avg_of_common_methods_list.append(self.__get_avg_no_methods(report))
 
         plt.plot(sensitivity_list, avg_of_common_methods_list)
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('average number of common methods')
         if save:
-            plt.savefig(self.java_project_address + "/avg_of_common_methods_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_of_common_methods_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
-    def show_avg_no_of_products_vs_sensitivity_chart(self, show=True, save=False):
+    def show_avg_no_of_products_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
         avg_of_common_methods_list = list()
-        for sensitivity in range(10):
-            json_report = self.get_json_report(sensitivity / 10, edit=False, save=False)
-            sensitivity_list.append(sensitivity / 10)
-            avg_of_common_methods_list.append(self.__get_avg_no_products(json_report))
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            avg_of_common_methods_list.append(self.__get_avg_no_products(report))
 
         plt.plot(sensitivity_list, avg_of_common_methods_list)
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('average number of products')
         if save:
-            plt.savefig(self.java_project_address + "/avg_number_of_products_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_number_of_products_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -234,10 +232,12 @@ if __name__ == "__main__":
     java_project = "10_water-simulator"
     fr = FactoryReport(java_project)
     #json_report = fr.get_single_report(0.1, edit=True)
-    factory_report = fr.get_list_of_report()
+    #factory_report = fr.get_list_of_report(3)
+    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+        json_report = json.load(f)
     #pandas_report = fr.get_pandas_report(json_report)
-    #fr.show_cases_vs_sensitivity_chart()
-    #fr.show_avg_of_common_methods_vs_sensitivity_chart(show=False, save=True)
-    #fr.show_avg_no_of_products_vs_sensitivity_chart(show=False, save=True)
+    #fr.show_cases_vs_sensitivity_chart(json_report)
+    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report)
+    fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
     #fr.show_avg_no_of_products_vs_sensitivity_chart_fast(show=False, save=True)
     #subprocess.Popen(["cd", "diff", "--shortstat"], stdout=subprocess.PIPE)
