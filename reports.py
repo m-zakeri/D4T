@@ -22,6 +22,7 @@ class Report:
 
     def reload_from_disk(self):
         self.files = File.find_all_file(self.java_project_address, 'java')
+        print(self.files)
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
         self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
         self.cd.make_class_diagram()
@@ -85,15 +86,14 @@ class FactoryReport(Report):
             code_changes_rate = self.get_code_changes_rate()
             report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
 
-        with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
-            json.dump(report, f, indent=4)
-
         return report
 
     def get_list_of_report(self, save=True, edit=True):
         reports = list()
-        for sensitivity in range(10):
+        for sensitivity in range(2):
             reports.append(self.get_single_report(sensitivity / 10, edit=edit))
+            self.restore_java_project()
+            self.reload_from_disk()
 
         if save:
             with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
@@ -238,7 +238,8 @@ class FactoryReport(Report):
 if __name__ == "__main__":
     java_project = "10_water-simulator"
     fr = FactoryReport(java_project)
-    json_report = fr.get_single_report(0.1, edit=True)
+    #json_report = fr.get_single_report(0.1, edit=True)
+    factory_report = fr.get_list_of_report()
     #pandas_report = fr.get_pandas_report(json_report)
     #fr.show_cases_vs_sensitivity_chart()
     #fr.show_avg_of_common_methods_vs_sensitivity_chart(show=False, save=True)

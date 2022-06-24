@@ -105,6 +105,7 @@ class FixProductsListener(JavaParserLabeledListener):
         self.packageIndex = 0
         self.productsClassIndex = []
         self.currentClass = None
+        self.has_implement = None
         # Move all the tokens in the source code in a buffer, token_stream_rewriter.
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
@@ -114,14 +115,20 @@ class FixProductsListener(JavaParserLabeledListener):
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         if ctx.IDENTIFIER().getText() in self.products_identifier:
             self.inProducts = True
-            if ctx.typeType().classOrInterfaceType().IDENTIFIER() is not None:
-                self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
-            else:
-                self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
+            if ctx.typeType() is not None:
+                if ctx.typeType().classOrInterfaceType().IDENTIFIER() is not None:
+                    self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
+                else:
+                    self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
             self.currentClass = ctx.IDENTIFIER().symbol.text
+            if ctx.IMPLEMENTS() is not None:
+                self.has_implement = True
+            else:
+                self.has_implement = False
 
     def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
         self.inProducts = False
+        self.currentClass = None
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -131,9 +138,15 @@ class FixProductsListener(JavaParserLabeledListener):
                                                index=self.packageIndex,
                                                text='\n' + self.interface_import_text + '\n')
         for item in self.productsClassIndex:
+            if self.has_implement == True:
+                text = self.interfaceName + ", "
+                item += 3
+            else:
+                text = " implements " + self.interfaceName
+
             self.token_stream_rewriter.insertAfter(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                    index=item,
-                                                   text=" implements " + self.interfaceName)
+                                                   text=text)
 
 
 class ProductCreatorDetectorListener(JavaParserLabeledListener):
