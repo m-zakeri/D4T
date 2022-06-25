@@ -85,10 +85,11 @@ class FactoryReport(Report):
 
     def get_list_of_report(self, no_of_samples, save=True, edit=True):
         reports = list()
-        for sensitivity in range(no_of_samples - 1):
-            reports.append(self.get_single_report(sensitivity / no_of_samples, edit=edit))
-            self.restore_java_project()
-            self.reload_from_disk()
+        for sensitivity in range(no_of_samples):
+            reports.append(self.get_single_report(sensitivity / (no_of_samples - 1), edit=edit))
+            if edit:
+                self.restore_java_project()
+                self.reload_from_disk()
 
         if save:
             with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
@@ -114,6 +115,25 @@ class FactoryReport(Report):
             with open(f"{config.BASE_DIR}/{self.java_project}/factory_report_fast.json", 'w') as f:
                 json.dump(report, f, indent=4)
         return report
+
+    def get_list_of_report_fast(self, no_of_samples, save=True):
+        reports = list()
+        f = FastFactory(self.index_dic)
+        for sensitivity in range(no_of_samples):
+            report = self.get_single_report_fast(
+                sensitivity / (no_of_samples - 1),
+                f,
+                save=False
+            )
+            reports.append(report)
+
+        if save:
+            with open(f"{config.BASE_DIR}/{self.java_project}/factory_report_fast.json", 'w') as f:
+                json.dump(reports, f, indent=4)
+        return reports
+
+
+
 
     def get_pandas_report(self, json_report, save=True):
         pandas_report = {
@@ -186,31 +206,6 @@ class FactoryReport(Report):
         if show:
             plt.show()
 
-    def show_avg_no_of_products_vs_sensitivity_chart_fast(self, show=True, save=False):
-        sensitivity_list = list()
-        avg_of_common_methods_list = list()
-        f = FastFactory(self.index_dic)
-        for sensitivity in range(10):
-            json_report = self.get_json_report_fast(
-                sensitivity / 10,
-                f,
-                edit=False,
-                save=False
-            )
-
-            sensitivity_list.append(sensitivity / 10)
-            print("json_report:", json_report)
-            avg_of_common_methods_list.append(self.__get_avg_no_products(json_report))
-
-        plt.plot(sensitivity_list, avg_of_common_methods_list)
-        plt.title(self.java_project)
-        plt.xlabel('sensitivity')
-        plt.ylabel('average number of products')
-        if save:
-            plt.savefig(self.java_project_address + "/avg_number_of_products_vs_sensitivity_chart_fast.png")
-        if show:
-            plt.show()
-
     def __get_avg_no_methods(self, json_report):
         a = 0
         b = 0
@@ -233,11 +228,10 @@ if __name__ == "__main__":
     fr = FactoryReport(java_project)
     #json_report = fr.get_single_report(0.1, edit=True)
     #factory_report = fr.get_list_of_report(3)
-    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-        json_report = json.load(f)
+    with open(f"{config.BASE_DIR}/{java_project}/factory_report_fast.json") as f:
+        json_report_fast = json.load(f)
     #pandas_report = fr.get_pandas_report(json_report)
     #fr.show_cases_vs_sensitivity_chart(json_report)
-    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report)
-    fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
-    #fr.show_avg_no_of_products_vs_sensitivity_chart_fast(show=False, save=True)
-    #subprocess.Popen(["cd", "diff", "--shortstat"], stdout=subprocess.PIPE)
+    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report_fast)
+    #fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
+    #fr.get_list_of_report_fast(5)
