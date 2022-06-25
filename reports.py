@@ -206,6 +206,38 @@ class FactoryReport(Report):
         if show:
             plt.show()
 
+    def show_complexity_vs_sensitivity_chart(self, json_report, show=True, save=True):
+        sensitivity_list = list()
+        complexity_list = list()
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            complexity_list.append(report["complexity"]["after"] - report["complexity"]["before"])
+
+        plt.plot(sensitivity_list, complexity_list)
+        plt.title(self.java_project)
+        plt.xlabel('sensitivity')
+        plt.ylabel('The rate of change of complexity')
+        if save:
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/complexity_vs_sensitivity_chart.png")
+        if show:
+            plt.show()
+
+    def show_code_changed_rate_vs_sensitivity_chart(self, json_report, show=True, save=True):
+        sensitivity_list = list()
+        complexity_list = list()
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            complexity_list.append(report["code_changes_rate"])
+
+        plt.plot(sensitivity_list, complexity_list)
+        plt.title(self.java_project)
+        plt.xlabel('sensitivity')
+        plt.ylabel('code changes rate')
+        if save:
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/code_changed_rate_vs_sensitivity_chart.png")
+        if show:
+            plt.show()
+
     def __get_avg_no_methods(self, json_report):
         a = 0
         b = 0
@@ -228,10 +260,12 @@ if __name__ == "__main__":
     fr = FactoryReport(java_project)
     #json_report = fr.get_single_report(0.1, edit=True)
     #factory_report = fr.get_list_of_report(3)
-    with open(f"{config.BASE_DIR}/{java_project}/factory_report_fast.json") as f:
-        json_report_fast = json.load(f)
+    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+        json_report = json.load(f)
     #pandas_report = fr.get_pandas_report(json_report)
     #fr.show_cases_vs_sensitivity_chart(json_report)
     #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report_fast)
     #fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
     #fr.get_list_of_report_fast(5)
+    #fr.show_complexity_vs_sensitivity_chart(json_report)
+    fr.show_code_changed_rate_vs_sensitivity_chart(json_report)
