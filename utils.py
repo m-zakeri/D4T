@@ -158,7 +158,7 @@ class Path:
     @staticmethod
     def detect_path(paths):
         if len(paths) == 1:
-            return '/'.join(paths[0][-2])
+            return '/'.join(paths[0][:-1])
         max_path_length = max([len(list_path) for list_path in paths])
         for i in range(max_path_length):
             x = set([j[i] for j in paths])

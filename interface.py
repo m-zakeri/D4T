@@ -157,8 +157,9 @@ class InterfaceAdapter:
         all_paths = [factory_info['factory']['path']]
         for product_info in factory_info['products']['classes']:
             all_paths.append(product_info['path'])
-        path = Path.detect_path(Path.convert_str_paths_to_list_paths(all_paths))
+        path = Path.detect_path(Path.convert_str_paths_to_list_paths(set(all_paths)))
         interface_info['path'] = path
+        print(path, all_paths)
         package = Path.get_default_package(base_dirs, path + '/' + name + '.java')
         interface_info['package'] = package
         interface_info['methods'] = factory_info['products']['methods']
@@ -191,4 +192,14 @@ def test_driver():
 
 
 if __name__ == "__main__":
-    test_driver()
+    #test_driver()
+    all_paths = [
+        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java',
+        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java',
+        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java'
+    ]
+    print(list(set(all_paths)))
+    all_paths = list(set(all_paths))
+    print(Path.convert_str_paths_to_list_paths(all_paths))
+    path = Path.detect_path(Path.convert_str_paths_to_list_paths(all_paths))
+    print(path)
