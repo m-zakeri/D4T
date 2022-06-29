@@ -14,9 +14,9 @@ import datetime
 import smogn
 from sklearn.linear_model import LassoCV, LarsCV
 from sklearn.svm import NuSVR
-from sklearnex import patch_sklearn
+# from sklearnex import patch_sklearn
 
-patch_sklearn()
+# patch_sklearn()
 
 import pandas as pd
 import joblib
@@ -29,7 +29,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit, GridSearchCV
 from sklearn import tree, preprocessing
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+# from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
     VotingRegressor
 
@@ -174,7 +174,7 @@ class Regression:
             regressor = tree.DecisionTreeRegressor(random_state=23, )
             # Set the parameters to be used for tuning by cross-validation
             parameters = {
-                'criterion': ['mse', 'friedman_mse', 'mae'],
+                'criterion': ['squared_error', 'friedman_mse', 'absolute_error'],
                 'max_depth': range(3, 50, 1),
                 'min_samples_split': range(2, 50, 1)
             }
@@ -182,7 +182,7 @@ class Regression:
             regressor = RandomForestRegressor(random_state=19, )
             parameters = {
                 'n_estimators': range(5, 50, 5),
-                # 'criterion': ['mse', 'mae'],
+                # 'criterion': ['squared_error', 'absolute_error'],
                 'max_depth': range(5, 50, 5),
                 # 'min_samples_split': range(2, 30, 2),
                 # 'max_features': ['auto', 'sqrt', 'log2']
