@@ -654,57 +654,52 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
 
 
 class Injection:
-    def detect_and_fix(self, index_dic, class_diagram):
+    # def refactor(self, index_dic, class_diagram):
+    #     print('Start injection refactoring . . .')
+    #     index_dic_keys = list(index_dic.keys())
+    #     parents = list((v for v, d in class_diagram.in_degree() if d >= 0))
+    #     interfaces = set()
+    #     for p in parents:
+    #         root_dfs = list(nx.bfs_edges(class_diagram, source=p, depth_limit=1))
+    #         if len(root_dfs) > 0:
+    #             for child_index in root_dfs:
+    #                 child = index_dic_keys[int(child_index[1])]
+    #                 child_path = index_dic[child]['path']
+    #                 print('\t', child_path)
+    #                 # child_class_name = child.split('-')[1]
+    #                 stream = FileStream(child_path, encoding='utf8', errors='ignore')
+    #                 lexer = JavaLexer(stream)
+    #                 tokens = CommonTokenStream(lexer)
+    #                 parser = JavaParserLabeled(tokens)
+    #                 tree = parser.compilationUnit()
+    #                 #listener = ConstructorEditorListener(index_dic, common_token_stream=tokens)
+    #                 listener = ConstructorEditorListener_v2(index_dic, common_token_stream=tokens)
+    #                 walker = ParseTreeWalker()
+    #                 walker.walk(
+    #                     listener=listener,
+    #                     t=tree
+    #                 )
+    #
+    #                 # print(listener.token_stream_rewriter.getDefaultText())
+    #                 with open(r"" + child_path, mode='w', encoding='utf-8', newline='') as f:
+    #                     # if listener.token_stream_rewriter.getDefaultText() is None:
+    #                     #     print('this text is None!')
+    #                     f.write(listener.token_stream_rewriter.getDefaultText())
+    #
+    #                 # for dependee in listener.dependee_dic:
+    #                 #     if listener.dependee_dic[dependee]['type'] == 'normal':
+    #                 #         key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
+    #                 #         interfaces.add(index_dic[key]['path'])
+    #
+    #     # create interfaces
+    #     # print(interfaces)
+    #     # for path in interfaces:
+    #     #     self.__create_injection_interface(path)
+    #     print('End injection refactoring !')
+
+    def refactor(self, base_dirs, index_dic, files, class_diagram):
         print('Start injection refactoring . . .')
-        index_dic_keys = list(index_dic.keys())
-        parents = list((v for v, d in class_diagram.in_degree() if d >= 0))
-        interfaces = set()
-        for p in parents:
-            root_dfs = list(nx.bfs_edges(class_diagram, source=p, depth_limit=1))
-            if len(root_dfs) > 0:
-                for child_index in root_dfs:
-                    child = index_dic_keys[int(child_index[1])]
-                    child_path = index_dic[child]['path']
-                    print('\t', child_path)
-                    # child_class_name = child.split('-')[1]
-                    stream = FileStream(child_path, encoding='utf8', errors='ignore')
-                    lexer = JavaLexer(stream)
-                    tokens = CommonTokenStream(lexer)
-                    parser = JavaParserLabeled(tokens)
-                    tree = parser.compilationUnit()
-                    #listener = ConstructorEditorListener(index_dic, common_token_stream=tokens)
-                    listener = ConstructorEditorListener_v2(index_dic, common_token_stream=tokens)
-                    walker = ParseTreeWalker()
-                    walker.walk(
-                        listener=listener,
-                        t=tree
-                    )
-
-                    # print(listener.token_stream_rewriter.getDefaultText())
-                    with open(r"" + child_path, mode='w', encoding='utf-8', newline='') as f:
-                        # if listener.token_stream_rewriter.getDefaultText() is None:
-                        #     print('this text is None!')
-                        f.write(listener.token_stream_rewriter.getDefaultText())
-
-                    # for dependee in listener.dependee_dic:
-                    #     if listener.dependee_dic[dependee]['type'] == 'normal':
-                    #         key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
-                    #         interfaces.add(index_dic[key]['path'])
-
-        # create interfaces
-        # print(interfaces)
-        # for path in interfaces:
-        #     self.__create_injection_interface(path)
-        print('End injection refactoring !')
-
-    def refactor(self, base_dirs, index_dic, files, class_diagram, statistic_path):
-        print('Start injection refactoring . . .')
-        # Import DictWriter class from CSV module
-        statistic_file = open(statistic_path, 'w')
-        writer_object = writer(statistic_file)
-        # list of column names
-        field_names = ['long_name', 'total_case', 'case1', 'case2', 'case3']
-        writer_object.writerow(field_names)
+        reports = []
 
         index_list = list(index_dic)
         roots_long_name = [index_list[n] for n,d in class_diagram.in_degree() if d==0]
@@ -724,17 +719,7 @@ class Injection:
             )
             walker = ParseTreeWalker()
             walker.walk(listener=listener,t=tree)
-            print(listener.statistics)
-            for c in listener.statistics:
-                statistic_row = list()
-                statistic_row.append(c)
-                for field in field_names[1:]:
-                    statistic_row.append(listener.statistics[c][field])
-                print(statistic_row)
-                print(field_names)
-                writer_object.writerow(statistic_row)
-
-        statistic_file.close()
+            print("listener.statistics:", listener.statistics)
 
         print('End injection refactoring !')
 
@@ -751,7 +736,7 @@ class Injection:
             t=tree
         )
         interface_info = listener.get_interface_info()
-        print(interface_info)
+        #print(interface_info)
         interface_info['name'] = 'I' + interface_info['name']
         path_list = Path.convert_str_paths_to_list_paths([path])
         interface_info['path'] = '/'.join(path_list[0][:-1])
@@ -761,10 +746,9 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['xerces2j']['path']
-    base_dirs = config.projects_info['xerces2j']['base_dirs']
+    java_project_address = config.projects_info['10_water-simulator']['path']
+    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
-    print(files)
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     #with open('class_index.json') as f:
     #    index_dic_ = json.load(f)
@@ -781,7 +765,7 @@ if __name__ == "__main__":
     # g = cd.class_diagram_graph
     # print(len(list(nx.weakly_connected_components(g))))
     injection = Injection()
-    injection.refactor(base_dirs, index_dic_, files, cd.class_diagram_graph, f"{java_project_address}/injection_statistic.csv")
+    injection.refactor(base_dirs, index_dic_, files, cd.class_diagram_graph)
 
     files = File.find_all_file(java_project_address, 'java')
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)

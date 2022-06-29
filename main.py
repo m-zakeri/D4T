@@ -3,6 +3,7 @@ from factory import Factory
 from utils import File
 import config
 import networkx as nx
+import json
 
 if __name__ == "__main__":
     java_project_address = config.projects_info['10_water-simulator']['path']
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     #g = cd.class_diagram_graph
     #print(len(list(nx.weakly_connected_components(g))))
     f = Factory()
-    f.refactor(0.1, index_dic, cd.class_diagram_graph, base_dirs)
+    report = f.refactor(0.1, index_dic, cd.class_diagram_graph, base_dirs)
 
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
