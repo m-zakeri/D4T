@@ -178,7 +178,5 @@ def make_benchmark():
     df.to_csv(r'data/data_modularity_QualCode_Understand3.csv', index=False)
 
 
-
-
 if __name__ == '__main__':
     make_benchmark()
