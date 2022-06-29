@@ -117,7 +117,8 @@ class FixProductsListener(JavaParserLabeledListener):
             self.inProducts = True
             if ctx.typeType() is not None:
                 if ctx.typeType().classOrInterfaceType().IDENTIFIER() is not None:
-                    self.productsClassIndex.append(ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
+                    self.productsClassIndex.append(
+                        ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
                 else:
                     self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
             self.currentClass = ctx.IDENTIFIER().symbol.text
@@ -213,11 +214,13 @@ class Factory:
                       products_identifier):
         parser, token_stream = get_parser_and_tokens(product_path)
         parse_tree = parser.compilationUnit()
-        my_listener = FixProductsListener(interface_name=interface_name,
-                                          interface_import_text=interface_import_text,
-                                          common_token_stream=token_stream,
-                                          creator_identifier=creator_identifier,
-                                          products_identifier=products_identifier)
+        my_listener = FixProductsListener(
+            interface_name=interface_name,
+            interface_import_text=interface_import_text,
+            common_token_stream=token_stream,
+            creator_identifier=creator_identifier,
+            products_identifier=products_identifier
+        )
         walker = ParseTreeWalker()
         walker.walk(t=parse_tree, listener=my_listener)
 
@@ -335,6 +338,7 @@ class Factory:
                     print('--------------------------------------------------')
         return reports
 
+
 class FastFactory(Factory):
     def __init__(self, index_dic):
         self.tree_tokenStream_dic = dict()
@@ -388,8 +392,8 @@ class FastFactory(Factory):
                     child_class_name = child.split('-')[1]
                     print('child path: ', child_path)
                     tree = self.tree_tokenStream_dic[child_path]
-                    #parser = get_parser(child_path)
-                    #tree = parser.compilationUnit()
+                    # parser = get_parser(child_path)
+                    # tree = parser.compilationUnit()
                     listener = ProductCreatorDetectorListener(child_class_name)
                     walker = ParseTreeWalker()
                     walker.walk(
