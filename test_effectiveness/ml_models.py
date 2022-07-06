@@ -33,7 +33,6 @@ from sklearn import tree, preprocessing
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
     VotingRegressor
 
-
 from sklearn import linear_model, feature_selection
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, RationalQuadratic, Exponentiation
@@ -68,11 +67,12 @@ class Regression:
             )
             print(self.dfx)
 
-        self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(self.df.iloc[:, 1:-14],
-                                                                                  self.df.iloc[:, -9],
-                                                                                  test_size=0.25,
-                                                                                  random_state=111,
-                                                                                  )
+        self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(
+            self.df.iloc[:, 1:-2],  # Features (node metrics)
+            self.df.iloc[:, -1],  # Label (Testability in [0, 1])
+            test_size=0.25,
+            random_state=47,
+        )
 
         if selection_on:
             # -- Feature selection (For DS2)
@@ -228,14 +228,14 @@ class Regression:
                 'C': [1.0, 2.0, 3.0]
             }
         elif model_name == 'GPR':
-        # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
-             regressor = GaussianProcessRegressor(random_state=0)
-             parameters = {
-                 'kernel': [DotProduct() + WhiteKernel(), DotProduct(), WhiteKernel(), Matern(),
-                            Exponentiation(RationalQuadratic(alpha=1.0), exponent=2),
-                            Exponentiation(RationalQuadratic(alpha=0.9), exponent=3),
-                            RationalQuadratic(alpha=1.0)],
-             }
+            # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
+            regressor = GaussianProcessRegressor(random_state=0)
+            parameters = {
+                'kernel': [DotProduct() + WhiteKernel(), DotProduct(), WhiteKernel(), Matern(),
+                           Exponentiation(RationalQuadratic(alpha=1.0), exponent=2),
+                           Exponentiation(RationalQuadratic(alpha=0.9), exponent=3),
+                           RationalQuadratic(alpha=1.0)],
+            }
         elif model_name == 'LassoCV':
             regressor = LarsCV()
             parameters = {
@@ -296,9 +296,12 @@ class Regression:
 
 
 def train():
-    dataset_path = 'dataset_merged/d4t_ds_sf110_03.csv'
-    model_path = 'sklearn_models1/'
-    models = ['DTR1', 'RFR1', 'GBR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
+    # dataset_path = 'dataset_merged/d4t_ds_sf110_03.csv'
+    # model_path = 'sklearn_models1/'
+    dataset_path = 'dataset_merged/sf110_production_nodes.csv'
+    model_path = 'sklearn_models_nodes_regress/'
+
+    # models = ['DTR1', 'RFR1', 'GBR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
     models = ['DTR1', 'RFR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
     ds_no = 1
     reg = Regression(df_path=dataset_path, selection_on=False)
