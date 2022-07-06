@@ -10,32 +10,29 @@ __author__ = 'Morteza Zakeri'
 import os
 import math
 import datetime
-
-import smogn
-from sklearn.linear_model import LassoCV, LarsCV
-from sklearn.svm import NuSVR
-# from sklearnex import patch_sklearn
-
-# patch_sklearn()
-
 import pandas as pd
 import joblib
 from joblib import dump, load
 
+from sklearn.linear_model import LassoCV, LarsCV
+from sklearn.svm import NuSVR
+
 from sklearn.metrics import *
-from sklearn.preprocessing import QuantileTransformer
-from sklearn.inspection import permutation_importance
-from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit, GridSearchCV
-from sklearn import tree, preprocessing
-# from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
-    VotingRegressor
-
 from sklearn import linear_model, feature_selection
+from sklearn import tree, preprocessing
+
+from sklearn.ensemble import (
+    GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, VotingRegressor
+)
+from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, RationalQuadratic, Exponentiation
+
+from sklearn.inspection import permutation_importance
+
+import smogn
 
 
 class Regression:
@@ -97,7 +94,7 @@ class Regression:
         # Standardization
         self.scaler = preprocessing.RobustScaler(with_centering=True, with_scaling=True, unit_variance=True)
         self.scaler = preprocessing.StandardScaler()
-        # self.scaler = QuantileTransformer(n_quantiles=1000, random_state=111)
+        # self.scaler = preprocessing.QuantileTransformer(n_quantiles=1000, random_state=111)
         self.scaler.fit(self.X_train1)
         self.X_train = self.scaler.transform(self.X_train1)
         self.X_test = self.scaler.transform(self.X_test1)
