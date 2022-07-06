@@ -38,11 +38,12 @@ import smogn
 class Regression:
     def __init__(self, df_path: str = None, selection_on=False, skewness=False):
         self.df = pd.read_csv(df_path, delimiter=',', index_col=False)
+        self.df = self.df.fillna(0)
 
         # Smogn
-        self.dfx = self.df.iloc[:, 1:-14]
-        self.dfx['DesignMeanCoverage'] = self.df.iloc[:, -1]
-        self.dfx.drop(columns=['number_of_selfloops'], inplace=True)
+        # self.dfx = self.df.iloc[:, 1:-14]
+        # self.dfx['DesignMeanCoverage'] = self.df.iloc[:, -1]
+        # self.dfx.drop(columns=['number_of_selfloops'], inplace=True)
         # print(self.dfx)
         if skewness:
             rg_mtrx = [
