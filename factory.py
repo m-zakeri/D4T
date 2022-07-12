@@ -206,7 +206,7 @@ class Factory:
         walker = ParseTreeWalker()
         walker.walk(t=parse_tree, listener=my_listener)
 
-        with open(creator_path, mode='w', newline='') as f:
+        with open(creator_path, mode='w', newline='', encoding='utf8', errors='ignore') as f:
             f.write(my_listener.token_stream_rewriter.getDefaultText())
 
     def __fix_product(self, product_path, interface_import_text, interface_name, creator_identifier,
@@ -221,7 +221,7 @@ class Factory:
         walker = ParseTreeWalker()
         walker.walk(t=parse_tree, listener=my_listener)
 
-        with open(product_path, mode='w', newline='') as f:
+        with open(product_path, mode='w', newline='', encoding='utf8', errors='ignore') as f:
             f.write(my_listener.token_stream_rewriter.getDefaultText())
 
     def __compare_similarity_of_two_list(self, list1, list2):
