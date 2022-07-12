@@ -1,51 +1,49 @@
 """
 The module provide learning to predict design test effectiveness
+and design testability
 
 """
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __author__ = 'Morteza Zakeri'
 
 import os
 import math
 import datetime
-
-import smogn
-from sklearn.linear_model import LassoCV, LarsCV
-from sklearn.svm import NuSVR
-from sklearnex import patch_sklearn
-
-patch_sklearn()
-
 import pandas as pd
 import joblib
 from joblib import dump, load
 
+from sklearn.linear_model import LassoCV, LarsCV
+from sklearn.svm import NuSVR
+
 from sklearn.metrics import *
-from sklearn.preprocessing import QuantileTransformer
-from sklearn.inspection import permutation_importance
-from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import ShuffleSplit, GridSearchCV
-from sklearn import tree, preprocessing
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, \
-    VotingRegressor
-
-
 from sklearn import linear_model, feature_selection
+from sklearn import tree, preprocessing
+
+from sklearn.ensemble import (
+    GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor, VotingRegressor
+)
+from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel, Matern, RationalQuadratic, Exponentiation
+
+from sklearn.inspection import permutation_importance
+
+import smogn
 
 
 class Regression:
     def __init__(self, df_path: str = None, selection_on=False, skewness=False):
         self.df = pd.read_csv(df_path, delimiter=',', index_col=False)
+        self.df = self.df.fillna(0)
 
         # Smogn
-        self.dfx = self.df.iloc[:, 1:-14]
-        self.dfx['DesignMeanCoverage'] = self.df.iloc[:, -1]
-        self.dfx.drop(columns=['number_of_selfloops'], inplace=True)
+        # self.dfx = self.df.iloc[:, 1:-14]
+        # self.dfx['DesignMeanCoverage'] = self.df.iloc[:, -1]
+        # self.dfx.drop(columns=['number_of_selfloops'], inplace=True)
         # print(self.dfx)
         if skewness:
             rg_mtrx = [
@@ -67,11 +65,12 @@ class Regression:
             )
             print(self.dfx)
 
-        self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(self.dfx.iloc[:, :-1],
-                                                                                  self.df.iloc[:, -1],
-                                                                                  test_size=0.25,
-                                                                                  random_state=111,
-                                                                                  )
+        self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(
+            self.df.iloc[:, 1:-2],  # Features (node metrics)
+            self.df.iloc[:, -1],  # Label (Testability in [0, 1])
+            test_size=0.25,
+            random_state=47,
+        )
 
         if selection_on:
             # -- Feature selection (For DS2)
@@ -96,7 +95,7 @@ class Regression:
         # Standardization
         self.scaler = preprocessing.RobustScaler(with_centering=True, with_scaling=True, unit_variance=True)
         self.scaler = preprocessing.StandardScaler()
-        # self.scaler = QuantileTransformer(n_quantiles=1000, random_state=111)
+        # self.scaler = preprocessing.QuantileTransformer(n_quantiles=1000, random_state=111)
         self.scaler.fit(self.X_train1)
         self.X_train = self.scaler.transform(self.X_train1)
         self.X_test = self.scaler.transform(self.X_test1)
@@ -162,45 +161,45 @@ class Regression:
         print(df)
         df.to_csv(model_path[:-7] + '_evaluation_metrics_R1.csv', index=True, index_label='Row')
 
-    def regress(self, model_path: str = None, model_number: int = None):
+    def regress(self, model_path: str = None, model_name: str = None):
         """
 
         :param model_path:
         :param model_number: 1: DTR, 2: RFR, 3: GBR, 4: HGBR, 5: SGDR, 6: MLPR,
         :return:
         """
-        if model_number == 1:
+        if model_name == 'DTR1':
             regressor = tree.DecisionTreeRegressor(random_state=23, )
             # Set the parameters to be used for tuning by cross-validation
             parameters = {
-                'criterion': ['mse', 'friedman_mse', 'mae'],
+                'criterion': ['squared_error', 'friedman_mse', 'absolute_error'],
                 'max_depth': range(3, 50, 1),
                 'min_samples_split': range(2, 50, 1)
             }
-        elif model_number == 2:
+        elif model_name == 'RFR1':
             regressor = RandomForestRegressor(random_state=19, )
             parameters = {
                 'n_estimators': range(5, 50, 5),
-                # 'criterion': ['mse', 'mae'],
+                # 'criterion': ['squared_error', 'absolute_error'],
                 'max_depth': range(5, 50, 5),
                 # 'min_samples_split': range(2, 30, 2),
                 # 'max_features': ['auto', 'sqrt', 'log2']
             }
-        elif model_number == 3:
+        elif model_name == 'GBR1':
             regressor = GradientBoostingRegressor(n_estimators=500, learning_rate=0.05, random_state=17, )
             parameters = {
                 'loss': ['ls', 'lad', ],
                 'max_depth': range(3, 50, 1),
                 'min_samples_split': range(2, 50, 1)
             }
-        elif model_number == 4:
+        elif model_name == 'HGBR1':
             regressor = HistGradientBoostingRegressor(max_iter=500, learning_rate=0.05, random_state=13, )
             parameters = {
                 # 'loss': ['least_squares', 'least_absolute_deviation'],
                 'max_depth': range(3, 50, 5),
                 'min_samples_leaf': range(2, 50, 5)
             }
-        elif model_number == 5:
+        elif model_name == 'SGDR1':
             regressor = linear_model.SGDRegressor(early_stopping=True, n_iter_no_change=10, random_state=11, )
             parameters = {
                 'loss': ['squared_loss', 'huber', 'epsilon_insensitive'],
@@ -210,7 +209,7 @@ class Regression:
                 'eta0': [0.1, 0.01, 0.005],
                 # 'average': [32, ]
             }
-        elif model_number == 6:
+        elif model_name == 'MLPR1':
             regressor = MLPRegressor(random_state=7, )
             parameters = {
                 'hidden_layer_sizes': [(32, 64), (32, 64, 32), ],
@@ -218,7 +217,7 @@ class Regression:
                 'solver': ['adam', ],
                 'max_iter': range(10, 200, 10)
             }
-        elif model_number == 7:
+        elif model_name == 'NuSVR1':
             regressor = NuSVR(cache_size=500, max_iter=-1, shrinking=True)
             parameters = {
                 'kernel': ['linear', 'rbf', 'poly', 'sigmoid', ],
@@ -226,16 +225,16 @@ class Regression:
                 'nu': [i * 0.1 for i in range(1, 10, 1)],
                 'C': [1.0, 2.0, 3.0]
             }
-        elif model_number == 8:
-        # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
-             regressor = GaussianProcessRegressor(random_state=0)
-             parameters = {
-                 'kernel': [DotProduct() + WhiteKernel(), DotProduct(), WhiteKernel(), Matern(),
-                            Exponentiation(RationalQuadratic(alpha=1.0), exponent=2),
-                            Exponentiation(RationalQuadratic(alpha=0.9), exponent=3),
-                            RationalQuadratic(alpha=1.0)],
-             }
-        elif model_number == 9:
+        elif model_name == 'GPR':
+            # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
+            regressor = GaussianProcessRegressor(random_state=0)
+            parameters = {
+                'kernel': [DotProduct() + WhiteKernel(), DotProduct(), WhiteKernel(), Matern(),
+                           Exponentiation(RationalQuadratic(alpha=1.0), exponent=2),
+                           Exponentiation(RationalQuadratic(alpha=0.9), exponent=3),
+                           RationalQuadratic(alpha=1.0)],
+            }
+        elif model_name == 'LassoCV':
             regressor = LarsCV()
             parameters = {
                 "fit_intercept": [True, False],
@@ -252,7 +251,7 @@ class Regression:
         # Find the best model using gird-search with cross-validation
         clf = GridSearchCV(regressor, param_grid=parameters, scoring=scoring, cv=cv,
                            n_jobs=7, refit='neg_root_mean_squared_error')
-        print('fitting model number', model_number)
+        print(f'Fitting {model_name} model')
         clf.fit(X=self.X_train, y=self.y_train)
 
         print('Writing grid search result ...')
@@ -295,21 +294,19 @@ class Regression:
 
 
 def train():
-    dataset_path = 'dataset_merged/d4t_ds_sf110_03.csv'
-    model_path = 'sklearn_models1/'
+    # dataset_path = 'dataset_merged/d4t_ds_sf110_03.csv'
+    # model_path = 'sklearn_models1/'
+    dataset_path = 'dataset_merged/sf110_production_nodes.csv'
+    model_path = 'sklearn_models_nodes_regress/'
+
+    # models = ['DTR1', 'RFR1', 'GBR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
+    models = ['DTR1', 'RFR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
     ds_no = 1
     reg = Regression(df_path=dataset_path, selection_on=False)
-    reg.regress(model_path=f'{model_path}DTR1_DS{ds_no}.joblib', model_number=1)
-    reg.regress(model_path=f'{model_path}RFR1_DS{ds_no}.joblib', model_number=2)
-    # reg.regress(model_path=f'{model_path}GBR1_DS{ds_no}.joblib', model_number=3)
-    reg.regress(model_path=f'{model_path}HGBR1_DS{ds_no}.joblib', model_number=4)
-    reg.regress(model_path=f'{model_path}SGDR1_DS{ds_no}.joblib', model_number=5)
-    reg.regress(model_path=f'{model_path}MLPR1_DS{ds_no}.joblib', model_number=6)
-    reg.regress(model_path=f'{model_path}NuSVR1_DS{ds_no}.joblib', model_number=7)
-    reg.vote(model_path=f'{model_path}VR1_DS{ds_no}.joblib', dataset_number=1)
+    for model_number, model_name in enumerate(models):
+        reg.regress(model_path=f'{model_path}{model_name}_DS{ds_no}.joblib', model_name=model_name)
 
-    # reg.regress(model_path=f'{model_path}GPR_DS{ds_no}.joblib', model_number=8)
-    # reg.regress(model_path=f'{model_path}LassoCV_DS{ds_no}.joblib', model_number=9)
+    reg.vote(model_path=f'{model_path}VoR1_DS{ds_no}.joblib', dataset_number=1)
 
 
 if __name__ == '__main__':

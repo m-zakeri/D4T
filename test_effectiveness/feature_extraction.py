@@ -20,8 +20,10 @@ class ModularDependencyGraph:
         self.mdg_df = pandas.read_csv(graph_path)
         self.mdg_df.rename(columns={"From Entities": "From_Entities", "To Entities": "To_Entities"}, inplace=True)
         if self.mdg_df is not None and not self.mdg_df.empty:
-            self.mdg_graph = nx.from_pandas_edgelist(self.mdg_df, source='From Class', target='To Class',
-                                                     edge_attr=True, create_using=nx.DiGraph())
+            self.mdg_graph = nx.from_pandas_edgelist(
+                self.mdg_df, source='From Class', target='To Class',
+                edge_attr=True, create_using=nx.DiGraph()
+            )
         else:
             self.mdg_graph = None
 
@@ -63,14 +65,14 @@ class ModularDependencyGraph:
             return 1.0 if node_coverage > 1 else node_coverage, 1.0 if edge_coverage > 1 else edge_coverage
 
     def extract_components(self, project_name):
-        # x = nx.number_connected_components(self.mdg_graph)
+        # x = nx.number_connected_components(self.mdg_graph)  # not implemented for directed type
         x = 1
         y = nx.number_strongly_connected_components(self.mdg_graph)
         z = nx.number_weakly_connected_components(self.mdg_graph)
         for wcc in nx.weakly_connected_components(self.mdg_graph):
-            print(len(wcc), nx.subgraph(self.mdg_graph, wcc))
+            print(len(wcc), ':', nx.subgraph(self.mdg_graph, wcc))
         print(project_name, y, z)
-
+        print('-' * 50)
         return z
 
     def extract_statistics(self, project_name):
@@ -120,7 +122,7 @@ class ModularDependencyGraph:
             sum(nx.current_flow_betweenness_centrality(nx.Graph(G)).values()) / len(G)]  # time-consuming
 
         # Category: Edge centrality features
-        df['edge_betweenness_centralit'] = [
+        df['edge_betweenness_centrality'] = [
             sum(nx.edge_betweenness_centrality(nx.Graph(G)).values()) / nx.number_of_edges(G)]
         df['edge_current_flow_betweenness_centrality'] = [sum(
             nx.edge_current_flow_betweenness_centrality(nx.Graph(G)).values()) / nx.number_of_edges(G)]
@@ -165,7 +167,8 @@ def concat_dataset_files():
     print(df_result)
     df_result.to_csv('d4t_ds_sf110_01.csv', index=False, )
 
-def concat_modularity_wtih_d4t_dataset():
+
+def concat_modularity_with_d4t_dataset():
     df1 = pd.read_csv('d4t_ds_sf110_01.csv')
     df2 = pd.read_csv(r'data/data_modularity_QualCode_Understand3.csv')
     df_result = df1.merge(df2, how='inner', on='Project')
@@ -178,7 +181,7 @@ def create_test_graph():
     for f in files:
         print(f'processing understand db file {f}:')
         mdg = ModularDependencyGraph(mdg_path + f, )
-        mdg.create_evosuite_classes_mdg(graph_path=mdg_path+f)
+        mdg.create_evosuite_classes_mdg(graph_path=mdg_path + f)
 
 
 def compute_design_test_effectiveness():
@@ -192,7 +195,7 @@ def compute_design_test_effectiveness():
         nc, ec = mdg_production.compute_design_coverage(test_graph_path=f'mdgs_only_test_classes/{project_}_UMDG.csv')
         nc_list.append(nc)
         ec_list.append(ec)
-        avg_list.append((nc+ec)/2.)
+        avg_list.append((nc + ec) / 2.)
 
     df['DesignNodeCoverage'] = nc_list
     df['DesignEdgeCoverage'] = ec_list
@@ -202,23 +205,24 @@ def compute_design_test_effectiveness():
 
 
 def extract_design_metrics():
-    mdg_path = 'mdgs_remained/'
+    mdg_path = 'mdgs/'
     files = [f for f in os.listdir(mdg_path) if os.path.isfile(os.path.join(mdg_path, f))]
     z = 0
     for f in files:
         print(f'processing understand db file {f}:')
         mdg = ModularDependencyGraph(mdg_path + f, )
-        df1 = mdg.extract_statistics(project_name=f)
-        df1.to_csv(f'dataset/{f}', index=False)
-        # z += mdg.extract_components(project_name=f)
+        # df1 = mdg.extract_statistics(project_name=f)
+        # df1.to_csv(f'dataset/{f}', index=False)
+        z += mdg.extract_components(project_name=f)
         # quit()
 
     print('z', z)
 
 
 if __name__ == '__main__':
+    path_ = 'mdgs'
     # concat_modularity_wtih_d4t_dataset()
-    create_test_graph()
+    extract_design_metrics()
+    # create_test_graph()
     # compute_design_test_effectiveness()
     # quit()
-
