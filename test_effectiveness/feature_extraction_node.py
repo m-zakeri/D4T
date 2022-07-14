@@ -110,25 +110,23 @@ class ModularDependencyGraphNodeFeature(ModularDependencyGraph):
         return df
 
 
-def merge_dataset_edge():
-    csvs_path = 'dataset_edges/'
+def merge_dataset_node():
+    csvs_path = 'dataset_nodes/'
     files = [f for f in os.listdir(csvs_path) if os.path.isfile(os.path.join(csvs_path, f))]
     df_all = pd.DataFrame()
     for f in files:
         print(f'Processing csv file {f}:')
-        try:
-            df1 = pd.read_csv(csvs_path + f)
-        except:
-            continue
+        df1 = pd.read_csv(os.path.join(csvs_path, f))
         if not df1.empty:
-            df_all = df_all.append(df1, ignore_index=True)
+            df_all = pd.concat([df_all, df1], ignore_index=True)
 
-    results_path = 'dataset_merged/sf110_edges.csv'
 
+    results_path = 'dataset_merged/sf110_production_nodes.csv'
+    print(df_all.shape)
     df_all.to_csv(results_path, index=False)
 
 
-def preprocess():
+def create_dataset_for_each_project():
     udbs_path = 'D:/AnacondaProjects/iust_start/testability/sf110_without_test/'
     mdg_path = '../testability/mdg_production_code/'
     test_path = 'D:/AnacondaProjects/iust_start/testability/dataset06/DS06010Z.csv'
@@ -159,4 +157,5 @@ def preprocess():
 
 
 if __name__ == '__main__':
-    preprocess()
+    # create_dataset_for_each_project()
+    merge_dataset_node()
