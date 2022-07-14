@@ -6,13 +6,14 @@ import networkx as nx
 import json
 
 if __name__ == "__main__":
-    java_projects = [
-        '10_water-simulator',
-        '61_noen',
-        '88_jopenchart',
-        'commons-codec',
-        'xerces2j'
-    ]
+    # java_projects = [
+    #     '10_water-simulator',
+    #     '61_noen',
+    #     '88_jopenchart',
+    #     'commons-codec',
+    #     'xerces2j'
+    # ]
+    java_projects = ["javaproject"]
     for java_project in java_projects:
         java_project_address = config.projects_info[java_project]['path']
         base_dirs = config.projects_info[java_project]['base_dirs']
