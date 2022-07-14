@@ -53,6 +53,16 @@ base_dirs.append(BASE_DIR + 'xerces2j/src/')
 projects_info['xerces2j']['path'] = java_project_address
 projects_info['xerces2j']['base_dirs'] = base_dirs
 
+
+# xerces2j packages
+for package in ["dom", "impl", "jaxp", "parsers"]:
+    projects_info[f'xerces2j-{package}'] = {}
+    java_project_address = BASE_DIR + f'xerces2j-{package}/src/org/apache/xerces/{package}'
+    base_dirs = []
+    base_dirs.append(BASE_DIR + f'xerces2j-{package}/src/')
+    projects_info[f'xerces2j-{package}']['path'] = java_project_address
+    projects_info[f'xerces2j-{package}']['base_dirs'] = base_dirs
+
 # simple_injection
 projects_info['simple_injection'] = {}
 java_project_address = BASE_DIR + 'simple_injection'

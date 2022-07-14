@@ -10,11 +10,12 @@ from utils import File
 import config
 
 class Report:
-    def __init__(self, java_project):
+    def __init__(self, java_project, reload_from_disk=True):
         self.java_project = java_project
         self.java_project_address = config.projects_info[java_project]['path']
         self.base_dirs = config.projects_info[java_project]['base_dirs']
-        self.reload_from_disk()
+        if reload_from_disk:
+            self.reload_from_disk()
 
     def reload_from_disk(self):
         self.files = File.find_all_file(self.java_project_address, 'java')
@@ -40,7 +41,10 @@ class Report:
         path = os.path.abspath(os.path.join(path, os.pardir))
         path = os.path.abspath(os.path.join(path, os.pardir))
         os.chdir(path)
-        return {"insertion":int(tmp[3]), "deletion":int(tmp[5])}
+        if len(tmp) > 0:
+            return {"insertion":int(tmp[3]), "deletion":int(tmp[5])}
+        else:
+            return {"insertion": 0, "deletion": 0}
 
     def get_json_report(self, sensitivity, save=True, edit=True):
         pass
@@ -138,9 +142,9 @@ class FactoryReport(Report):
     def get_pandas_report(self, json_report, save=True):
         pandas_report = {
             "project":[],
-            "package": [],
-            "path": [],
-            "class": [],
+            "creator_package": [],
+            "creator_path": [],
+            "creator_class": [],
             "sensitivity": []
         }
         for report in json_report:
@@ -256,16 +260,16 @@ class FactoryReport(Report):
 
 
 if __name__ == "__main__":
-    java_project = "10_water-simulator"
-    fr = FactoryReport(java_project)
+    java_project = "xerces2j-parsers"
+    fr = FactoryReport(java_project, True)
     #json_report = fr.get_single_report(0.1, edit=True)
-    #factory_report = fr.get_list_of_report(3)
-    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-        json_report = json.load(f)
+    factory_report = fr.get_list_of_report(3)
+    # with open(f"{config.BASE_DIR}/{java_project}/factory_report_fast.json") as f:
+    #     json_report = json.load(f)
     #pandas_report = fr.get_pandas_report(json_report)
     #fr.show_cases_vs_sensitivity_chart(json_report)
-    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report_fast)
+    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report)
     #fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
-    #fr.get_list_of_report_fast(5)
+    #fr.get_list_of_report_fast(10)
     #fr.show_complexity_vs_sensitivity_chart(json_report)
-    fr.show_code_changed_rate_vs_sensitivity_chart(json_report)
+    #fr.show_code_changed_rate_vs_sensitivity_chart(json_report)
