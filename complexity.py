@@ -17,7 +17,7 @@ class Complexity():
             self.inheritance_complexity_dic[node] = self.__calculate_inheritance_complexity(node)
 
     def calculate_interaction_complexity(self, source, target):
-        #print("\t in calculate_interaction_complexity")
+        print("\t in calculate_interaction_complexity")
         complexity = 1
         has_path = False
         #print(list(nx.all_simple_paths(self.CDG, source=source, target=target)))
@@ -25,29 +25,32 @@ class Complexity():
             #print("\t calculate_interaction_complexity")
             #print("\t path:", path)
             has_path = True
+            print("calculate_interaction_complexity")
             complexity *= self.__calculate_path_complexity(path)
         if not has_path:
             complexity = None
         return complexity
 
     def __calculate_path_complexity(self, path):
-        #print("\t in __calculate_path_complexity")
+        print("\t in __calculate_path_complexity")
         complexity = 1
         for i in range(len(path) - 1):
+            print("__calculate_path_complexity")
             if self.CDG[path[i]][path[i+1]]['relation_type'] == 'use_def':
                 if path[i] in self.inheritance_complexity_dic:
-                    #print("\t __calculate_path_complexity")
                     complexity *= self.inheritance_complexity_dic[path[i]]
+                    print("\t __calculate_path_complexity")
         return complexity
 
     def __calculate_inheritance_complexity(self, node):
-        #print("\t in __calculate_inheritance_complexity")
+        print("\t in __calculate_inheritance_complexity")
         complexity = 0
         stack = []
         stack.append(node)
 
         depth_dic = {node:1}
         while stack != []:
+            print("__calculate_inheritance_complexity")
             #print("\t __calculate_inheritance_complexity")
             current_node = stack.pop()
             is_leave = True
@@ -62,12 +65,12 @@ class Complexity():
         return complexity
 
     def __find_inheritance_candidates(self):
-        #print("\t in __find_inheritance_candidates")
+        print("\t in __find_inheritance_candidates")
         candidates = set()
         for edge in self.CDG.edges:
             if self.CDG.edges[edge]['relation_type'] == 'parent':
                 candidates.add(edge[1])
-                #print("\t __find_inheritance_candidates")
+                print("\t __find_inheritance_candidates")
         return candidates
 
     def get_matrix(self):
@@ -81,6 +84,7 @@ class Complexity():
             for d in range(no_nodes):
                 if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]]['type'] == "normal":
                     complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
+                    print("complexity:", node_list[s], node_list[d], complexity)
                     matrix[s].append(complexity)
                 else:
                     matrix[s].append(None)
@@ -139,13 +143,13 @@ if __name__ == "__main__":
     #     print(i)
 
 
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['xerces2j-impl']['path']
+    base_dirs = config.projects_info['xerces2j-impl']['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
     cd.make_class_diagram()
-    cd.save('class_diagram.gml')
+    #cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
     #cd.load('class_diagram.gml')

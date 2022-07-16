@@ -397,7 +397,7 @@ statement
     | THROW expression ';' #statement11
     | BREAK IDENTIFIER? ';' #statement12
     | CONTINUE IDENTIFIER? ';' #statement13
-    | SEMI #statement14
+    | ';' #statement14
     | statementExpression=expression ';' #statement15
     | identifierLabel=IDENTIFIER ':' statement #statement16
     ;

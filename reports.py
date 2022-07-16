@@ -260,7 +260,7 @@ class FactoryReport(Report):
 
 
 if __name__ == "__main__":
-    java_project = "xerces2j-parsers"
+    java_project = "xerces2j-impl"
     fr = FactoryReport(java_project, True)
     #json_report = fr.get_single_report(0.1, edit=True)
     factory_report = fr.get_list_of_report(3)
