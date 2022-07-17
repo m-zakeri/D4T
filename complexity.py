@@ -1,10 +1,20 @@
 import json
 
+import signal
+
 from class_diagram import ClassDiagram
 from config import test_class_diagram
 
 import networkx as nx
 import csv
+
+class TimeoutException(Exception):   # Custom exception class
+    pass
+
+def timeout_handler(signum, frame):   # Custom signal handler
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 class Complexity():
     def __init__(self, CDG):
@@ -20,10 +30,15 @@ class Complexity():
         print("\t in calculate_interaction_complexity")
         complexity = 1
         has_path = False
+        print(nx.dfs_postorder_nodes(self.CDG))
+        print("*" * 50)
+        quit()
+        # for path in nx.all_simple_paths(self.CDG, source=source, target=target):
+        #     print("*****path*****: ", path)
         #print(list(nx.all_simple_paths(self.CDG, source=source, target=target)))
         for path in nx.all_simple_paths(self.CDG, source=source, target=target):
             #print("\t calculate_interaction_complexity")
-            #print("\t path:", path)
+            print("\t path:", path)
             has_path = True
             print("calculate_interaction_complexity")
             complexity *= self.__calculate_path_complexity(path)
@@ -55,10 +70,15 @@ class Complexity():
             current_node = stack.pop()
             is_leave = True
             for neighbor in self.CDG[current_node]:
-                if self.CDG[current_node][neighbor]['relation_type'] == 'child' and self.CDG[neighbor][current_node]['relation_type'] == 'parent':
-                    is_leave = False
-                    stack.append(neighbor)
-                    depth_dic[neighbor] = depth_dic[current_node] + 1
+                # print(self.CDG[current_node][neighbor]['relation_type'], "child")
+                # print(self.CDG[current_node])
+                # print(self.CDG[neighbor][current_node]['relation_type'], "parent")
+                # print(self.CDG[neighbor])
+                if (current_node in self.CDG[neighbor]):
+                    if self.CDG[current_node][neighbor]['relation_type'] == 'child' and self.CDG[neighbor][current_node]['relation_type'] == 'parent':
+                        is_leave = False
+                        stack.append(neighbor)
+                        depth_dic[neighbor] = depth_dic[current_node] + 1
 
             if is_leave:
                 complexity += depth_dic[current_node] * (depth_dic[current_node] - 1)
@@ -83,7 +103,16 @@ class Complexity():
             matrix.append([])
             for d in range(no_nodes):
                 if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]]['type'] == "normal":
-                    complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
+                    # Start the timer. Once 5 seconds are over, a SIGALRM signal is sent.
+                    signal.alarm(5)
+
+                    try:
+                        complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
+                    except TimeoutException:
+                        complexity = None
+                        print("time out")
+                    signal.alarm(0)
+
                     print("complexity:", node_list[s], node_list[d], complexity)
                     matrix[s].append(complexity)
                 else:
@@ -145,27 +174,33 @@ if __name__ == "__main__":
 
     java_project_address = config.projects_info['xerces2j-impl']['path']
     base_dirs = config.projects_info['xerces2j-impl']['base_dirs']
-    files = File.find_all_file(java_project_address, 'java')
-    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
-    cd.make_class_diagram()
-    #cd.save('class_diagram.gml')
-    cd.show(cd.class_diagram_graph)
+    # files = File.find_all_file(java_project_address, 'java')
+    # index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
 
-    #cd.load('class_diagram.gml')
-    cd.set_stereotypes()
-    cd.save('class_diagram.gml')
-    cd.show(cd.class_diagram_graph)
+    with open('class_index.json') as f:
+        index_dic = json.load(f)
+
+    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    # cd.make_class_diagram()
+    # #cd.save('class_diagram.gml')
+    # cd.show(cd.class_diagram_graph)
+    #
+    #
+    # cd.set_stereotypes()
+    # cd.save('class_diagram.gml')
+    cd.load('class_diagram.gml')
+    # cd.show(cd.class_diagram_graph)
 
     CDG = cd.get_CDG()
-    cd.show(CDG)
+    # cd.show(CDG)
 
     c = Complexity(CDG)
 
-    matrix = c.get_matrix()
-    print(Complexity.get_avg_of_matrix(matrix))
-    for i in matrix:
-       print(i)
+    c.calculate_interaction_complexity("22", "0")
+    # matrix = c.get_matrix()
+    # print(Complexity.get_avg_of_matrix(matrix))
+    # for i in matrix:
+    #    print(i)
 
     #print(c.calculate_interaction_complexity(2, 3))
     # cd.save(java_project_address + '\\' + 'class_diagram.gml')

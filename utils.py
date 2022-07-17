@@ -185,6 +185,10 @@ def get_parser_and_tokens(path):
     parser = JavaParserLabeled(tokens)
     return parser, tokens
 
+def convert_networkx_to_dic_graph(networkx_graph):
+    g = dict()
+    return g
+
 if __name__ == "__main__":
     File.indexing_files_directory(
         File.find_all_file('E:/sadegh/iust/compiler/compiler projects/java_projects/javaproject', 'java'),

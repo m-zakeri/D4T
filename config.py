@@ -29,6 +29,14 @@ base_dirs.append(BASE_DIR + 'commons-codec/src/main/java/')
 projects_info['commons-codec']['path'] = java_project_address
 projects_info['commons-codec']['base_dirs'] = base_dirs
 
+# jfreechart
+projects_info['jfreechart'] = dict()
+java_project_address = BASE_DIR + 'jfreechart/src/main/java/org'
+base_dirs = list()
+base_dirs.append(BASE_DIR + 'jfreechart/src/main/java/org/')
+projects_info['jfreechart']['path'] = java_project_address
+projects_info['jfreechart']['base_dirs'] = base_dirs
+
 #ant
 projects_info['ant'] = {}
 java_project_address = BASE_DIR + 'ant/src/main'

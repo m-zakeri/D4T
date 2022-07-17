@@ -22,6 +22,7 @@ class Report:
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
         self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
         self.cd.make_class_diagram()
+        self.cd.set_stereotypes()
         self.cdg = self.cd.get_CDG()
 
     def restore_java_project(self):
@@ -260,7 +261,7 @@ class FactoryReport(Report):
 
 
 if __name__ == "__main__":
-    java_project = "xerces2j-impl"
+    java_project = "10_water-simulator"
     fr = FactoryReport(java_project, True)
     #json_report = fr.get_single_report(0.1, edit=True)
     factory_report = fr.get_list_of_report(3)
