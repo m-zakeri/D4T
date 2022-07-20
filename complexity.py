@@ -8,13 +8,13 @@ from config import test_class_diagram
 import networkx as nx
 import csv
 
-class TimeoutException(Exception):   # Custom exception class
-    pass
-
-def timeout_handler(signum, frame):   # Custom signal handler
-    raise TimeoutException
-
-signal.signal(signal.SIGALRM, timeout_handler)
+# class TimeoutException(Exception):   # Custom exception class
+#     pass
+#
+# def timeout_handler(signum, frame):   # Custom signal handler
+#     raise TimeoutException
+#
+# signal.signal(signal.SIGALRM, timeout_handler)
 
 class Complexity():
     def __init__(self, CDG):
@@ -30,9 +30,7 @@ class Complexity():
         print("\t in calculate_interaction_complexity")
         complexity = 1
         has_path = False
-        print(nx.dfs_postorder_nodes(self.CDG))
-        print("*" * 50)
-        quit()
+
         # for path in nx.all_simple_paths(self.CDG, source=source, target=target):
         #     print("*****path*****: ", path)
         #print(list(nx.all_simple_paths(self.CDG, source=source, target=target)))
@@ -190,13 +188,19 @@ if __name__ == "__main__":
     # cd.save('class_diagram.gml')
     cd.load('class_diagram.gml')
     # cd.show(cd.class_diagram_graph)
-
     CDG = cd.get_CDG()
+    for n1 in CDG:
+        for n2 in CDG[n1]:
+            if nx.has_path(CDG, source=n1, target=n2):
+                for path in nx.all_simple_paths(CDG, source=n1, target=n2):
+                    x = 1
+            print(n1, n2)
+
+    # CDG = cd.get_CDG()
     # cd.show(CDG)
-
-    c = Complexity(CDG)
-
-    c.calculate_interaction_complexity("22", "0")
+    # c = Complexity(CDG)
+    # print(c.find_all_paths("22", "0"))
+    # c.calculate_interaction_complexity("22", "0")
     # matrix = c.get_matrix()
     # print(Complexity.get_avg_of_matrix(matrix))
     # for i in matrix:

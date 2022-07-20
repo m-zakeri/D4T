@@ -479,7 +479,6 @@ class ClassDiagram:
         nx.set_node_attributes(self.class_diagram_graph, ['normal', 'abstract', 'interface'], "type")
 
     def make_class_diagram(self):
-        print(self.java_project_address)
         files = File.find_all_file(self.java_project_address, 'java')
 
         # add nodes to class_diagram
