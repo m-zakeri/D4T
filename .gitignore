@@ -30,6 +30,7 @@ benchmarks/xerces2j-dom/
 benchmarks/xerces2j-impl/
 benchmarks/xerces2j-jaxp/
 benchmarks/xerces2j-parsers/
+benchmarks/Transportation/
 
 codart.egg-info
 dist

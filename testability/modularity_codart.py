@@ -143,5 +143,6 @@ def compute_all_modularity(udbs_path):
 
 # Test module
 if __name__ == '__main__':
-    udbs_path_ = 'D:/AnacondaProjects/iust_start/testability/sf110_without_test/'
+    udbs_path_ = "benchmarks/xerces2j/"
+    print(udbs_path_)
     compute_all_modularity(udbs_path_)

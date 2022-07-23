@@ -718,12 +718,13 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    print(1, java_project_address)
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    print(java_project_address)
+    base_dirs = config.projects_info['javaproject']['base_dirs']
+    print(base_dirs)
     files = File.find_all_file(java_project_address, 'java')
+    print(files)
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    print(2, java_project_address)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
     cd.make_class_diagram()
 
@@ -734,14 +735,13 @@ if __name__ == "__main__":
     cd.set_stereotypes()
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
-
-    CDG = cd.get_CFG()
-    for edge in CDG.edges:
-        print(edge, CDG.edges[edge])
-    cd.show(CDG)
-
-    g = cd.class_diagram_graph
-    print(len(list(nx.weakly_connected_components(g))))
-    for i in nx.weakly_connected_components(g):
-        print(i)
-
+    #
+    # CDG = cd.get_CFG()
+    # for edge in CDG.edges:
+    #     print(edge, CDG.edges[edge])
+    # cd.show(CDG)
+    #
+    # g = cd.class_diagram_graph
+    # print(len(list(nx.weakly_connected_components(g))))
+    # for i in nx.weakly_connected_components(g):
+    #     print(i)
