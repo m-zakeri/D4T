@@ -1,33 +1,51 @@
 """
-The module extract features for each edge in MDG
-to be used in the edge-level learning strategy.
+
+The module predicts design testability based on the novel design testability prediction model
 
 """
 
-__version__ = '0.1.3'
+__version__ = '0.1.0'
 __author__ = 'Morteza Zakeri'
 
-import sys
 import os
-import re
-import pandas
 import pandas as pd
 import networkx as nx
-import networkx.algorithms.community as nx_comm
+import re
+import joblib
 
 import understand
 
-from feature_extraction import ModularDependencyGraph
+from directory_utils import export_understand_dependencies_csv
 
 
-class ModularDependencyGraphNodeFeature(ModularDependencyGraph):
-    def __init__(self, graph_path, **kwargs):
-        super(ModularDependencyGraphNodeFeature, self).__init__(graph_path, **kwargs)
-        self.db: understand.Db = kwargs['db']
+class TestabilityPrediction:
+    def __init__(self, **kwargs):
+        self.db_path = kwargs['db_path']
         self.project_name = kwargs['project_name']
-        self.df_test = kwargs['df_test']
+        graph_path = self.create_mdg()
+        self.mdg_df = pd.read_csv(graph_path)
+        self.mdg_df.rename(columns={"From Entities": "From_Entities", "To Entities": "To_Entities"}, inplace=True)
+        if self.mdg_df is not None and not self.mdg_df.empty:
+            self.mdg_graph = nx.from_pandas_edgelist(
+                self.mdg_df, source='From Class', target='To Class',
+                edge_attr=True, create_using=nx.DiGraph()
+            )
+        else:
+            self.mdg_graph = None
+
+    def create_mdg(self):
+        csv_path = os.path.join(
+            os.path.dirname(__file__),
+            f'mdg_production_code_experiments/{self.project_name}_MDG.csv'
+        )
+        export_understand_dependencies_csv(
+            csv_path=csv_path,
+            db_path=self.db_path
+        )
+        return csv_path
 
     def extract_node_statistics(self, ):
+        db: understand.Db = understand.open(self.db_path)
         G = self.mdg_graph
         # G = nx.subgraph(self.mdg_graph, max(nx.weakly_connected_components(self.mdg_graph), key=len))
         df = pd.DataFrame()
@@ -61,7 +79,7 @@ class ModularDependencyGraphNodeFeature(ModularDependencyGraph):
             df_temp = pd.DataFrame()
             df_temp['Class'] = [u]
 
-            entities = self.db.lookup(re.compile(u + r'$'), )
+            entities = db.lookup(re.compile(u + r'$'), )
             if entities is None or len(entities) == 0:  # Nested classes
                 continue
             if str(entities[0].kind().name()).find('Enum') != -1:
@@ -71,16 +89,10 @@ class ModularDependencyGraphNodeFeature(ModularDependencyGraph):
             if str(entities[0].kind().name()).find('Unresolved') != -1:
                 continue
 
-            df_x = self.df_test[self.df_test['Class'].isin([u])]
-
-            if len(df_x) > 0:
-                node_testability = df_x['Coverageability1'].values / 100
-                df_temp['AbstractOrInterface'] = [0]
-            elif ('Abstract' in entities[0].kind().name()) or ('Interface' in entities[0].kind().name()):
+            if ('Abstract' in entities[0].kind().name()) or ('Interface' in entities[0].kind().name()):
                 df_temp['AbstractOrInterface'] = [1]
-                node_testability = 1
             else:
-                continue
+                df_temp['AbstractOrInterface'] = [0]
 
             # Features for source class, u (15)
             df_temp['InDegree'] = [self.mdg_graph.in_degree(u)]
@@ -101,61 +113,46 @@ class ModularDependencyGraphNodeFeature(ModularDependencyGraph):
             df_temp['PageRank'] = [pagerank_dict[u]]
             avg_shortest_path = nx.single_source_dijkstra_path_length(G=G, source=u).values()
             df_temp['AverageDijkstraPathLength'] = [sum(avg_shortest_path) / len(avg_shortest_path)]
-            df_temp['NodeTestability'] = node_testability
 
             df = pd.concat([df, df_temp], ignore_index=True)
             # print(df.values)
-
+        db.close()
         print(df)
         return df
 
+    def inference_model(self, model_path=None, scaler_path=None):
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
 
-def merge_dataset_node():
-    csvs_path = 'dataset_nodes/'
-    files = [f for f in os.listdir(csvs_path) if os.path.isfile(os.path.join(csvs_path, f))]
-    df_all = pd.DataFrame()
-    for f in files:
-        print(f'Processing csv file {f}:')
-        df1 = pd.read_csv(os.path.join(csvs_path, f))
-        if not df1.empty:
-            df_all = pd.concat([df_all, df1], ignore_index=True)
+        df_predict_data = self.extract_node_statistics()
+        df_predict_data = df_predict_data.fillna(0)
+        df_predict_data1 = df_predict_data.loc[df_predict_data['AbstractOrInterface'] == 1]
+        df_predict_data2 = df_predict_data.loc[df_predict_data['AbstractOrInterface'] == 0]
+
+        X_test1 = df_predict_data2.iloc[:, 2:]
+        X_test = scaler.transform(X_test1)
+        y_pred = model.predict(X_test)
+
+        df_predict_data2['Testability'] = list(y_pred)
+
+        df_predict_data1['Testability'] = [1]*len(df_predict_data1)
+        df_new = pd.concat([df_predict_data2, df_predict_data1], ignore_index=True)
+        print(df_new)
+
+        df_new.to_csv(f'{self.project_name}_testability.csv', index=False)
+        print(f'Design testability for "{self.project_name}" = {df_new["Testability"].mean()}')
 
 
-    results_path = 'dataset_merged/sf110_production_nodes.csv'
-    print(df_all.shape)
-    df_all.to_csv(results_path, index=False)
-
-
-def create_dataset_for_each_project():
-    udbs_path = 'D:/AnacondaProjects/iust_start/testability/sf110_without_test/'
-    mdg_path = '../testability/mdg_production_code/'
-    test_path = 'D:/AnacondaProjects/iust_start/testability/dataset06/DS06010Z.csv'
-
-    udb_files = [f for f in os.listdir(udbs_path) if os.path.isdir(os.path.join(udbs_path, f)) and f[-4:] == '.und']
-    mdg_files = [f for f in os.listdir(mdg_path) if os.path.isfile(os.path.join(mdg_path, f))]
-    df_test = pd.read_csv(test_path)
-
-    for mdg_file in mdg_files:
-        project_name = mdg_file[:-8]
-        print(f'Processing understand db file {project_name}:')
-        if os.path.exists(f'dataset_nodes/{project_name}_Node.csv'):
-            print('Already exist.')
-            continue
-        db = understand.open(os.path.join(udbs_path, f"{project_name}.und"))
-        mdg_ = ModularDependencyGraphNodeFeature(
-            graph_path=os.path.join(mdg_path, mdg_file),
-            db=db,
-            project_name=project_name,
-            df_test=df_test,
-        )
-        df = mdg_.extract_node_statistics()
-        db.close()
-        if df is not None:
-            df.to_csv(f'dataset_nodes/{project_name}_Node.csv', index=False)
-            # quit()
-        print('-'*50)
+def main(db_path=None, project_name=None, model_path=None, scaler_path=None):
+    tp = TestabilityPrediction(db_path=db_path, project_name=project_name)
+    tp.inference_model(model_path=model_path, scaler_path=scaler_path)
 
 
 if __name__ == '__main__':
-    # create_dataset_for_each_project()
-    merge_dataset_node()
+    db_path_ = r'E:/LSSDS/CodART/Experimental1/udbs/jvlt-1.3.2.und'  # This path should be replaced for each project
+    project_name_ = 'jvlt-1.3.2'
+
+    model_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/VoR1_DS2.joblib'
+    scaler_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/scaler.joblib'
+
+    main(db_path=db_path_, project_name=project_name_, model_path=model_path_, scaler_path=scaler_path_)

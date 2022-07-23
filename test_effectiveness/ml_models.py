@@ -10,9 +10,14 @@ __author__ = 'Morteza Zakeri'
 import os
 import math
 import datetime
+
+import numpy as np
 import pandas as pd
 import joblib
 from joblib import dump, load
+from matplotlib import pyplot as plt
+import seaborn as sns
+from scipy.stats import stats
 
 from sklearn.linear_model import LassoCV, LarsCV
 from sklearn.svm import NuSVR
@@ -39,7 +44,7 @@ class Regression:
     def __init__(self, df_path: str = None, selection_on=False, skewness=False):
         self.df = pd.read_csv(df_path, delimiter=',', index_col=False)
         self.df = self.df.fillna(0)
-
+        self.df = self.df.loc[self.df['AbstractOrInterface'] == 0]
         # Smogn
         # self.dfx = self.df.iloc[:, 1:-14]
         # self.dfx['DesignMeanCoverage'] = self.df.iloc[:, -1]
@@ -66,7 +71,7 @@ class Regression:
             print(self.dfx)
 
         self.X_train1, self.X_test1, self.y_train, self.y_test = train_test_split(
-            self.df.iloc[:, 1:-2],  # Features (node metrics)
+            self.df.iloc[:, 2:-1],  # Features (node metrics)
             self.df.iloc[:, -1],  # Label (Testability in [0, 1])
             test_size=0.25,
             random_state=47,
@@ -99,6 +104,8 @@ class Regression:
         self.scaler.fit(self.X_train1)
         self.X_train = self.scaler.transform(self.X_train1)
         self.X_test = self.scaler.transform(self.X_test1)
+
+        dump(self.scaler, 'scaler.joblib')
 
         # print(self.df.isnull().sum().sum())
         # rows_with_nan = [index for index, row in self.df.iterrows() if row.isnull().any()]
@@ -218,12 +225,12 @@ class Regression:
                 'max_iter': range(10, 200, 10)
             }
         elif model_name == 'NuSVR1':
-            regressor = NuSVR(cache_size=500, max_iter=-1, shrinking=True)
+            regressor = NuSVR(cache_size=1000, max_iter=-1, shrinking=True)
             parameters = {
-                'kernel': ['linear', 'rbf', 'poly', 'sigmoid', ],
-                'degree': [1, 2, 3],
-                'nu': [i * 0.1 for i in range(1, 10, 1)],
-                'C': [1.0, 2.0, 3.0]
+                'kernel': ['linear', 'rbf', 'poly', ],
+                'degree': [1, 2],
+                'nu': [i * 0.1 for i in range(1, 10, 2)],
+                'C': [1.0, 2.0]
             }
         elif model_name == 'GPR':
             # https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
@@ -250,7 +257,7 @@ class Regression:
         cv = ShuffleSplit(n_splits=5, test_size=0.20, random_state=101)
         # Find the best model using gird-search with cross-validation
         clf = GridSearchCV(regressor, param_grid=parameters, scoring=scoring, cv=cv,
-                           n_jobs=7, refit='neg_root_mean_squared_error')
+                           n_jobs=4, refit='neg_root_mean_squared_error')
         print(f'Fitting {model_name} model')
         clf.fit(X=self.X_train, y=self.y_train)
 
@@ -277,16 +284,20 @@ class Regression:
 
     def vote(self, model_path=None, dataset_number=1):
         # Trained regressors
-        reg1 = load(r'sklearn_models1/HGBR1_DS{0}.joblib'.format(dataset_number))
-        reg2 = load(r'sklearn_models1/RFR1_DS{0}.joblib'.format(dataset_number))
-        reg3 = load(r'sklearn_models1/MLPR1_DS{0}.joblib'.format(dataset_number))
+        reg1 = load(r'sklearn_models_nodes_regress/HGBR1_DS{0}.joblib'.format(dataset_number))
+        reg2 = load(r'sklearn_models_nodes_regress/RFR1_DS{0}.joblib'.format(dataset_number))
+        reg3 = load(r'sklearn_models_nodes_regress/MLPR1_DS{0}.joblib'.format(dataset_number))
         # reg4 = load(r'sklearn_models7/SGDR1_DS1.joblib')
 
+        hgbr_r2 = 0.481711731335663  # 0.624798373109928
+        rfr_r2 = 0.473849326241475  # 0.6390467327537
+        mlpr_r2 = 0.37217497525279  # 0.569560495202819
+        sum_r2 = hgbr_r2 + rfr_r2 + mlpr_r2
         ereg = VotingRegressor([('HGBR1_DS{0}'.format(dataset_number), reg1),
                                 ('RFR1_DS{0}'.format(dataset_number), reg2),
                                 ('MLPR1_DS{0}'.format(dataset_number), reg3)
                                 ],
-                               weights=[3. / 6., 2. / 6., 1. / 6.])
+                               weights=[hgbr_r2 / sum_r2, rfr_r2 / sum_r2, mlpr_r2 / sum_r2])
 
         ereg.fit(self.X_train, self.y_train)
         dump(ereg, model_path)
@@ -300,8 +311,10 @@ def train():
     model_path = 'sklearn_models_nodes_regress/'
 
     # models = ['DTR1', 'RFR1', 'GBR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
-    models = ['DTR1', 'RFR1', 'HGBR1', 'SGDR1', 'MLPR1', 'NuSVR1', 'GPR', 'LassoCV']
-    ds_no = 1
+    # models = ['DTR1', 'RFR1', 'HGBR1', 'SGDR1', 'MLPR1', 'GPR', 'LassoCV', 'NuSVR1']
+    models = ['GPR', 'LassoCV', 'NuSVR1']
+    models = ['NuSVR1']
+    ds_no = 2
     reg = Regression(df_path=dataset_path, selection_on=False)
     for model_number, model_name in enumerate(models):
         reg.regress(model_path=f'{model_path}{model_name}_DS{ds_no}.joblib', model_name=model_name)
@@ -309,5 +322,229 @@ def train():
     reg.vote(model_path=f'{model_path}VoR1_DS{ds_no}.joblib', dataset_number=1)
 
 
+def merge_trained_model_results():
+    trained_models_path = 'sklearn_models_nodes_regress/'
+    ds_no = 2
+    models = ['DTR1', 'RFR1', 'HGBR1', 'SGDR1', 'MLPR1', 'VoR1', ]
+    df_results = pd.DataFrame()
+    for model_name in models:
+        df1 = pd.read_csv(f'{trained_models_path}{model_name}_DS{ds_no}_evaluation_metrics_R1.csv')
+        df1.insert(loc=0, column='Model', value=[model_name])
+        df_results = pd.concat([df_results, df1], ignore_index=True)
+
+    print(df_results)
+    df_results.to_csv(os.path.join(trained_models_path, f'results_merged_DS{ds_no}.csv'), index=False)
+
+
+def compute_permutation_importance(model=None, n_repeats=100, scoring='r2'):
+    dataset_path = 'dataset_merged/sf110_production_nodes.csv'
+    model_path = 'sklearn_models_nodes_regress/VoR1_DS2.joblib'
+
+    if model is None:
+        model = load(model_path)
+    reg = Regression(df_path=dataset_path, selection_on=False)
+
+    result = permutation_importance(
+        model, reg.X_test, reg.y_test,
+        scoring=scoring,
+        n_repeats=n_repeats,
+        random_state=42,
+        n_jobs=4
+    )
+
+    perm_sorted_idx = result.importances_mean.argsort()
+    result_top_features = result.importances[perm_sorted_idx].T
+    labels_list = []
+    for label in reg.X_test1.columns[perm_sorted_idx]:
+        labels_list.append(label)
+    df1 = pd.DataFrame(data=result_top_features, columns=labels_list)
+    print('Top metrics:\n', df1)
+    df1.to_csv(f'sklearn_models_nodes_regress/VoR1_DS2_sc_{scoring}_rep{n_repeats}.csv', index=False)
+
+
+def draw_important_features(n_features=16):
+    df = pd.read_csv(r'sklearn_models_nodes_regress/VoR1_DS2_sc_r2_rep100.csv')  # R2
+    df2 = pd.melt(
+        df.iloc[:, -1 * n_features:].iloc[:, ::-1], id_vars=None,
+        value_name='Importance', var_name='Design metric'
+    )
+
+    sns.set_style('ticks', {'xtick.major.size': 0.0005, 'axes.facecolor': '1.0'})
+    f, ax = plt.subplots(figsize=(9, 5))
+    # ax.set_xscale('logit')
+    sns.boxplot(data=df2,
+                x='Importance', y='Design metric',
+                width=.700,
+                linewidth=.70
+                )
+
+    # Add in points to show each observation
+    sns.stripplot(data=df2,
+                  x='Importance', y='Design metric',
+                  size=1.55,
+                  color='.35',
+                  linewidth=0.20, )
+
+    # Tweak the visual presentation
+    # ax.set(ylabel="")
+    ax.xaxis.grid(b=True, which='both')
+    sns.despine(top=True, right=True, left=False, bottom=False, offset=None, trim=False)
+    plt.tight_layout()
+    plt.show()
+
+
+def draw_design_metrics_testability_relationship(n_features=15):
+    df = pd.read_csv('dataset_merged/sf110_production_nodes.csv')
+
+    df2 = pd.read_csv(r'sklearn_models_nodes_regress/VoR1_DS2_sc_r2_rep100.csv')  # R2
+    df3 = df2.iloc[:, -1 * n_features:].iloc[:, ::-1]
+    print(df3)
+
+    df4 = df[df3.columns]
+    df4['Testability'] = df['NodeTestability']
+    df4 = df4.fillna(0)
+
+    df4 = df4[(np.abs(stats.zscore(df4)) < 3).all(axis=1)]
+    print(df4)
+
+    for col_ in df4.columns[:-1]:
+        df4[col_] = (df4[col_] - df4[col_].min()) / (df4[col_].max() - df4[col_].min())
+        df4[col_] = df4[col_] * (1 - 0.0001) + 0.0001
+        # df4[col_].replace(to_replace=0, value=0.001, inplace=True)
+
+    col_order = ['OutDegree', 'KatzCentrality', 'CurrentFlowBetweennessCentrality', 'CurrentFlowClosenessCentrality',
+                 'PageRank', 'AverageNeighborDegree', 'ClosenessCentrality', 'AverageDijkstraPathLength',
+                 'EigenvectorCentrality', 'OutDegreeCentrality', 'DegreeCentrality', 'InDegree', 'HarmonicCentrality',
+                 'InDegreeCentrality', 'BetweennessCentrality']
+
+    col_regress_info = []
+    for col_ in col_order:
+        slope, intercept, r_value, p_value, std_err = stats.linregress(df4[col_], df4['Testability'])
+        print(col_)
+        r, p = stats.pearsonr(df4[col_], df4['Testability'])
+        col_regress_info.append((
+            slope,
+            intercept,
+            r_value,
+            p_value,
+            std_err,
+            r,
+            p,
+        ))
+
+    print(col_regress_info)
+    # quit()
+
+    df4 = df4.sample(frac=0.80, ignore_index=False)
+    df4 = df4.sample(frac=0.40, ignore_index=False)
+    print(df4.columns)
+
+    df4 = df4.melt(id_vars='Testability', var_name='Metric', value_name='Value', )
+    print(df4)
+
+    # sns.relplot(data=df4,
+    #             x='Value', y='Testability',
+    #             col='Metric', col_wrap=5,
+    #             height=2.5, aspect=1.15,
+    #             kind='line'
+    #             )
+
+    sns.set(font_scale=1.05)
+    g = sns.FacetGrid(
+        data=df4, hue='Metric', col='Metric', col_wrap=5,
+        height=2.95, aspect=0.975,
+        sharex=False, sharey=False,
+        # palette='turbo',
+        legend_out=True
+    )
+
+    g.map(
+        # sns.jointplot,
+        sns.regplot,
+        "Value", "Testability",
+        truncate=True,
+        x_bins=500,
+        x_ci='sd',
+        ci=95,
+        # scatter=False,
+        n_boot=1000,
+        # lw=0.5,
+        line_kws={'lw': 1.5,
+                  'color': 'm',
+                  # 'color': '#4682b4',
+                  # 'label': "y={0:.1f}x+{1:.1f}".format(2.5, 3.5)
+                  },
+
+    )
+
+    # g.map(
+    #     sns.lineplot,
+    #     "Value", "Testability",
+    #
+    # )
+
+    """
+    g = sns.lmplot(
+        data=df4,
+        x='Value', y='Testability',
+        hue='Metric', col='Metric', col_wrap=5,
+
+        height=2.5, aspect=1.15,
+
+        fit_reg=True,
+        truncate=True,
+        # logx=True,
+        x_ci='sd',
+        ci=95,
+        n_boot=1000,
+        # x_estimator=np.mean,
+        # robust=True, order=1,
+
+        x_bins=1000,
+        # common_bins=False,
+
+        scatter_kws={'s': 10,
+
+                     },
+        line_kws={'lw': 1.05,
+                  'color': 'm',
+                  # 'color': '#4682b4',
+                  },
+        # facet_kws=dict(sharex=False, sharey=False,)
+        facet_kws={'sharey': False, 'sharex': False}
+
+    )
+    """
+
+    # for species, ax in g.axes_dict.items():
+    #     print(ax)
+
+    i = 0
+    for ax, title in zip(g.axes.flat, col_order):
+        # ax.set_title(title)
+        ax.text(
+            0.5, 0.15, f'{round(col_regress_info[i][5], 5)}',
+            fontsize=12, fontweight='bold',
+            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,
+            color='saddlebrown',
+        )
+        ax.text(
+            0.5, 0.05, f'({col_regress_info[i][6]:.4E})',
+            fontsize=12, fontweight='bold',
+            horizontalalignment='center', verticalalignment='center', transform=ax.transAxes,
+            color='saddlebrown', #'indigo'
+        )
+        i += 1
+
+    # g.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
-    train()
+    # train()
+    # merge_trained_model_results()
+    # compute_permutation_importance()
+    # draw_important_features()
+    draw_design_metrics_testability_relationship()
+
