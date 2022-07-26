@@ -31,6 +31,20 @@ benchmarks/xerces2j-impl/
 benchmarks/xerces2j-jaxp/
 benchmarks/xerces2j-parsers/
 benchmarks/Transportation/
+benchmarks/jfreechart/
+
+testability/exclude/
+testability/mdg_production_code_experiments/
+testability/mdg_production_code/
+
+test_effectiveness/dataset/
+test_effectiveness/data/
+test_effectiveness/dataset_edges/
+test_effectiveness/dataset_merged/
+test_effectiveness/dataset_nodes/
+test_effectiveness/mdgs/
+test_effectiveness/mdgs_only_test_classes2/
+test_effectiveness/sklearn_models_nodes_regress/
 
 codart.egg-info
 dist

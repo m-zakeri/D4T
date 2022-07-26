@@ -112,15 +112,15 @@ def main(project_db_path=None, project_name=None, initial_value=1.0):
 
     # csv_path = os.path.abspath('../metrics/mdg/MDG.csv')
     csv_path = os.path.join(os.path.dirname(__file__), f'mdg_production_code/{project_name}_MDG.csv')
-    export_understand_dependencies_csv(
-        csv_path=csv_path,
-        db_path=project_db_path
-    )
+    # export_understand_dependencies_csv(
+    #     csv_path=csv_path,
+    #     db_path=project_db_path
+    # )
     # while not os.path.exists(csv_path):
     #     time.sleep(0.05)
 
     if not os.path.exists(csv_path):
-        return initial_value
+        return 0
     modulo = Modularity(graph_path=csv_path, project_db_path=project_db_path)
     q = modulo.compute_modularity_newman_leicht()
     # os.remove(csv_path)
@@ -137,12 +137,11 @@ def compute_all_modularity(udbs_path):
         df1['Project'] = [f[:-4]]
         df1['Modularity'] = [q]
         df = pd.concat([df, df1], ignore_index=True)
-        print(f'Computed modulartity for project {f[:-4]}: {q}')
+        print(f'Computed modularity for project {f[:-4]}: {q}')
     df.to_csv('SF110_codart_modularity_production_code.csv', index=False)
 
 
 # Test module
 if __name__ == '__main__':
-    udbs_path_ = "benchmarks/xerces2j/"
-    print(udbs_path_)
+    udbs_path_ = 'C:/Users/Zakeri/Desktop/SF110/'
     compute_all_modularity(udbs_path_)

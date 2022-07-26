@@ -149,8 +149,8 @@ def main(db_path=None, project_name=None, model_path=None, scaler_path=None):
 
 
 if __name__ == '__main__':
-    db_path_ = r'E:/LSSDS/CodART/Experimental1/udbs/jvlt-1.3.2.und'  # This path should be replaced for each project
-    project_name_ = 'jvlt-1.3.2'
+    db_path_ = r'C:/Users/Zakeri/Desktop/SF110/10_water-simulator.und'  # This path should be replaced for each project
+    project_name_ = '10_water-simulator'
 
     model_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/VoR1_DS2.joblib'
     scaler_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/scaler.joblib'
