@@ -297,11 +297,11 @@ class FactoryReport(Report):
 
 if __name__ == "__main__":
     java_project = "10_water-simulator"
-    fr = FactoryReport(java_project, False)
-    #json_report = fr.get_single_report(0.1, edit=True)
-    # factory_report = fr.get_list_of_report(3)
-    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-        factory_report = json.load(f)
+    fr = FactoryReport(java_project, True)
+    factory_report = fr.get_list_of_report(5)
+
+    # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+    #     factory_report = json.load(f)
 
     #pandas_report = fr.get_pandas_report(json_report)
 

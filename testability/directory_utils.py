@@ -120,7 +120,6 @@ def update_understand_database(udb_path):
     result = subprocess.run(understand_6_cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-
     # info_ = result.stdout.decode('utf-8')
     # error_ = result.stderr.decode('utf-8')
     # print(info_[:85])

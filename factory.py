@@ -365,7 +365,7 @@ class FastFactory(Factory):
                     child = index_dic_keys[int(child_index[1])]
                     child_path = index_dic[child]['path']
                     child_class_name = child.split('-')[1]
-                    print('child path: ', child_path)
+                    # print('child path: ', child_path)
                     tree = self.tree_tokenStream_dic[child_path]
                     # parser = get_parser(child_path)
                     # tree = parser.compilationUnit()
@@ -377,7 +377,7 @@ class FastFactory(Factory):
                     )
                     method_class_dic[int(child_index[1])] = listener.methods
 
-                print("fastFactory:", method_class_dic)
+                # print("fastFactory:", method_class_dic)
                 result = self.find_products(root_dfs[0][0], method_class_dic, sensitivity)
                 if len(result['products']['classes']) > 1:
                     print('--------------------------------------------------')
