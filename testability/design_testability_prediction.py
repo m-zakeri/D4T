@@ -15,7 +15,7 @@ import joblib
 
 import understand
 
-from directory_utils import export_understand_dependencies_csv
+from testability.directory_utils import export_understand_dependencies_csv
 
 
 class TestabilityPrediction:
@@ -141,6 +141,7 @@ class TestabilityPrediction:
 
         df_new.to_csv(f'{self.project_name}_testability.csv', index=False)
         print(f'Design testability for "{self.project_name}" = {df_new["Testability"].mean()}')
+        return df_new["Testability"].mean()
 
 
 def main(db_path=None, project_name=None, model_path=None, scaler_path=None):

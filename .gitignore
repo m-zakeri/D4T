@@ -46,6 +46,8 @@ test_effectiveness/mdgs/
 test_effectiveness/mdgs_only_test_classes2/
 test_effectiveness/sklearn_models_nodes_regress/
 
+*.csv
+
 codart.egg-info
 dist
 

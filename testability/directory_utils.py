@@ -8,6 +8,7 @@ __version__ = '0.5.2'
 import datetime
 import os
 import subprocess
+import platform
 from multiprocessing.dummy import Pool, Process, Manager
 
 from antlr4 import FileStream
@@ -15,8 +16,6 @@ from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from joblib import Parallel, delayed
 
 import understand as und
-
-from java8speedy.parser import sa_javalabeled
 
 
 def git_restore(project_dir):
@@ -146,12 +145,13 @@ def update_understand_database(udb_path):
             if trials > 5:
                 break
 
-    # Try to close und.exe process if it has not been killed automatically
-    result = subprocess.run(['taskkill', '/f', '/im', 'und.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode != 0:
-        print('The und.exe process is not running')
-    else:
-        print('The und.exe process killed manually')
+    if platform.system() == "Windows":
+        # Try to close und.exe process if it has not been killed automatically
+        result = subprocess.run(['taskkill', '/f', '/im', 'und.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print('The und.exe process is not running')
+        else:
+            print('The und.exe process killed manually')
 
 
 def export_understand_dependencies_csv2(csv_path: str, db_path: str):
@@ -189,12 +189,14 @@ def export_understand_dependencies_csv(csv_path: str, db_path: str):
         if trials > 5:
             break
     print("Modular dependency graph (MDG.csv) was exported.")
-    # Try to close und.exe process if it has not been killed automatically
-    result = subprocess.run(['taskkill', '/f', '/im', 'und.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode != 0:
-        print('The und.exe process is not running')
-    else:
-        print('The und.exe process killed manually')
+
+    if platform.system() == "Windows":
+        # Try to close und.exe process if it has not been killed automatically
+        result = subprocess.run(['taskkill', '/f', '/im', 'und.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print('The und.exe process is not running')
+        else:
+            print('The und.exe process killed manually')
 
 
 def reset_project(project_path=None, quit_=False):

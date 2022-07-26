@@ -6,6 +6,8 @@ import os
 from class_diagram import ClassDiagram
 from factory import Factory, FastFactory
 from complexity import Complexity
+from testability.design_testability_prediction import TestabilityPrediction
+from testability.directory_utils import update_understand_database
 from utils import File
 import config
 
@@ -57,17 +59,28 @@ class Report:
 
 class FactoryReport(Report):
     def get_single_report(self, sensitivity, edit=True):
+        db_path_ = f'benchmarks/{self.java_project}/{self.java_project}.und'
+
+        model_path_ = r'test_effectiveness/sklearn_models_nodes_regress/VoR1_DS2.joblib'
+        scaler_path_ = r'test_effectiveness/sklearn_models_nodes_regress/scaler.joblib'
+
         report = {
-                "java_project":self.java_project,
-                "sensitivity":sensitivity,
-                "complexity": {"before": None, "after": None},
+                "java_project": self.java_project,
+                "sensitivity": sensitivity,
+                "testability": {"before": None, "after": None},
                 "code_changes_rate": 0,
-                "cases":None
+                "cases": None
             }
 
-        c = Complexity(self.cdg)
-        matrix = c.get_matrix()
-        report["complexity"]["before"] = Complexity.get_avg_of_matrix(matrix)
+        # c = Complexity(self.cdg)
+        # matrix = c.get_matrix()
+        # report["complexity"]["before"] = Complexity.get_avg_of_matrix(matrix)
+
+        update_understand_database(db_path_)
+        tp = TestabilityPrediction(db_path=db_path_, project_name=self.java_project)
+        testability_ = tp.inference_model(model_path=model_path_, scaler_path=scaler_path_)
+        report["testability"]["before"] = testability_
+
         f = Factory()
         report["cases"] = f.refactor(
             sensitivity,
@@ -79,9 +92,15 @@ class FactoryReport(Report):
 
         if edit:
             self.reload_from_disk()
-            c = Complexity(self.cdg)
-            matrix = c.get_matrix()
-            report["complexity"]["after"] = Complexity.get_avg_of_matrix(matrix)
+
+            # c = Complexity(self.cdg)
+            # matrix = c.get_matrix()
+            # report["complexity"]["after"] = Complexity.get_avg_of_matrix(matrix)
+
+            update_understand_database(db_path_)
+            tp = TestabilityPrediction(db_path=db_path_, project_name=self.java_project)
+            testability_ = tp.inference_model(model_path=model_path_, scaler_path=scaler_path_)
+            report["testability"]["after"] = testability_
 
             code_changes_rate = self.get_code_changes_rate()
             report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
@@ -227,6 +246,22 @@ class FactoryReport(Report):
         if show:
             plt.show()
 
+    def show_testability_vs_sensitivity_chart(self, json_report, show=True, save=True):
+        sensitivity_list = list()
+        testability_list = list()
+        for report in json_report:
+            sensitivity_list.append(report["sensitivity"])
+            testability_list.append(report["testability"]["after"] - report["testability"]["before"])
+
+        plt.plot(sensitivity_list, testability_list)
+        plt.title(self.java_project)
+        plt.xlabel('sensitivity')
+        plt.ylabel('The rate of change of testability')
+        if save:
+            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/testability_vs_sensitivity_chart.png")
+        if show:
+            plt.show()
+
     def show_code_changed_rate_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
         complexity_list = list()
@@ -262,15 +297,18 @@ class FactoryReport(Report):
 
 if __name__ == "__main__":
     java_project = "10_water-simulator"
-    fr = FactoryReport(java_project, True)
+    fr = FactoryReport(java_project, False)
     #json_report = fr.get_single_report(0.1, edit=True)
-    factory_report = fr.get_list_of_report(3)
-    # with open(f"{config.BASE_DIR}/{java_project}/factory_report_fast.json") as f:
-    #     json_report = json.load(f)
+    # factory_report = fr.get_list_of_report(3)
+    with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+        factory_report = json.load(f)
+
     #pandas_report = fr.get_pandas_report(json_report)
-    #fr.show_cases_vs_sensitivity_chart(json_report)
-    #fr.show_avg_of_common_methods_vs_sensitivity_chart(json_report)
-    #fr.show_avg_no_of_products_vs_sensitivity_chart(json_report)
-    #fr.get_list_of_report_fast(10)
-    #fr.show_complexity_vs_sensitivity_chart(json_report)
-    #fr.show_code_changed_rate_vs_sensitivity_chart(json_report)
+
+    fr.show_testability_vs_sensitivity_chart(factory_report)
+    fr.show_cases_vs_sensitivity_chart(factory_report)
+    fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report)
+    fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report)
+    # fr.get_list_of_report_fast(10)
+    # fr.show_complexity_vs_sensitivity_chart(json_report)
+    fr.show_code_changed_rate_vs_sensitivity_chart(factory_report)
