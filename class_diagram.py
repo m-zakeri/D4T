@@ -476,7 +476,7 @@ class ClassDiagram:
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
-        nx.set_node_attributes(self.class_diagram_graph, ['normal', 'abstract', 'interface'], "type")
+        nx.set_node_attributes(self.class_diagram_graph, ['class', 'abstract class', 'interface', 'enum'], "type")
 
     def make_class_diagram(self):
         files = File.find_all_file(self.java_project_address, 'java')
@@ -701,7 +701,7 @@ class ClassDiagram:
         CDG = nx.DiGraph()
         relationships_name = ['parent', 'child', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(CDG, relationships_name, "relation_type")
-        nx.set_node_attributes(CDG, ['normal', 'abstract', 'interface'], "type")
+        nx.set_node_attributes(CDG, ['class', 'abstract class', 'interface', 'enum'], "type")
 
         for n in self.class_diagram_graph.nodes:
             CDG.add_node(n)

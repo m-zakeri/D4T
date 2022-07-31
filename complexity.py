@@ -96,7 +96,7 @@ class Complexity():
         for s in range(no_nodes):
             matrix.append([])
             for d in range(no_nodes):
-                if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]]['type'] == "normal":
+                if self.CDG.nodes[node_list[s]]['type'] == "class" and self.CDG.nodes[node_list[d]]['type'] == "class":
                     # Start the timer. Once 5 seconds are over, a SIGALRM signal is sent.
                     signal.alarm(5)
 
@@ -139,8 +139,8 @@ class Complexity():
             for s in range(no_nodes):
                 for d in range(no_nodes):
                     print(s, d)
-                    if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]][
-                        'type'] == "normal":
+                    if self.CDG.nodes[node_list[s]]['type'] == "class" and self.CDG.nodes[node_list[d]][
+                        'type'] == "class":
                         complexity = self.calculate_interaction_complexity(str(node_list[s]), str(node_list[d]))
                         #if complexity != None:
                         #    writer.writerow([s, d, complexity])
@@ -229,7 +229,7 @@ class Complexity2():
         for s in range(no_nodes):
             matrix.append([])
             for d in range(no_nodes):
-                if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]]['type'] == "normal":
+                if self.CDG.nodes[node_list[s]]['type'] == "class" and self.CDG.nodes[node_list[d]]['type'] == "class":
 
                     complexity = self.calculate_interaction_complexity(node_list[s], node_list[d])
 
@@ -265,8 +265,8 @@ class Complexity2():
             for s in range(no_nodes):
                 for d in range(no_nodes):
                     print(s, d)
-                    if self.CDG.nodes[node_list[s]]['type'] == "normal" and self.CDG.nodes[node_list[d]][
-                        'type'] == "normal":
+                    if self.CDG.nodes[node_list[s]]['type'] == "class" and self.CDG.nodes[node_list[d]][
+                        'type'] == "class":
                         complexity = self.calculate_interaction_complexity(str(node_list[s]), str(node_list[d]))
                         #if complexity != None:
                         #    writer.writerow([s, d, complexity])

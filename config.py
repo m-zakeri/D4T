@@ -145,7 +145,7 @@ relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def
 # nodes
 for i in range(16):
     test_class_diagram.add_node(i)
-    test_class_diagram.nodes[i]['type'] = 'normal'
+    test_class_diagram.nodes[i]['type'] = 'class'
 
 # extends path
 test_class_diagram.add_edge(1, 0)

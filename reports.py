@@ -24,7 +24,7 @@ class Report:
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
         self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
         self.cd.make_class_diagram()
-        self.cd.set_stereotypes()
+        #self.cd.set_stereotypes()
         self.cdg = self.cd.get_CDG()
 
     def restore_java_project(self):
@@ -115,9 +115,9 @@ class FactoryReport(Report):
                 self.restore_java_project()
                 self.reload_from_disk()
 
-        if save:
-            with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
-                json.dump(reports, f, indent=4)
+            if save:
+                with open(f"{config.BASE_DIR}/{self.java_project}/factory_report.json", 'w') as f:
+                    json.dump(reports, f, indent=4)
         return reports
 
     def get_single_report_fast(self, sensitivity, fast_factory, save=True):
@@ -284,7 +284,10 @@ class FactoryReport(Report):
         for case in json_report["cases"]:
             b += 1
             a += len(case["products"]["methods"])
-        return round(a / b, 2)
+        if b == 0:
+            return 0
+        else:
+            return round(a / b, 2)
 
     def __get_avg_no_products(self, json_report):
         a = 0
@@ -292,23 +295,33 @@ class FactoryReport(Report):
         for case in json_report["cases"]:
             b += 1
             a += len(case["products"]["classes"])
-        return round(a / b, 2)
+        if b == 0:
+            return 0
+        else:
+            return round(a / b, 2)
 
 
 if __name__ == "__main__":
-    java_project = "10_water-simulator"
-    fr = FactoryReport(java_project, True)
-    factory_report = fr.get_list_of_report(5)
+    java_projects = [
+        # "10_water-simulator",
+        # "jfreechart",
+        # "88_jopenchart",
+        # "tabula-java"
+        "61_noen"
+    ]
+    for java_project in java_projects:
+        fr = FactoryReport(java_project, False)
+        # factory_report = fr.get_list_of_report(10)
 
-    # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-    #     factory_report = json.load(f)
+        with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+            factory_report = json.load(f)
 
-    #pandas_report = fr.get_pandas_report(json_report)
+        #pandas_report = fr.get_pandas_report(json_report)
 
-    fr.show_testability_vs_sensitivity_chart(factory_report)
-    fr.show_cases_vs_sensitivity_chart(factory_report)
-    fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report)
-    fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report)
-    # fr.get_list_of_report_fast(10)
-    # fr.show_complexity_vs_sensitivity_chart(json_report)
-    fr.show_code_changed_rate_vs_sensitivity_chart(factory_report)
+        # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
+        # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
+        # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
+        # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
+        # fr.get_list_of_report_fast(10)
+        # fr.show_complexity_vs_sensitivity_chart(json_report)
+        fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)

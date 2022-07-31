@@ -40,11 +40,11 @@ class ClassTypeListener(JavaParserLabeledListener):
         if self.__depth == 1:
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             type_declaration = ctx.parentCtx
-            _type = 'normal'
+            _type = 'class'
             if type_declaration.classOrInterfaceModifier() is not None:
                 if len(type_declaration.classOrInterfaceModifier()) == 1:
                     if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
-                        _type = 'abstract'
+                        _type = 'abstract class'
 
             self.file_info[self.current_class] = {'type': _type}
 
