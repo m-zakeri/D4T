@@ -120,7 +120,6 @@ def merge_dataset_node():
         if not df1.empty:
             df_all = pd.concat([df_all, df1], ignore_index=True)
 
-
     results_path = 'dataset_merged/sf110_production_nodes.csv'
     print(df_all.shape)
     df_all.to_csv(results_path, index=False)
@@ -138,9 +137,9 @@ def create_dataset_for_each_project():
     for mdg_file in mdg_files:
         project_name = mdg_file[:-8]
         print(f'Processing understand db file {project_name}:')
-        if os.path.exists(f'dataset_nodes/{project_name}_Node.csv'):
-            print('Already exist.')
-            continue
+        # if os.path.exists(f'dataset_nodes/{project_name}_Node.csv'):
+        #     print('Already exist.')
+        #     continue
         db = understand.open(os.path.join(udbs_path, f"{project_name}.und"))
         mdg_ = ModularDependencyGraphNodeFeature(
             graph_path=os.path.join(mdg_path, mdg_file),
@@ -148,14 +147,34 @@ def create_dataset_for_each_project():
             project_name=project_name,
             df_test=df_test,
         )
+
+        mdg_.draw_mdg()
+        continue
         df = mdg_.extract_node_statistics()
         db.close()
         if df is not None:
             df.to_csv(f'dataset_nodes/{project_name}_Node.csv', index=False)
             # quit()
-        print('-'*50)
+        print('-' * 50)
+
+
+def draw_an_mdg():
+    project_name = '10_water-simulator'
+    udbs_path = 'D:/AnacondaProjects/iust_start/testability/sf110_without_test/'
+    mdg_path = '../testability/mdg_production_code/'
+    mdg_file = '10_water-simulator_MDG.csv'
+
+    db = understand.open(os.path.join(udbs_path, f"{project_name}.und"))
+    mdg_ = ModularDependencyGraphNodeFeature(
+        graph_path=os.path.join(mdg_path, mdg_file),
+        db=db,
+        project_name=project_name,
+        df_test=None
+    )
+    mdg_.draw_mdg()
 
 
 if __name__ == '__main__':
-    # create_dataset_for_each_project()
-    merge_dataset_node()
+    create_dataset_for_each_project()
+    # merge_dataset_node()
+    # draw_an_mdg()
