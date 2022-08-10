@@ -137,7 +137,7 @@ def compute_all_modularity(udbs_path):
         df1['Project'] = [f[:-4]]
         df1['Modularity'] = [q]
         df = pd.concat([df, df1], ignore_index=True)
-        print(f'Computed modulartity for project {f[:-4]}: {q}')
+        print(f'Computed modularity for project {f[:-4]}: {q}')
     df.to_csv('SF110_codart_modularity_production_code.csv', index=False)
 
 
