@@ -224,7 +224,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                 #     print(self.token_stream_rewriter.getDefaultText())
 
                 if v_info['type'] in self.dependee_dic:
-                    if self.dependee_dic[v_info['type']]['type'] == 'normal':
+                    if self.dependee_dic[v_info['type']]['type'] == 'class':
                         instantiate_text += f"private {'I' + v_info['type']} {v};\n\t"
                         formal_variable_text += f"{'I' + v_info['type']} {v},"
                     else:
@@ -264,7 +264,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         import_text = ''
         print('self.dependee_dic:', self.dependee_dic)
         for dependee in self.dependee_dic:
-            if self.dependee_dic[dependee]['type'] == 'normal':
+            if self.dependee_dic[dependee]['type'] == 'class':
                 import_text += f'\nimport {self.dependee_dic[dependee]["package"]}.I{dependee};'
 
         self.token_stream_rewriter.insertAfter(
@@ -398,7 +398,7 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
             not field_variable.initiation_location:
             for formal_parameter in constructor.formal_parameters:
                 if field_variable.type == formal_parameter.type:
-                    if self.dependees[field_variable.type].type == 'normal':
+                    if self.dependees[field_variable.type].type == 'class':
                         return True
         return False
 
@@ -431,7 +431,7 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
                 self.__delete_new(v_info.initiation_location[0], v_info.initiation_location[1])
 
                 variable_type = v_info.type
-                if self.dependees[v_info.type].type == 'normal':
+                if self.dependees[v_info.type].type == 'class':
                     variable_type = 'I' + v_info.type
                     location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
                     self.__edit_variable_type(variable_type, location)
@@ -457,7 +457,7 @@ class ConstructorEditorListener_v2(JavaParserLabeledListener):
                 if self.__check_constructor_injection_case1(v_info):
                     self.__delete_new(v_info.initiation_location[0], v_info.initiation_location[1])
                     variable_type = v_info.type
-                    if self.dependees[v_info.type].type == 'normal':
+                    if self.dependees[v_info.type].type == 'class':
                         variable_type = 'I' + v_info.type
                         location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
                         self.__edit_variable_type(variable_type, location)
@@ -687,7 +687,7 @@ class Injection:
     #                     f.write(listener.token_stream_rewriter.getDefaultText())
     #
     #                 # for dependee in listener.dependee_dic:
-    #                 #     if listener.dependee_dic[dependee]['type'] == 'normal':
+    #                 #     if listener.dependee_dic[dependee]['type'] == 'class':
     #                 #         key = listener.dependee_dic[dependee]['package'] + '-' + dependee + '-' + dependee
     #                 #         interfaces.add(index_dic[key]['path'])
     #

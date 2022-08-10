@@ -1,0 +1,39 @@
+\contentsline {chapter}{فهرست تصاویر}{خ}{section*.1}%
+\contentsline {chapter}{فهرست جداول}{د}{section*.2}%
+\contentsline {chapter}{فهرست الگوریتم‌ها}{ذ}{section*.2}%
+\contentsline {chapter}{فهرست علائم اختصاری}{ر}{chapter*.4}%
+\contentsline {chapter}{\numberline {1}راهنمای استفاده از کلاس}{1}{chapter.1}%
+\contentsline {section}{\numberline {1-1}مقدمه}{1}{section.1.1}%
+\contentsline {section}{\numberline {1-2}این همه فایل؟!}{2}{section.1.2}%
+\contentsline {section}{\numberline {1-3}از کجا شروع کنم؟}{2}{section.1.3}%
+\contentsline {section}{\numberline {1-4}مطالب پروژه را چطور بنویسم؟}{4}{section.1.4}%
+\contentsline {subsection}{\numberline {1-4-1}نوشتن فصل‌ها}{4}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1-4-2}مراجع}{4}{subsection.1.4.2}%
+\contentsline {subsection}{\numberline {1-4-3}واژه‌نامه فارسی به انگلیسی و برعکس}{5}{subsection.1.4.3}%
+\contentsline {subsection}{\numberline {1-4-4}نمایه}{5}{subsection.1.4.4}%
+\contentsline {section}{\numberline {1-5}اگر سوالی داشتم، از کی بپرسم؟}{5}{section.1.5}%
+\contentsline {section}{\numberline {1-6}جمع‌بندی}{5}{section.1.6}%
+\contentsline {chapter}{\numberline {2}آشنایی سریع با برخی دستورات لاتک}{6}{chapter.2}%
+\contentsline {section}{\numberline {2-1}بندها و زیرنویس‌ها}{6}{section.2.1}%
+\contentsline {section}{\numberline {2-2}فرمول‌های ریاضی}{7}{section.2.2}%
+\contentsline {subsection}{\numberline {2-2-1}یک زیربخش}{7}{subsection.2.2.1}%
+\contentsline {subsubsection}{یک زیرزیربخش}{7}{section*.5}%
+\contentsline {section}{\numberline {2-3}نوشته‌های فارسی و انگلیسی مخلوط}{8}{section.2.3}%
+\contentsline {section}{\numberline {2-4}افزودن تصویر به نوشته}{8}{section.2.4}%
+\contentsline {section}{\numberline {2-5}محیط‌های شمارش و نکات}{9}{section.2.5}%
+\contentsline {section}{\numberline {2-6}تعریف و قضیه}{10}{section.2.6}%
+\contentsline {section}{\numberline {2-7}چگونگی نوشتن و ارجاع به مراجع}{10}{section.2.7}%
+ \renewcommand \cftchappresnum {پیوست\nobreakspace {}}\setlength {\cftchapnumwidth }{\mylenapp }
+\contentsline {chapter}{\numberline {آ}مدیریت مراجع در لاتک}{12}{appendix.Alph1}%
+\contentsline {section}{\numberline {آ-1} مدیریت مراجع با \lr {Bib\LRE {\TeX }} }{12}{section.Alph1.1}%
+\contentsline {subsection}{\numberline {آ-1-1}سبک‌های فعلی قابل استفاده در زی‌پرشین}{13}{subsection.Alph1.1.1}%
+\contentsline {subsection}{\numberline {آ-1-2} نحوه استفاده از سبک‌های فارسی}{14}{subsection.Alph1.1.2}%
+\contentsline {chapter}{\numberline {ب}‌جدول، نمودار و الگوریتم در لاتک}{17}{appendix.Alph2}%
+\contentsline {section}{\numberline {ب-1}مدلهای حرکت دوبعدی}{17}{section.Alph2.1}%
+\contentsline {section}{\numberline {ب-2}ماتریس}{17}{section.Alph2.2}%
+\contentsline {section}{\numberline {ب-3}الگوریتم با دستورات فارسی}{18}{section.Alph2.3}%
+\contentsline {section}{\numberline {ب-4}الگوریتم با دستورات لاتین}{19}{section.Alph2.4}%
+\contentsline {section}{\numberline {ب-5}نمودار}{19}{section.Alph2.5}%
+\contentsline {section}{\numberline {ب-6}تصویر}{20}{section.Alph2.6}%
+\contentsline {chapter}{واژه‌نامه فارسی به انگلیسی}{21}{appendix*.6}%
+\contentsline {chapter}{واژه‌نامه انگلیسی به فارسی}{22}{appendix*.7}%

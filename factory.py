@@ -94,42 +94,28 @@ class FixCreatorListener(JavaParserLabeledListener):
 class FixProductsListener(JavaParserLabeledListener):
     def __init__(self, interface_name, interface_import_text,
                  common_token_stream: CommonTokenStream = None,
-                 creator_identifier: str = None,
-                 products_identifier: str = None, ):
+                 products_identifier: str = None):
         self.interface_import_text = interface_import_text
         self.token_stream = common_token_stream
-        self.creator_identifier = creator_identifier
         self.products_identifier = products_identifier
         self.interfaceName = interface_name
-        self.inProducts = False
         self.packageIndex = 0
-        self.productsClassIndex = []
-        self.currentClass = None
-        self.has_implement = None
         # Move all the tokens in the source code in a buffer, token_stream_rewriter.
         if common_token_stream is not None:
             self.token_stream_rewriter = TokenStreamRewriter(common_token_stream)
         else:
             raise TypeError('common_token_stream is None')
 
-    def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if ctx.IDENTIFIER().getText() in self.products_identifier:
-            self.inProducts = True
-            if ctx.typeType() is not None:
-                if ctx.typeType().classOrInterfaceType().IDENTIFIER() is not None:
-                    self.productsClassIndex.append(
-                        ctx.typeType().classOrInterfaceType().IDENTIFIER()[0].symbol.tokenIndex)
-                else:
-                    self.productsClassIndex.append(ctx.IDENTIFIER().symbol.tokenIndex)
-            self.currentClass = ctx.IDENTIFIER().symbol.text
-            if ctx.IMPLEMENTS() is not None:
-                self.has_implement = True
-            else:
-                self.has_implement = False
-
     def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.inProducts = False
-        self.currentClass = None
+        if ctx.IDENTIFIER().getText() in self.products_identifier:
+            if ctx.typeList():
+                text = ", " + self.interfaceName
+            else:
+                text = " implements " + self.interfaceName
+
+            self.token_stream_rewriter.insertAfter(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                                                   index=ctx.classBody().start.tokenIndex - 1,
+                                                   text=text)
 
     def exitPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
         self.packageIndex = ctx.SEMI().symbol.tokenIndex
@@ -138,16 +124,6 @@ class FixProductsListener(JavaParserLabeledListener):
         self.token_stream_rewriter.insertAfter(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                                                index=self.packageIndex,
                                                text='\n' + self.interface_import_text + '\n')
-        for item in self.productsClassIndex:
-            if self.has_implement == True:
-                text = self.interfaceName + ", "
-                item += 3
-            else:
-                text = " implements " + self.interfaceName
-
-            self.token_stream_rewriter.insertAfter(program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-                                                   index=item,
-                                                   text=text)
 
 
 class ProductCreatorDetectorListener(JavaParserLabeledListener):
@@ -218,7 +194,6 @@ class Factory:
             interface_name=interface_name,
             interface_import_text=interface_import_text,
             common_token_stream=token_stream,
-            creator_identifier=creator_identifier,
             products_identifier=products_identifier
         )
         walker = ParseTreeWalker()
@@ -390,7 +365,7 @@ class FastFactory(Factory):
                     child = index_dic_keys[int(child_index[1])]
                     child_path = index_dic[child]['path']
                     child_class_name = child.split('-')[1]
-                    print('child path: ', child_path)
+                    # print('child path: ', child_path)
                     tree = self.tree_tokenStream_dic[child_path]
                     # parser = get_parser(child_path)
                     # tree = parser.compilationUnit()
@@ -402,7 +377,7 @@ class FastFactory(Factory):
                     )
                     method_class_dic[int(child_index[1])] = listener.methods
 
-                print("fastFactory:", method_class_dic)
+                # print("fastFactory:", method_class_dic)
                 result = self.find_products(root_dfs[0][0], method_class_dic, sensitivity)
                 if len(result['products']['classes']) > 1:
                     print('--------------------------------------------------')

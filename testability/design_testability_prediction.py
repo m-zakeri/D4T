@@ -15,7 +15,7 @@ import joblib
 
 import understand
 
-from directory_utils import export_understand_dependencies_csv
+from testability.directory_utils import export_understand_dependencies_csv
 
 
 class TestabilityPrediction:
@@ -141,6 +141,7 @@ class TestabilityPrediction:
 
         df_new.to_csv(f'{self.project_name}_testability.csv', index=False)
         print(f'Design testability for "{self.project_name}" = {df_new["Testability"].mean()}')
+        return df_new["Testability"].mean()
 
 
 def main(db_path=None, project_name=None, model_path=None, scaler_path=None):
@@ -149,8 +150,8 @@ def main(db_path=None, project_name=None, model_path=None, scaler_path=None):
 
 
 if __name__ == '__main__':
-    db_path_ = r'E:/LSSDS/CodART/Experimental1/udbs/jvlt-1.3.2.und'  # This path should be replaced for each project
-    project_name_ = 'jvlt-1.3.2'
+    db_path_ = r'C:/Users/Zakeri/Desktop/SF110/10_water-simulator.und'  # This path should be replaced for each project
+    project_name_ = '10_water-simulator'
 
     model_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/VoR1_DS2.joblib'
     scaler_path_ = r'../test_effectiveness/sklearn_models_nodes_regress/scaler.joblib'

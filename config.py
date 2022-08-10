@@ -29,6 +29,14 @@ base_dirs.append(BASE_DIR + 'commons-codec/src/main/java/')
 projects_info['commons-codec']['path'] = java_project_address
 projects_info['commons-codec']['base_dirs'] = base_dirs
 
+# jfreechart
+projects_info['jfreechart'] = dict()
+java_project_address = BASE_DIR + 'jfreechart/src/main/java/org'
+base_dirs = list()
+base_dirs.append(BASE_DIR + 'jfreechart/src/main/java/org/')
+projects_info['jfreechart']['path'] = java_project_address
+projects_info['jfreechart']['base_dirs'] = base_dirs
+
 #ant
 projects_info['ant'] = {}
 java_project_address = BASE_DIR + 'ant/src/main'
@@ -137,7 +145,7 @@ relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def
 # nodes
 for i in range(16):
     test_class_diagram.add_node(i)
-    test_class_diagram.nodes[i]['type'] = 'normal'
+    test_class_diagram.nodes[i]['type'] = 'class'
 
 # extends path
 test_class_diagram.add_edge(1, 0)

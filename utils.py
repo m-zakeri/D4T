@@ -40,11 +40,11 @@ class ClassTypeListener(JavaParserLabeledListener):
         if self.__depth == 1:
             self.current_class = self.__package + '-' + self.file_name + '-' + ctx.IDENTIFIER().getText()
             type_declaration = ctx.parentCtx
-            _type = 'normal'
+            _type = 'class'
             if type_declaration.classOrInterfaceModifier() is not None:
                 if len(type_declaration.classOrInterfaceModifier()) == 1:
                     if type_declaration.classOrInterfaceModifier()[0].getText() == 'abstract':
-                        _type = 'abstract'
+                        _type = 'abstract class'
 
             self.file_info[self.current_class] = {'type': _type}
 
@@ -139,13 +139,8 @@ class Path:
 
     @staticmethod
     def get_file_name_from_path(path):
-        """
-        Use Python built-in functions instead of this
-        """
-        path = path.split('/')
-        class_name = path[-1]
-        class_name = class_name.split('.')
-        class_name = class_name[0]
+        head, tail = os.path.split(path)
+        class_name = tail.split('.')[0]
         return class_name
 
     @staticmethod
@@ -184,6 +179,10 @@ def get_parser_and_tokens(path):
     tokens = CommonTokenStream(lexer)
     parser = JavaParserLabeled(tokens)
     return parser, tokens
+
+def convert_networkx_to_dic_graph(networkx_graph):
+    g = dict()
+    return g
 
 if __name__ == "__main__":
     File.indexing_files_directory(

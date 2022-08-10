@@ -440,7 +440,7 @@ class StereotypeListener(JavaParserLabeledListener):
             if len(list_of_objects) > 1:
                 for object in list_of_objects[1:]:
                     if current_type in self.index_dic:
-                        print(current_type, object)
+                        # print(current_type, object)
                         current_type = self.methods_information[current_type]['attributes'][object]
 
             # detect use type
@@ -476,10 +476,9 @@ class ClassDiagram:
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
-        nx.set_node_attributes(self.class_diagram_graph, ['normal', 'abstract', 'interface'], "type")
+        nx.set_node_attributes(self.class_diagram_graph, ['class', 'abstract class', 'interface', 'enum'], "type")
 
     def make_class_diagram(self):
-        print(self.java_project_address)
         files = File.find_all_file(self.java_project_address, 'java')
 
         # add nodes to class_diagram
@@ -509,7 +508,7 @@ class ClassDiagram:
                 t=tree
             )
             graph = listener.class_dic
-            print('graph:', graph)
+            # print('graph:', graph)
             # add edges to class_diagram
             for c in graph:
                 for i in graph[c]:
@@ -561,7 +560,7 @@ class ClassDiagram:
         return roots
 
     def __add_extends_attributes_and_methods(self, parent, child, method_info, index_list):
-        print((parent, child))
+        # print((parent, child))
         for attribute in method_info[index_list[parent]]['attributes']:
             if not(attribute in method_info[index_list[child]]['attributes']):
                 method_info[index_list[child]]['attributes'][attribute] = \
@@ -581,8 +580,8 @@ class ClassDiagram:
         extends_graph = self.__get_extend_graph()
         roots = self.__find_extend_roots(extends_graph)
         index_list = list(self.index_dic.keys())
-        print(extends_graph)
-        print(roots)
+        # print(extends_graph)
+        # print(roots)
         q = queue.Queue()
         for root in roots:
             q.put(root)
@@ -619,7 +618,7 @@ class ClassDiagram:
                 t=tree
             )
             file_info = listener.get_file_info()
-            print(file_info)
+            # print(file_info)
             file_name = Path.get_file_name_from_path(file)
             for c in file_info:
                 if listener.get_package() == None:
@@ -628,10 +627,10 @@ class ClassDiagram:
                     package = listener.get_package()
                 #class_index = index_dic[]['index']
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
-        print(methods_info)
+        # print(methods_info)
         methods_info = self.__handle_extends_methods_information(methods_info)
         methods_info = self.__calculate_interface_modification_type(methods_info)
-        print(methods_info)
+        # print(methods_info)
         print("finish finding methods information !")
         return methods_info
 
@@ -650,11 +649,19 @@ class ClassDiagram:
                 for m in method_info[c]['methods']:
                     for implemented_class in implemented_classes:
                         class_name = index_list[implemented_class]
-                        if method_info[class_name]['methods'][m]['is_modify_itself']:
-                            method_info[c]['methods'][m]['is_modify_itself'] = True
-                            break
-                        else:
-                            method_info[c]['methods'][m]['is_modify_itself'] = False
+                        try:
+                            if method_info[class_name]['methods'][m]['is_modify_itself']:
+                                method_info[c]['methods'][m]['is_modify_itself'] = True
+                                break
+                            else:
+                                method_info[c]['methods'][m]['is_modify_itself'] = False
+                        except:
+                            print("-"*20)
+                            print(class_name)
+                            print(method_info[class_name]['methods'])
+                            print(m)
+                            print("-"*20)
+                            # quit()
         return method_info
 
     def set_stereotypes(self):
@@ -694,7 +701,7 @@ class ClassDiagram:
         CDG = nx.DiGraph()
         relationships_name = ['parent', 'child', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(CDG, relationships_name, "relation_type")
-        nx.set_node_attributes(CDG, ['normal', 'abstract', 'interface'], "type")
+        nx.set_node_attributes(CDG, ['class', 'abstract class', 'interface', 'enum'], "type")
 
         for n in self.class_diagram_graph.nodes:
             CDG.add_node(n)
@@ -719,12 +726,13 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['10_water-simulator']['path']
-    print(1, java_project_address)
-    base_dirs = config.projects_info['10_water-simulator']['base_dirs']
+    java_project_address = config.projects_info['javaproject']['path']
+    print(java_project_address)
+    base_dirs = config.projects_info['javaproject']['base_dirs']
+    print(base_dirs)
     files = File.find_all_file(java_project_address, 'java')
+    print(files)
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    print(2, java_project_address)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
     cd.make_class_diagram()
 
@@ -735,14 +743,13 @@ if __name__ == "__main__":
     cd.set_stereotypes()
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
-
-    CDG = cd.get_CFG()
-    for edge in CDG.edges:
-        print(edge, CDG.edges[edge])
-    cd.show(CDG)
-
-    g = cd.class_diagram_graph
-    print(len(list(nx.weakly_connected_components(g))))
-    for i in nx.weakly_connected_components(g):
-        print(i)
-
+    #
+    # CDG = cd.get_CFG()
+    # for edge in CDG.edges:
+    #     print(edge, CDG.edges[edge])
+    # cd.show(CDG)
+    #
+    # g = cd.class_diagram_graph
+    # print(len(list(nx.weakly_connected_components(g))))
+    # for i in nx.weakly_connected_components(g):
+    #     print(i)

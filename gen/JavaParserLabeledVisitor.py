@@ -1,4 +1,4 @@
-# Generated from C:/Users/sadegh/Desktop/sadegh/find_factory_product_class\JavaParserLabeled.g4 by ANTLR 4.9.1
+# Generated from /media/sadegh/Data/sadegh/iust/compiler/compiler projects/main_project/grammars/JavaParserLabeled.g4 by ANTLR 4.10.1
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .JavaParserLabeled import JavaParserLabeled
