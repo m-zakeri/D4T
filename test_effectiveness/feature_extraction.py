@@ -7,12 +7,15 @@ The extracted feature are then used to predict design test effectiveness.
 __version__ = '0.1.1'
 __author__ = 'Morteza Zakeri'
 
+import re
 import sys
 import os
 import pandas
 import pandas as pd
 import networkx as nx
 import networkx.algorithms.community as nx_comm
+from networkx.drawing.nx_agraph import graphviz_layout, to_agraph
+import pygraphviz as pgv
 
 
 class ModularDependencyGraph:
@@ -20,12 +23,65 @@ class ModularDependencyGraph:
         self.mdg_df = pandas.read_csv(graph_path)
         self.mdg_df.rename(columns={"From Entities": "From_Entities", "To Entities": "To_Entities"}, inplace=True)
         if self.mdg_df is not None and not self.mdg_df.empty:
-            self.mdg_graph = nx.from_pandas_edgelist(
+            self.mdg_graph: nx.DiGraph = nx.from_pandas_edgelist(
                 self.mdg_df, source='From Class', target='To Class',
                 edge_attr=True, create_using=nx.DiGraph()
             )
         else:
             self.mdg_graph = None
+        self.kwargs = kwargs
+
+    def draw_mdg(self):
+        # self.mdg_graph.write(f'mdg.dot')
+
+        node_to_be_removed = []
+        for i, u in enumerate(self.mdg_graph.nodes()):
+            entities = self.kwargs['db'].lookup(re.compile(u + r'$'), )
+            if entities is None or len(entities) == 0:  # Nested classes
+                node_to_be_removed.append(u)
+                continue
+            if str(entities[0].kind().name()).find('Enum') != -1:
+                node_to_be_removed.append(u)
+                continue
+            if str(entities[0].kind().name()).find('Unknown') != -1:
+                node_to_be_removed.append(u)
+                continue
+            if str(entities[0].kind().name()).find('Unresolved') != -1:
+                node_to_be_removed.append(u)
+                continue
+
+            attrs = {u: {"shape": "record"}}
+            nx.set_node_attributes(self.mdg_graph, attrs)
+            if 'Abstract' in entities[0].kind().name() or 'Interface' in entities[0].kind().name():
+                attrs = {u: {"shape": "oval", "style": "filled", "fillcolor": "cadetblue1", "color": "cornflowerblue"}}
+                nx.set_node_attributes(self.mdg_graph, attrs)
+
+        self.mdg_graph.remove_nodes_from(node_to_be_removed)
+
+        for u, v, data in self.mdg_graph.edges(data=True):
+            entities = self.kwargs['db'].lookup(re.compile(v + r'$'), )
+            if 'Abstract' in entities[0].kind().name() or 'Interface' in entities[0].kind().name():
+                data['arrowhead'] = 'vee'
+                data['style'] = 'dashed'
+                data['color'] = 'chocolate2'
+
+            entities = self.kwargs['db'].lookup(re.compile(u + r'$'), )
+            if 'Abstract' in entities[0].kind().name() or 'Interface' in entities[0].kind().name():
+                data['arrowhead'] = 'vee'
+                data['style'] = 'dashed'
+                data['color'] = 'deeppink3'
+
+            data["label"] = data.pop("References")
+
+        a_graph = to_agraph(self.mdg_graph)
+        # print(a_graph)
+        a_graph.layout('dot')
+        a_graph.draw(os.path.join('class_diagrams_viz', f'{self.kwargs["project_name"]}.png'))
+        a_graph.draw(os.path.join('class_diagrams_viz', f'{self.kwargs["project_name"]}.pdf'))
+        with open(os.path.join('class_diagrams_viz', f'{self.kwargs["project_name"]}.dot'), mode='w',
+                  encoding='utf8', ) as f:
+            f.write(a_graph.to_string())
+
 
     def remove_test_classes_from_mdg(self, graph_path):
         with open(graph_path, mode='r') as f:
@@ -221,7 +277,7 @@ def extract_design_metrics():
 
 if __name__ == '__main__':
     path_ = 'mdgs'
-    # concat_modularity_wtih_d4t_dataset()
+    # concat_modularity_with_d4t_dataset()
     extract_design_metrics()
     # create_test_graph()
     # compute_design_test_effectiveness()
