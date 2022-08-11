@@ -727,11 +727,11 @@ class ClassDiagram:
 
 if __name__ == "__main__":
     java_project_address = config.projects_info['javaproject']['path']
-    print(java_project_address)
+    print('java_project_address', java_project_address)
     base_dirs = config.projects_info['javaproject']['base_dirs']
-    print(base_dirs)
+    print('base_dirs', base_dirs)
     files = File.find_all_file(java_project_address, 'java')
-    print(files)
+    print('files', files)
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs, index_dic)
     cd.make_class_diagram()
