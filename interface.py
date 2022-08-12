@@ -157,7 +157,9 @@ class InterfaceAdapter:
         all_paths = [factory_info['factory']['path']]
         for product_info in factory_info['products']['classes']:
             all_paths.append(product_info['path'])
+        print("path", Path.convert_str_paths_to_list_paths(set(all_paths)))
         path = Path.detect_path(Path.convert_str_paths_to_list_paths(set(all_paths)))
+        print("result", path)
         interface_info['path'] = path
         print(path, all_paths)
         package = Path.get_default_package(base_dirs, path + '/' + name + '.java')
