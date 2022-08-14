@@ -1,7 +1,7 @@
 *.pyc
 *.gml
 *.json
-refactored_project/*
+gen/*
 
 # IDEs
 /venv/
@@ -32,6 +32,7 @@ benchmarks/xerces2j-jaxp/
 benchmarks/xerces2j-parsers/
 benchmarks/Transportation/
 benchmarks/jfreechart/
+benchmarks/1_tullibee/
 
 testability/exclude/
 testability/mdg_production_code_experiments/
