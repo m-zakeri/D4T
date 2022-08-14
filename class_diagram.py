@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import queue
 import json
 
-from utils import File, Path
+from utils import File, Path, get_parser
 import config
 
 
@@ -464,14 +464,11 @@ class StereotypeListener(JavaParserLabeledListener):
 
 
 class ClassDiagram:
-    def __init__(self, java_project_address, base_dirs, index_dic=None):
+    def __init__(self, java_project_address, base_dirs):
+        self.files = File.find_all_file(java_project_address, 'java')
         self.java_project_address = java_project_address
         self.base_dirs = base_dirs
-        if index_dic == None:
-            files = File.find_all_file(self.java_project_address, 'java')
-            self.index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-        else:
-            self.index_dic = index_dic
+        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', base_dirs)
 
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
@@ -479,8 +476,6 @@ class ClassDiagram:
         nx.set_node_attributes(self.class_diagram_graph, ['class', 'abstract class', 'interface', 'enum'], "type")
 
     def make_class_diagram(self):
-        files = File.find_all_file(self.java_project_address, 'java')
-
         # add nodes to class_diagram
         for c in self.index_dic:
             index = self.index_dic[c]['index']
@@ -488,17 +483,10 @@ class ClassDiagram:
             self.class_diagram_graph.nodes[index]['type'] = self.index_dic[c]['type']
 
         print('Start making class diagram . . .')
-        for f in files:
+        for f in self.files:
             file_name = Path.get_file_name_from_path(f)
             print('\t' + f)
-            try:
-                stream = FileStream(f, encoding='utf8')
-            except:
-                print('\t' + f, 'can not read')
-                continue
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
+            parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = ClassDiagramListener(self.base_dirs, self.index_dic, file_name, f)
             walker = ParseTreeWalker()
@@ -597,19 +585,12 @@ class ClassDiagram:
                     q.put(child)
         return method_information
 
-    def __find_methods_information(self, files):
+    def __find_methods_information(self):
         print('start finding methods information . . .')
         methods_info = {}
-        for file in files:
-            try:
-                stream = FileStream(file, encoding='utf8')
-                print('\t' + file)
-            except:
-                print(file, 'can not read')
-                continue
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
+        for f in self.files:
+            print('\t' + f)
+            parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = MethodModificationTypeListener()
             walker = ParseTreeWalker()
@@ -618,19 +599,18 @@ class ClassDiagram:
                 t=tree
             )
             file_info = listener.get_file_info()
-            # print(file_info)
-            file_name = Path.get_file_name_from_path(file)
+
+            file_name = Path.get_file_name_from_path(f)
             for c in file_info:
                 if listener.get_package() == None:
-                    package = Path.get_default_package(self.base_dirs, file)
+                    package = Path.get_default_package(self.base_dirs, f)
                 else:
                     package = listener.get_package()
-                #class_index = index_dic[]['index']
+
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
-        # print(methods_info)
+
         methods_info = self.__handle_extends_methods_information(methods_info)
         methods_info = self.__calculate_interface_modification_type(methods_info)
-        # print(methods_info)
         print("finish finding methods information !")
         return methods_info
 
@@ -649,37 +629,28 @@ class ClassDiagram:
                 for m in method_info[c]['methods']:
                     for implemented_class in implemented_classes:
                         class_name = index_list[implemented_class]
-                        try:
-                            if method_info[class_name]['methods'][m]['is_modify_itself']:
-                                method_info[c]['methods'][m]['is_modify_itself'] = True
-                                break
-                            else:
-                                method_info[c]['methods'][m]['is_modify_itself'] = False
-                        except:
-                            print("-"*20)
-                            print(class_name)
-                            print(method_info[class_name]['methods'])
-                            print(m)
-                            print("-"*20)
-                            # quit()
+                        # try:
+                        if method_info[class_name]['methods'][m]['is_modify_itself']:
+                            method_info[c]['methods'][m]['is_modify_itself'] = True
+                            break
+                        else:
+                            method_info[c]['methods'][m]['is_modify_itself'] = False
+                        # except:
+                        #     print("-"*20)
+                        #     print(class_name)
+                        #     print(method_info[class_name]['methods'])
+                        #     print(m)
+                        #     print("-"*20)
+                        #     # quit()
         return method_info
 
     def set_stereotypes(self):
-        files = File.find_all_file(self.java_project_address, 'java')
-        methods_information = self.__find_methods_information(files)
+        methods_information = self.__find_methods_information()
         print('Start setting stereotype . . .')
-        for f in files:
+        for f in self.files:
             file_name = Path.get_file_name_from_path(f)
             print('\t' + f)
-            try:
-                stream = FileStream(f, encoding='utf8')
-            except Exception as e:
-                print('\t' + f, 'can not read')
-                print(e)
-                continue
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
+            parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = StereotypeListener(methods_information, self.base_dirs, self.index_dic, file_name, f)
             walker = ParseTreeWalker()
@@ -730,10 +701,7 @@ if __name__ == "__main__":
     print('java_project_address', java_project_address)
     base_dirs = config.projects_info['javaproject']['base_dirs']
     print('base_dirs', base_dirs)
-    files = File.find_all_file(java_project_address, 'java')
-    print('files', files)
-    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
+    cd = ClassDiagram(java_project_address, base_dirs)
     cd.make_class_diagram()
 
     cd.show(cd.class_diagram_graph)
@@ -743,13 +711,6 @@ if __name__ == "__main__":
     cd.set_stereotypes()
     cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
-    #
-    # CDG = cd.get_CFG()
-    # for edge in CDG.edges:
-    #     print(edge, CDG.edges[edge])
-    # cd.show(CDG)
-    #
-    # g = cd.class_diagram_graph
-    # print(len(list(nx.weakly_connected_components(g))))
-    # for i in nx.weakly_connected_components(g):
-    #     print(i)
+
+    CDG = cd.get_CDG()
+    cd.show(CDG)

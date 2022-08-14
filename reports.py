@@ -6,7 +6,7 @@ import os
 from class_diagram import ClassDiagram
 from factory import Factory, FastFactory
 from complexity import Complexity
-from testability.design_testability_prediction import TestabilityPrediction
+from testability.design_testability_prediction2 import main as evaluate_testability
 from testability.directory_utils import update_understand_database
 from utils import File
 import config
@@ -60,9 +60,8 @@ class Report:
 class FactoryReport(Report):
     def get_single_report(self, sensitivity, edit=True):
         db_path_ = f'benchmarks/{self.java_project}/{self.java_project}.und'
-
-        model_path_ = r'test_effectiveness/sklearn_models_nodes_regress/VoR1_DS2.joblib'
-        scaler_path_ = r'test_effectiveness/sklearn_models_nodes_regress/scaler.joblib'
+        log_path_ = os.path.join(os.path.dirname(__file__),
+                                 f'benchmarks/{self.java_project}/{self.java_project}_testability_s2.csv')
 
         report = {
                 "java_project": self.java_project,
@@ -72,14 +71,15 @@ class FactoryReport(Report):
                 "cases": None
             }
 
-        # c = Complexity(self.cdg)
-        # matrix = c.get_matrix()
-        # report["complexity"]["before"] = Complexity.get_avg_of_matrix(matrix)
+        c = Complexity(self.cdg)
+        matrix = c.get_matrix()
+        report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
 
         update_understand_database(db_path_)
-        tp = TestabilityPrediction(db_path=db_path_, project_name=self.java_project)
-        testability_ = tp.inference_model(model_path=model_path_, scaler_path=scaler_path_)
-        report["testability"]["before"] = testability_
+
+        report["testability"]["before"] = evaluate_testability(db_path_, initial_value=1.0,
+                                                     verbose=False,
+                                                     log_path=log_path_)
 
         f = Factory()
         report["cases"] = f.refactor(
@@ -93,14 +93,14 @@ class FactoryReport(Report):
         if edit:
             self.reload_from_disk()
 
-            # c = Complexity(self.cdg)
-            # matrix = c.get_matrix()
-            # report["complexity"]["after"] = Complexity.get_avg_of_matrix(matrix)
+            c = Complexity(self.cdg)
+            matrix = c.get_matrix()
+            report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
 
             update_understand_database(db_path_)
-            tp = TestabilityPrediction(db_path=db_path_, project_name=self.java_project)
-            testability_ = tp.inference_model(model_path=model_path_, scaler_path=scaler_path_)
-            report["testability"]["after"] = testability_
+            report["testability"]["after"] = evaluate_testability(db_path_, initial_value=1.0,
+                                                     verbose=False,
+                                                     log_path=log_path_)
 
             code_changes_rate = self.get_code_changes_rate()
             report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
@@ -193,6 +193,14 @@ class FactoryReport(Report):
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('number of cases')
+        # plt.legend([
+        #     "10_water-simulator",
+        #     "jfreechart",
+        #     "88_jopenchart",
+        #     "tabula-java",
+        #     "61_noen",
+        #     "xerces2j"
+        # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/cases_vs_sensitivity_chart.png")
         if show:
@@ -209,6 +217,14 @@ class FactoryReport(Report):
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('average number of common methods')
+        # plt.legend([
+        #     "10_water-simulator",
+        #     "jfreechart",
+        #     "88_jopenchart",
+        #     "tabula-java",
+        #     "61_noen",
+        #     "xerces2j"
+        # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_of_common_methods_vs_sensitivity_chart.png")
         if show:
@@ -225,6 +241,14 @@ class FactoryReport(Report):
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('average number of products')
+        # plt.legend([
+        #     "10_water-simulator",
+        #     "jfreechart",
+        #     "88_jopenchart",
+        #     "tabula-java",
+        #     "61_noen",
+        #     "xerces2j"
+        # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_number_of_products_vs_sensitivity_chart.png")
         if show:
@@ -241,6 +265,14 @@ class FactoryReport(Report):
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('The rate of change of complexity')
+        # plt.legend([
+        #     "10_water-simulator",
+        #     "jfreechart",
+        #     "88_jopenchart",
+        #     "tabula-java",
+        #     "61_noen",
+        #     "xerces2j"
+        # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/complexity_vs_sensitivity_chart.png")
         if show:
@@ -251,12 +283,20 @@ class FactoryReport(Report):
         testability_list = list()
         for report in json_report:
             sensitivity_list.append(report["sensitivity"])
-            testability_list.append(report["testability"]["after"] - report["testability"]["before"])
+            testability_list.append(((report["testability"]["after"] - report["testability"]["before"]) / report["testability"]["before"]) * 100)
 
         plt.plot(sensitivity_list, testability_list)
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('The rate of change of testability')
+    #     plt.legend([
+    #     "10_water-simulator",
+    #     "jfreechart",
+    #     "88_jopenchart",
+    #     "tabula-java",
+    #     "61_noen",
+    #     "xerces2j"
+    # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/testability_vs_sensitivity_chart.png")
         if show:
@@ -273,6 +313,14 @@ class FactoryReport(Report):
         plt.title(self.java_project)
         plt.xlabel('sensitivity')
         plt.ylabel('code changes rate')
+        # plt.legend([
+        #     "10_water-simulator",
+        #     "jfreechart",
+        #     "88_jopenchart",
+        #     "tabula-java",
+        #     "61_noen",
+        #     "xerces2j"
+        # ])
         if save:
             plt.savefig(f"{config.BASE_DIR}/{self.java_project}/code_changed_rate_vs_sensitivity_chart.png")
         if show:
@@ -303,18 +351,20 @@ class FactoryReport(Report):
 
 if __name__ == "__main__":
     java_projects = [
-        # "10_water-simulator",
+        "10_water-simulator",
         # "jfreechart",
         # "88_jopenchart",
-        # "tabula-java"
-        "61_noen"
+        # "tabula-java",
+        # "61_noen",
+        # "xerces2j",
+        # "1_tullibee"
     ]
     for java_project in java_projects:
-        fr = FactoryReport(java_project, False)
-        # factory_report = fr.get_list_of_report(10)
+        fr = FactoryReport(java_project, True)
+        factory_report = fr.get_list_of_report(10)
 
-        with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-            factory_report = json.load(f)
+        # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+        #     factory_report = json.load(f)
 
         #pandas_report = fr.get_pandas_report(json_report)
 
@@ -324,4 +374,4 @@ if __name__ == "__main__":
         # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
         # fr.get_list_of_report_fast(10)
         # fr.show_complexity_vs_sensitivity_chart(json_report)
-        fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
+        # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)

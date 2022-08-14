@@ -14,12 +14,30 @@ BASE_DIR = 'benchmarks/'
 projects_info = dict()
 
 # 10_water_simulator
-projects_info['10_water-simulator'] = dict()
-java_project_address = BASE_DIR + '10_water-simulator/src/main/java'
+project_name = "10_water-simulator"
+projects_info[project_name] = dict()
+java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
 base_dirs = list()
-base_dirs.append(BASE_DIR + '10_water-simulator/src/main/java/')
-projects_info['10_water-simulator']['path'] = java_project_address
-projects_info['10_water-simulator']['base_dirs'] = base_dirs
+base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
+projects_info[project_name]['path'] = java_project_address
+projects_info[project_name]['base_dirs'] = base_dirs
+
+# 1_tullibee
+project_name = "1_tullibee"
+projects_info[project_name] = dict()
+java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
+base_dirs = list()
+base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
+projects_info[project_name]['path'] = java_project_address
+projects_info[project_name]['base_dirs'] = base_dirs
+
+# tabula-java
+projects_info['tabula-java'] = dict()
+java_project_address = BASE_DIR + 'tabula-java/src/main/java'
+base_dirs = list()
+base_dirs.append(BASE_DIR + 'tabula-java/src/main/java/')
+projects_info['tabula-java']['path'] = java_project_address
+projects_info['tabula-java']['base_dirs'] = base_dirs
 
 # commons-codec
 projects_info['commons-codec'] = dict()
@@ -145,7 +163,7 @@ relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def
 # nodes
 for i in range(16):
     test_class_diagram.add_node(i)
-    test_class_diagram.nodes[i]['type'] = 'class'
+    test_class_diagram.nodes[i]['type'] = 'normal'
 
 # extends path
 test_class_diagram.add_edge(1, 0)
