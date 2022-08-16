@@ -358,7 +358,8 @@ if __name__ == "__main__":
         # "tabula-java",
         # "61_noen",
         # "xerces2j",
-        # "1_tullibee"
+        # "1_tullibee",
+        "2_a4j"
     ]
     for java_project in java_projects:
         fr = FactoryReport(java_project, True)
