@@ -464,11 +464,19 @@ class StereotypeListener(JavaParserLabeledListener):
 
 
 class ClassDiagram:
-    def __init__(self, java_project_address, base_dirs):
-        self.files = File.find_all_file(java_project_address, 'java')
+    def __init__(self, java_project_address, base_dirs, files=None, index_dic=None):
+        if files:
+            self.files = files
+        else:
+            self.files = File.find_all_file(java_project_address, 'java')
+
+        if index_dic:
+            self.index_dic = index_dic
+        else:
+            self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', base_dirs)
+
         self.java_project_address = java_project_address
         self.base_dirs = base_dirs
-        self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', base_dirs)
 
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']

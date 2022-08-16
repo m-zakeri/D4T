@@ -22,7 +22,7 @@ class Report:
     def reload_from_disk(self):
         self.files = File.find_all_file(self.java_project_address, 'java')
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
-        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.index_dic)
+        self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.files, self.index_dic)
         self.cd.make_class_diagram()
         #self.cd.set_stereotypes()
         self.cdg = self.cd.get_CDG()
@@ -67,6 +67,7 @@ class FactoryReport(Report):
                 "java_project": self.java_project,
                 "sensitivity": sensitivity,
                 "testability": {"before": None, "after": None},
+                "complexity": {"before": None, "after": None},
                 "code_changes_rate": 0,
                 "cases": None
             }
@@ -351,7 +352,7 @@ class FactoryReport(Report):
 
 if __name__ == "__main__":
     java_projects = [
-        "10_water-simulator",
+        # "10_water-simulator",
         # "jfreechart",
         # "88_jopenchart",
         # "tabula-java",

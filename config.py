@@ -31,6 +31,15 @@ base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
 projects_info[project_name]['path'] = java_project_address
 projects_info[project_name]['base_dirs'] = base_dirs
 
+# 2_a4j
+project_name = "2_a4j"
+projects_info[project_name] = dict()
+java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
+base_dirs = list()
+base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
+projects_info[project_name]['path'] = java_project_address
+projects_info[project_name]['base_dirs'] = base_dirs
+
 # tabula-java
 projects_info['tabula-java'] = dict()
 java_project_address = BASE_DIR + 'tabula-java/src/main/java'
