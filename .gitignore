@@ -9,6 +9,7 @@ gen/*
 .idea/
 
 benchmarks/*/
+reports/
 
 testability/exclude/
 testability/mdg_production_code_experiments/
