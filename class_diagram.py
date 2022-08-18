@@ -609,12 +609,11 @@ class ClassDiagram:
             file_info = listener.get_file_info()
 
             file_name = Path.get_file_name_from_path(f)
+            if listener.get_package() == None:
+                package = Path.get_default_package(self.base_dirs, f)
+            else:
+                package = listener.get_package()
             for c in file_info:
-                if listener.get_package() == None:
-                    package = Path.get_default_package(self.base_dirs, f)
-                else:
-                    package = listener.get_package()
-
                 methods_info[package + '-' + file_name + '-' + c] = file_info[c]
 
         methods_info = self.__handle_extends_methods_information(methods_info)
