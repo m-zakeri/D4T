@@ -134,8 +134,9 @@ class ClassDiagramListener(JavaParserLabeledListener):
 
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
-    #file_info = {}
-    def __init__(self):
+    def __init__(self, base_dirs, file):
+        self.base_dirs = base_dirs
+        self.file = file
         self.file_info = {}
         self.current_class = None
         self.current_method = None
@@ -283,6 +284,11 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
             self.file_info[self.current_class]['attributes'][variable] = None
         return (is_attribute and (not(is_parameter or is_local_variable))) or \
                (not (is_attribute or is_parameter or is_local_variable))
+
+    def exitCompilationUnit(self, ctx:JavaParserLabeled.CompilationUnitContext):
+        if self.__package is None:
+            self.__package = Path.get_default_package(self.base_dirs, self.file)
+
 
 
 class StereotypeListener(JavaParserLabeledListener):
@@ -600,7 +606,7 @@ class ClassDiagram:
             print('\t' + f)
             parser = get_parser(f)
             tree = parser.compilationUnit()
-            listener = MethodModificationTypeListener()
+            listener = MethodModificationTypeListener(self.base_dirs, f)
             walker = ParseTreeWalker()
             walker.walk(
                 listener=listener,
@@ -609,12 +615,9 @@ class ClassDiagram:
             file_info = listener.get_file_info()
 
             file_name = Path.get_file_name_from_path(f)
-            if listener.get_package() is None:
-                package = Path.get_default_package(self.base_dirs, f)
-            else:
-                package = listener.get_package()
+
             for c in file_info:
-                methods_info[package + '-' + file_name + '-' + c] = file_info[c]
+                methods_info[listener.get_package() + '-' + file_name + '-' + c] = file_info[c]
 
         methods_info = self.__handle_extends_methods_information(methods_info)
         methods_info = self.__calculate_interface_modification_type(methods_info)
@@ -704,9 +707,10 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
+    java_project = "javaproject"
+    java_project_address = config.projects_info[java_project]['path']
     print('java_project_address', java_project_address)
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    base_dirs = config.projects_info[java_project]['base_dirs']
     print('base_dirs', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs)
     cd.make_class_diagram()
