@@ -1,4 +1,5 @@
 import json
+import time
 
 from class_diagram import ClassDiagram
 from config import test_class_diagram
@@ -63,6 +64,7 @@ class Complexity():
         return candidates
 
     def get_matrix(self):
+        start_time = time.time()
         node_list = list(self.CDG.nodes)
         no_nodes = len(node_list)
         node_list.sort()
@@ -76,7 +78,8 @@ class Complexity():
                     matrix[s].append(complexity)
                 else:
                     matrix[s].append(None)
-        return matrix
+        execution_time = time.time() - start_time
+        return matrix, execution_time
 
     @staticmethod
     def get_avg_of_matrix(matrix):

@@ -2,7 +2,9 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import understand as und
 
+from metrics.metrics_coverability import UnderstandUtility
 from class_diagram import ClassDiagram
 from factory import Factory, FastFactory
 from complexity import Complexity
@@ -60,27 +62,39 @@ class Report:
 class FactoryReport(Report):
     def get_single_report(self, sensitivity, edit=True):
         db_path_ = f'benchmarks/{self.java_project}/{self.java_project}.und'
+        db = und.open(db_path_)
         log_path_ = os.path.join(os.path.dirname(__file__),
                                  f'benchmarks/{self.java_project}/{self.java_project}_testability_s2.csv')
 
         report = {
-                "java_project": self.java_project,
-                "sensitivity": sensitivity,
-                "testability": {"before": None, "after": None},
-                "complexity": {"before": None, "after": None},
-                "code_changes_rate": 0,
-                "cases": None
+            "java_project": self.java_project,
+            "sensitivity": sensitivity,
+            "testability": {"before": int(), "before_time": int(),
+                            "after": int(), "after_time": int()},
+            "complexity": {"before": int(), "before_time": int(),
+                            "after": int(), "after_time": int()},
+            "no_classes": {"before": int(), "after": int()},
+            "code_changes_rate": int(),
+            "cases": list()
             }
 
         c = Complexity(self.cdg)
-        matrix = c.get_matrix()
+        matrix, complexity_time = c.get_matrix()
         report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
+        report["complexity"]["before_time"] = complexity_time
+
+        no_classes = len(UnderstandUtility.get_project_classes_java(db))
+        no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
+        no_enums = len(UnderstandUtility.get_project_enums_java(db))
+        report["no_classes"]["before"] = no_classes + no_interfaces + no_enums
 
         update_understand_database(db_path_)
 
-        report["testability"]["before"] = evaluate_testability(db_path_, initial_value=1.0,
+        report["testability"]["before"], testability_time = evaluate_testability(db_path_,
+                                                     initial_value=1.0,
                                                      verbose=False,
                                                      log_path=log_path_)
+        report["testability"]["before_time"] = testability_time
 
         f = Factory()
         report["cases"] = f.refactor(
@@ -92,16 +106,25 @@ class FactoryReport(Report):
         )
 
         if edit:
+            db = und.open(db_path_)
             self.reload_from_disk()
 
             c = Complexity(self.cdg)
-            matrix = c.get_matrix()
+            matrix, complexity_time = c.get_matrix()
             report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
+            report["complexity"]["after_time"] = complexity_time
+
+            no_classes = len(UnderstandUtility.get_project_classes_java(db))
+            no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
+            no_enums = len(UnderstandUtility.get_project_enums_java(db))
+            report["no_classes"]["after"] = no_classes + no_interfaces + no_enums
 
             update_understand_database(db_path_)
-            report["testability"]["after"] = evaluate_testability(db_path_, initial_value=1.0,
+            report["testability"]["after"], testability_time = evaluate_testability(db_path_,
+                                                     initial_value=1.0,
                                                      verbose=False,
                                                      log_path=log_path_)
+            report["testability"]["after_time"] = testability_time
 
             code_changes_rate = self.get_code_changes_rate()
             report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
@@ -351,16 +374,7 @@ class FactoryReport(Report):
 
 
 if __name__ == "__main__":
-    java_projects = [
-        # "10_water-simulator",
-        # "jfreechart",
-        # "88_jopenchart",
-        # "tabula-java",
-        # "61_noen",
-        # "xerces2j",
-        # "1_tullibee",
-        "2_a4j"
-    ]
+    java_projects = config.SF110_projects
     for java_project in java_projects:
         fr = FactoryReport(java_project, True)
         factory_report = fr.get_list_of_report(10)

@@ -13,32 +13,22 @@ __author__ = 'Sadegh Jafari, Morteza Zakeri'
 BASE_DIR = 'benchmarks/'
 projects_info = dict()
 
-# 10_water_simulator
-project_name = "10_water-simulator"
-projects_info[project_name] = dict()
-java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
-base_dirs = list()
-base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
-projects_info[project_name]['path'] = java_project_address
-projects_info[project_name]['base_dirs'] = base_dirs
 
-# 1_tullibee
-project_name = "1_tullibee"
-projects_info[project_name] = dict()
-java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
-base_dirs = list()
-base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
-projects_info[project_name]['path'] = java_project_address
-projects_info[project_name]['base_dirs'] = base_dirs
+# SF110 projects
+SF110_projects = [
+    "1_tullibee",
+    "2_a4j",
+    "10_water-simulator",
+    "13_jdbacl"
+]
 
-# 2_a4j
-project_name = "2_a4j"
-projects_info[project_name] = dict()
-java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
-base_dirs = list()
-base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
-projects_info[project_name]['path'] = java_project_address
-projects_info[project_name]['base_dirs'] = base_dirs
+for project_name in SF110_projects:
+    projects_info[project_name] = dict()
+    java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
+    base_dirs = list()
+    base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
+    projects_info[project_name]['path'] = java_project_address
+    projects_info[project_name]['base_dirs'] = base_dirs
 
 # tabula-java
 projects_info['tabula-java'] = dict()

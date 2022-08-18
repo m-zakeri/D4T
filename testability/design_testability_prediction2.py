@@ -26,6 +26,7 @@ import os
 import pandas as pd
 import joblib
 from joblib import Parallel, delayed
+import time
 
 import understand as und
 
@@ -389,14 +390,15 @@ def main(project_db_path, initial_value=1.0, verbose=False, log_path=None):
     testability_prediction module API
 
     """
-
+    start_time = time.time()
     df = PreProcess().compute_metrics_by_class_list(
         project_db_path,
         n_jobs=0  # n_job must be set to number of CPU cores, use zero for non-parallel computing of metrics
     )
     testability_ = TestabilityModel().inference(df_predict_data=df, verbose=verbose, log_path=log_path)
     # print('testability=', testability_)
-    return round(testability_ / initial_value, 5)
+    execution_time = time.time() - start_time
+    return round(testability_ / initial_value, 5), execution_time
 
 
 # Test module
