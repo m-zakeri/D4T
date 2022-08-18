@@ -609,7 +609,7 @@ class ClassDiagram:
             file_info = listener.get_file_info()
 
             file_name = Path.get_file_name_from_path(f)
-            if listener.get_package() == None:
+            if listener.get_package() is None:
                 package = Path.get_default_package(self.base_dirs, f)
             else:
                 package = listener.get_package()
