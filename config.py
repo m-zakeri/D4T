@@ -18,6 +18,8 @@ projects_info = dict()
 SF110_projects = [
     "1_tullibee",
     "2_a4j",
+    "5_templateit",
+    "8_gfarcegestionfa",
     "10_water-simulator",
     "13_jdbacl"
 ]
