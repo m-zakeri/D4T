@@ -615,7 +615,6 @@ class ClassDiagram:
             file_info = listener.get_file_info()
 
             file_name = Path.get_file_name_from_path(f)
-
             for c in file_info:
                 methods_info[listener.get_package() + '-' + file_name + '-' + c] = file_info[c]
 
