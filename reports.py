@@ -62,7 +62,6 @@ class Report:
 class FactoryReport(Report):
     def get_single_report(self, sensitivity, edit=True):
         db_path_ = f'benchmarks/{self.java_project}/{self.java_project}.und'
-        db = und.open(db_path_)
         log_path_ = os.path.join(os.path.dirname(__file__),
                                  f'benchmarks/{self.java_project}/{self.java_project}_testability_s2.csv')
 
@@ -83,12 +82,15 @@ class FactoryReport(Report):
         report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
         report["complexity"]["before_time"] = complexity_time
 
+
+
+        update_understand_database(db_path_)
+
+        db = und.open(db_path_)
         no_classes = len(UnderstandUtility.get_project_classes_java(db))
         no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
         no_enums = len(UnderstandUtility.get_project_enums_java(db))
         report["no_classes"]["before"] = no_classes + no_interfaces + no_enums
-
-        update_understand_database(db_path_)
 
         report["testability"]["before"], testability_time = evaluate_testability(db_path_,
                                                      initial_value=1.0,
@@ -106,7 +108,6 @@ class FactoryReport(Report):
         )
 
         if edit:
-            db = und.open(db_path_)
             self.reload_from_disk()
 
             c = Complexity(self.cdg)
@@ -114,12 +115,14 @@ class FactoryReport(Report):
             report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
             report["complexity"]["after_time"] = complexity_time
 
+            update_understand_database(db_path_)
+
+            db = und.open(db_path_)
             no_classes = len(UnderstandUtility.get_project_classes_java(db))
             no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
             no_enums = len(UnderstandUtility.get_project_enums_java(db))
             report["no_classes"]["after"] = no_classes + no_interfaces + no_enums
 
-            update_understand_database(db_path_)
             report["testability"]["after"], testability_time = evaluate_testability(db_path_,
                                                      initial_value=1.0,
                                                      verbose=False,
