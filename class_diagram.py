@@ -534,9 +534,17 @@ class ClassDiagram:
 
     def show(self, graph):
         pos = nx.spring_layout(graph)
+        # print(pos)
+        pos_with_type = {}
+        y_off = 0.1  # offset on the y axis
+        for k, v in pos.items():
+            pos_with_type[k] = (v[0], v[1] + y_off)
+
         nx.draw_networkx(graph, pos)
-        labels = nx.get_edge_attributes(graph, 'relation_type')
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels)
+        edge_labels = nx.get_edge_attributes(graph, 'relation_type')
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
+        node_labels = nx.get_node_attributes(graph, 'type')
+        nx.draw_networkx_labels(graph, pos_with_type, node_labels)
         plt.show()
 
     def dfs(self):
