@@ -534,7 +534,7 @@ class ClassDiagram:
 
     def show(self, graph):
         pos = nx.spring_layout(graph)
-        # print(pos)
+        
         pos_with_type = {}
         y_off = 0.1  # offset on the y axis
         for k, v in pos.items():
