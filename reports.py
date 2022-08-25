@@ -77,7 +77,7 @@ class FactoryReport(Report):
             "cases": list()
             }
 
-        c = Complexity(self.cdg)
+        c = Complexity(self.cd)
         matrix, complexity_time = c.get_matrix()
         report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
         report["complexity"]["before_time"] = complexity_time
@@ -110,7 +110,7 @@ class FactoryReport(Report):
         if edit:
             self.reload_from_disk()
 
-            c = Complexity(self.cdg)
+            c = Complexity(self.cd)
             matrix, complexity_time = c.get_matrix()
             report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
             report["complexity"]["after_time"] = complexity_time
@@ -380,7 +380,8 @@ if __name__ == "__main__":
     java_projects = config.SF110_projects
     for java_project in java_projects:
         fr = FactoryReport(java_project, True)
-        factory_report = fr.get_list_of_report(10)
+        # factory_report = fr.get_list_of_report(10)
+        fr.get_single_report(0.5)
 
         # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
         #     factory_report = json.load(f)
