@@ -1,4 +1,3 @@
-import json
 import time
 
 from class_diagram import ClassDiagram
@@ -9,8 +8,9 @@ import csv
 
 
 class Complexity():
-    def __init__(self, CDG):
-        self.CDG = CDG
+    def __init__(self, class_diagram):
+        self.class_diagram = class_diagram.class_diagram_graph
+        self.CDG = class_diagram.get_CDG()
 
         # calculate hierarchical inheritance complexity
         self.inheritance_complexity_dic = {}
@@ -21,7 +21,7 @@ class Complexity():
     def calculate_interaction_complexity(self, source, target):
         complexity = 1
         has_path = False
-        for path in nx.all_simple_paths(self.CDG, source=source, target=target):
+        for path in nx.all_simple_paths(self.class_diagram, source=source, target=target):
             has_path = True
             complexity *= self.__calculate_path_complexity(path)
         if not has_path:
@@ -121,92 +121,12 @@ class Complexity():
                         complexity = self.calculate_interaction_complexity(str(node_list[s]), str(node_list[d]))
                         no_row += 1
 
-
-
-
-
-import config
-from utils import File
-
 if __name__ == "__main__":
-    # cd = ClassDiagram()
-    # cd.class_diagram_graph = test_class_diagram
-    # cd.show(cd.class_diagram_graph)
-    #
-    # test_CDG = cd.get_CFG()
-    # c = Complexity(test_CDG)
-    # matrix = c.get_matrix()
-    # for i in matrix:
-    #     print(i)
-
-
-    java_project_address = config.projects_info['xerces2j-impl']['path']
-    base_dirs = config.projects_info['xerces2j-impl']['base_dirs']
-    # files = File.find_all_file(java_project_address, 'java')
-    # index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
-
-    with open('class_index.json') as f:
-        index_dic = json.load(f)
-
-    cd = ClassDiagram(java_project_address, base_dirs, index_dic)
-    # cd.make_class_diagram()
-    # #cd.save('class_diagram.gml')
-    # cd.show(cd.class_diagram_graph)
-    #
-    #
-    # cd.set_stereotypes()
-    # cd.save('class_diagram.gml')
-    cd.load('class_diagram.gml')
-    # cd.show(cd.class_diagram_graph)
-    CDG = cd.get_CDG()
-    c2 = Complexity2(CDG, cd.class_diagram_graph)
-    print(c2.calculate_interaction_complexity("0", "148"))
-    # CDG = cd.get_CDG()
-    # cd.show(CDG)
-    # c = Complexity(CDG)
-    # print(c.find_all_paths("22", "0"))
-    # c.calculate_interaction_complexity("22", "0")
-    # matrix = c.get_matrix()
-    # print(Complexity.get_avg_of_matrix(matrix))
-    # for i in matrix:
-    #    print(i)
-
-    #print(c.calculate_interaction_complexity(2, 3))
-    # cd.save(java_project_address + '\\' + 'class_diagram.gml')
-    # cd.save_index(java_project_address + '\\' + 'index_dic.json')
-
-
-
-
-    # java_project_address = config.projects_info['rhino-Rhino1_7_12_Release']['path']
-    # base_dirs = config.projects_info['rhino-Rhino1_7_12_Release']['base_dirs']
-    # with open(java_project_address + '\\' + 'index_dic.json') as f:
-    #     index_dic = json.load(f)
-    # cd = ClassDiagram(java_project_address, base_dirs, index_dic)
-    # cd.load(java_project_address + '\\' + 'class_diagram.gml')
-    # CDG = cd.get_CDG()
-    # #cd.show(CDG)
-    # c = Complexity(CDG)
-    # #print((2, 0), c.calculate_interaction_complexity("2", "0"))
-    # print(10, 110)
-    # x = 0
-    # print(len(cd.class_diagram_graph.edges))
-    #
-    # for path in nx.all_simple_paths(cd.class_diagram_graph, source="10", target="110"):
-    #     x += 1
-    #     print(x)
-
-
-
-    # print((10, 110), c.calculate_interaction_complexity("10", "110"))
-    # for i in range(10, 276):
-    #     for j in range(276):
-    #         print(i, j)
-    #         complexity = c.calculate_interaction_complexity(str(i), str(j))
-    #         #if complexity != None :
-    #             #if complexity > 1:
-    #         print((i, j), complexity)
-    #c.save_csv(java_project_address + '\\' + 'complexity.csv')
+    cd = ClassDiagram(java_project_address='', base_dirs='', files=[], index_dic={})
+    cd.class_diagram_graph = test_class_diagram
+    cd.show(cd.class_diagram_graph)
+    c = Complexity(cd)
+    print(c.calculate_interaction_complexity(8, 7))
 
 
 

@@ -202,7 +202,7 @@ class Factory:
         with open(product_path, mode='w', newline='', encoding='utf8', errors='ignore') as f:
             f.write(my_listener.token_stream_rewriter.getDefaultText())
 
-    def __compare_similarity_of_two_list(self, list1, list2):
+    def __get_intersection_of_two_list(self, list1, list2):
         return list(set(list1) & set(list2))
 
     def find_products(self, parent_class, method_class_dic, sensitivity):
@@ -215,14 +215,14 @@ class Factory:
             len_c1_methods = len(method_class_dic[c1])
             for c2 in method_class_dic.keys():
                 len_c2_methods = len(method_class_dic[c2])
-                method_list_help = self.__compare_similarity_of_two_list(method_list, method_class_dic[c2])
+                method_list_help = self.__get_intersection_of_two_list(method_list, method_class_dic[c2])
                 if max(len_c1_methods, len_c2_methods) == 0:
                     continue
-
+                #todo convert max to unioin
                 if len(method_list_help) / max(len_c1_methods, len_c2_methods) >= sensitivity:
                     method_list = method_list_help.copy()
                     class_list.append(c2)
-
+            #todo add find maximum sensitivity
             if len(class_list) > len(result['products']['classes']):
                 result['products']['classes'] = class_list
                 for m in method_list:
