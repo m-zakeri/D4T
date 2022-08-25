@@ -86,16 +86,9 @@ class FactoryReport(Report):
         report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
         report["complexity"]["before_time"] = complexity_time
 
-
-
         update_understand_database(self.db_path_)
 
-        db = und.open(self.db_path_)
-        no_classes = len(UnderstandUtility.get_project_classes_java(db))
-        no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
-        no_enums = len(UnderstandUtility.get_project_enums_java(db))
-        report["no_classes"]["before"] = no_classes + no_interfaces + no_enums
-
+        report["no_classes"]["before"] = len(self.cd.class_diagram_graph.nodes)
         report["no_relationships"]["before"] = len(self.cd.class_diagram_graph.edges)
 
         report["testability"]["before"], testability_time = evaluate_testability(
@@ -125,12 +118,7 @@ class FactoryReport(Report):
 
             update_understand_database(self.db_path_)
 
-            db = und.open(self.db_path_)
-            no_classes = len(UnderstandUtility.get_project_classes_java(db))
-            no_interfaces = len(UnderstandUtility.get_project_interfaces_java(db))
-            no_enums = len(UnderstandUtility.get_project_enums_java(db))
-            report["no_classes"]["after"] = no_classes + no_interfaces + no_enums
-
+            report["no_classes"]["after"] = len(self.cd.class_diagram_graph.nodes)
             report["no_relationships"]["after"] = len(self.cd.class_diagram_graph.edges)
 
             report["testability"]["after"], testability_time = evaluate_testability(
