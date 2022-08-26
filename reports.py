@@ -62,12 +62,6 @@ class Report:
 
 class FactoryReport(Report):
     def get_single_report(self, sensitivity, edit=True):
-        db_path_ = f'benchmarks/{self.java_project}/{self.java_project}.und'
-        log_path_ = os.path.join(
-            os.path.dirname(__file__),
-            f'benchmarks/{self.java_project}/{self.java_project}_testability_s2.csv'
-        )
-
         report = {
             "java_project": self.java_project,
             "sensitivity": sensitivity,
@@ -278,13 +272,13 @@ if __name__ == "__main__":
     java_projects = config.SF110_projects
     for java_project in java_projects:
         fr = FactoryReport(java_project, True)
-        factory_report = fr.get_list_of_report(10)
+        factory_report = fr.get_list_of_report(5)
 
         # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
         #     factory_report = json.load(f)
 
         # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
+        fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_complexity_vs_sensitivity_chart(json_report)

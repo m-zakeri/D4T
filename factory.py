@@ -206,7 +206,7 @@ class Factory:
 
     def find_products(self, parent_class, method_class_dic, sensitivity):
         result = {'factory': int(parent_class), 'products': {'classes': [], 'methods': []}}
-
+        best_factory_quality = 0
         for c1 in method_class_dic.keys():
             class_list = []
             method_list = method_class_dic[c1]
@@ -217,19 +217,26 @@ class Factory:
                 method_list_help = self.__get_intersection_of_two_list(method_list, method_class_dic[c2])
                 if max(len_c1_methods, len_c2_methods) == 0:
                     continue
-                #todo convert max to unioin
-                if len(method_list_help) / max(len_c1_methods, len_c2_methods) >= sensitivity:
+                if len(method_list_help) / len(set(method_class_dic[c1] + method_class_dic[c2])) >= sensitivity:
                     method_list = method_list_help.copy()
                     class_list.append(c2)
-            #todo add find maximum sensitivity
-            if len(class_list) > len(result['products']['classes']):
+            # if len(class_list) > len(result['products']['classes']):
+            #     result['products']['classes'] = class_list
+            #     for m in method_list:
+            #         if method_class_dic[class_list[0]][m] != {}:
+            #             result['products']['methods'].append(method_class_dic[class_list[0]][m])
+            common_methods = set.intersection(*[set(method_class_dic[c2]) for c in class_list])
+            union_methods = set.union(*[set(method_class_dic[c2]) for c in class_list])
+            if len(common_methods) / len(union_methods) > best_factory_quality:
+                best_factory_quality = len(common_methods) / len(union_methods)
                 result['products']['classes'] = class_list
                 for m in method_list:
                     if method_class_dic[class_list[0]][m] != {}:
                         result['products']['methods'].append(method_class_dic[class_list[0]][m])
         return result
 
-    def __get_class_info_from_index(self, index, index_dic, index_list):
+    @staticmethod
+    def __get_class_info_from_index(index, index_dic, index_list):
         class_info = dict()
         class_info['index'] = index
         key = index_list[class_info['index']]
@@ -241,14 +248,18 @@ class Factory:
 
     def find_class_info_from_id(self, result, index_dic):
         index_list = list(index_dic.keys())
-        result['factory'] = self.__get_class_info_from_index(int(result['factory']),
-                                                             index_dic,
-                                                             index_list)
+        result['factory'] = Factory.__get_class_info_from_index(
+            int(result['factory']),
+            index_dic,
+            index_list
+        )
         products_class_list = []
         for product_class in result['products']['classes']:
-            product_info = self.__get_class_info_from_index(int(product_class),
-                                                            index_dic,
-                                                            index_list)
+            product_info = Factory.__get_class_info_from_index(
+                int(product_class),
+                index_dic,
+                index_list
+            )
             products_class_list.append(product_info)
         result['products']['classes'] = products_class_list
         return result
