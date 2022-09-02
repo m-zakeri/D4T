@@ -133,7 +133,7 @@ class File:
             tree = parser.compilationUnit()
             listener = ClassTypeListener(base_java_dirs, file_name, f)
             walker = ParseTreeWalker()
-            walker.walk(listener=listener,t=tree)
+            walker.walk(listener=listener, t=tree)
             for c in listener.file_info:
                 index_dic[c] = {'index': index, 'path': f, 'type': listener.file_info[c]['type']}
                 index += 1
