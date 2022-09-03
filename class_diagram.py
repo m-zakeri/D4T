@@ -117,11 +117,14 @@ class ClassDiagramListener(JavaParserLabeledListener):
                     file_name = self.file_name
                     package = self.__package
                 else:
-                    file_name = dependee
                     package = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+                    splitted_dependee = dependee.split('.')
+                    dependee = splitted_dependee[-1]
+                    file_name = dependee
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
+
             self.class_dic[current_class][dependee] = current_relationship
 
         for current_class in self.class_dic:
@@ -288,7 +291,6 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
     def exitCompilationUnit(self, ctx:JavaParserLabeled.CompilationUnitContext):
         if self.__package is None:
             self.__package = Path.get_default_package(self.base_dirs, self.file)
-
 
 
 class StereotypeListener(JavaParserLabeledListener):
@@ -652,13 +654,6 @@ class ClassDiagram:
                             break
                         else:
                             method_info[c]['methods'][m]['is_modify_itself'] = False
-                        # except:
-                        #     print("-"*20)
-                        #     print(class_name)
-                        #     print(method_info[class_name]['methods'])
-                        #     print(m)
-                        #     print("-"*20)
-                        #     # quit()
         return method_info
 
     def set_stereotypes(self):
@@ -714,9 +709,9 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project = "javaproject"
+    java_project = "simple_injection"
     java_project_address = config.projects_info[java_project]['path']
-    print('java_project_address', java_project_address)
+    print('java_project_addresssimple_injection', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
     print('base_dirs', base_dirs)
     cd = ClassDiagram(java_project_address, base_dirs)

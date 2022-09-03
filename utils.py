@@ -147,18 +147,22 @@ class Path:
     @staticmethod
     def find_package_of_dependee(dependee, imports, imports_star, index_dic):
         splitted_dependee = dependee.split('.')
-        # for normal import
-        for i in imports:
-            splitted_import = i.split('.')
-            if splitted_dependee[0] == splitted_import[-1]:
-                return '.'.join(i.split('.')[:-1])
+        if len(splitted_dependee) == 1:
+            # for normal import
+            for i in imports:
+                splitted_import = i.split('.')
+                if splitted_dependee[0] == splitted_import[-1]:
+                    return '.'.join(i.split('.')[:-1])
 
-        # for import star
-        class_name = splitted_dependee[-1]
-        for i in imports_star:
-            index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
-            if index_dic_dependee in index_dic.keys():
-                return i
+            # for import star
+            class_name = splitted_dependee[-1]
+            for i in imports_star:
+                index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
+                if index_dic_dependee in index_dic.keys():
+                    return i
+        elif len(splitted_dependee) > 1:
+            return '.'.join(splitted_dependee[:-1])
+
 
     @staticmethod
     def get_default_package(base_dirs, file_path):
