@@ -5,54 +5,83 @@ The module implements extract interface refactoring
 __version__ = '0.1.1'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
-import os
-
 from antlr4 import *
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 
-from gen.JavaLexer import JavaLexer
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 from gen.JavaParserLabeled import JavaParserLabeled
 
-from utils import Path
+from utils import Path, File, get_parser_and_tokens, get_parser
+import config
 
 
 class InterfaceInfoListener(JavaParserLabeledListener):
-    def __init__(self):
+    def __init__(self, class_name, base_dirs, class_path):
+        self.class_name = class_name
+        self.base_dirs = base_dirs
+        self.class_path = class_path
+        self.file_name = Path.get_file_name_from_path(class_path)
+
         self.current_class = None
-        self.interface_info = {'package': str(), 'name': str(), 'path': str(), 'methods': []}
+        self.__depth = 0
+        self.__package = None
+        self.interface_info = {
+            'package': str(),
+            'name': f'I{self.file_name}_{class_name}',
+            'path': f'{self.class_path[:-(len(self.file_name) + 5)]}I{self.file_name}_{class_name}.java',
+            'methods': list()
+        }
 
     def enterPackageDeclaration(self, ctx: JavaParserLabeled.PackageDeclarationContext):
-        self.interface_info['package'] = ctx.qualifiedName().getText()
+        self.__package = ctx.qualifiedName().getText()
 
     def enterClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        if ctx.parentCtx.classOrInterfaceModifier() is not None:
-            if len(ctx.parentCtx.classOrInterfaceModifier()) > 0:
-                if ctx.parentCtx.classOrInterfaceModifier()[0].getText() == "public":
-                    self.current_class = ctx.IDENTIFIER().getText()
-                    self.interface_info['name'] = self.current_class
-            else:
-                self.current_class = ctx.IDENTIFIER().getText()
-                self.interface_info['name'] = self.current_class
+        self.__depth += 1
+        if self.__package is None:
+            self.__package = Path.get_default_package(self.base_dirs, self.class_path)
+
+        if self.__depth == 1:
+            self.current_class = ctx.IDENTIFIER().getText()
 
     def exitClassDeclaration(self, ctx: JavaParserLabeled.ClassDeclarationContext):
-        self.current_class = None
+        self.__depth -= 1
+        if self.__depth == 0:
+            self.current_class = None
 
     def enterMethodDeclaration(self, ctx: JavaParserLabeled.MethodDeclarationContext):
-        for modifier in ctx.parentCtx.parentCtx.modifier():
-            if modifier.classOrInterfaceModifier() is not None:
-                # print('modifier.classOrInterfaceModifier().getText()', modifier.classOrInterfaceModifier().getText())
-                if modifier.classOrInterfaceModifier().getText() not in ['private']:
-                    method = {'name': ctx.IDENTIFIER().getText(), 'return_type': ctx.typeTypeOrVoid().getText(),
-                              'formal_parameters': []}
-                    if ctx.formalParameters().formalParameterList() is not None:
-                        for f in ctx.formalParameters().formalParameterList().formalParameter():
-                            _type = f.typeType().getText()
-                            identifier = f.variableDeclaratorId().getText()
-                            method['formal_parameters'].append([_type, identifier])
-                    self.interface_info['methods'].append(method)
+        if self.current_class == self.class_name:
+            number_of_annotation_modifiers = 0
+            can_add_to_interface = False
+            if len(ctx.parentCtx.parentCtx.modifier()) == 0:
+                can_add_to_interface = True
+            else:
+                for modifier in ctx.parentCtx.parentCtx.modifier():
+
+                    if modifier.classOrInterfaceModifier() is not None:
+                        if modifier.classOrInterfaceModifier().annotation() is not None:
+                            number_of_annotation_modifiers += 1
+                        if modifier.classOrInterfaceModifier().getText() == 'public':
+                            can_add_to_interface = True
+                            break
+
+            if len(ctx.parentCtx.parentCtx.modifier()) == number_of_annotation_modifiers:
+                can_add_to_interface = True
+
+            if ctx.IDENTIFIER().getText() == 'main':
+                can_add_to_interface = False
+
+            if can_add_to_interface:
+                method = {'name': ctx.IDENTIFIER().getText(), 'return_type': ctx.typeTypeOrVoid().getText(),
+                          'formal_parameters': []}
+                if ctx.formalParameters().formalParameterList() is not None:
+                    for f in ctx.formalParameters().formalParameterList().formalParameter():
+                        _type = f.typeType().getText()
+                        identifier = f.variableDeclaratorId().getText()
+                        method['formal_parameters'].append([_type, identifier])
+                self.interface_info['methods'].append(method)
 
     def get_interface_info(self):
+        self.interface_info['package'] = self.__package
         return self.interface_info
 
 
@@ -131,15 +160,11 @@ class InterfaceCreator:
         return self.interface_info['package'] + '.' + self.interface_info['name']
 
     def add_implement_statement_to_class(self, class_path):
-        stream = FileStream(class_path, encoding='utf-8', errors='ignore')
-        lexer = JavaLexer(stream)
-        token_stream = CommonTokenStream(lexer)
-        parser = JavaParserLabeled(token_stream)
-        parser.getTokenStream()
+        parser, token_stream = get_parser_and_tokens(class_path)
         parse_tree = parser.compilationUnit()
         listener = AddingImplementStatementToClass(
             common_token_stream=token_stream,
-            class_name=os.path.splitext(os.path.basename(class_path))[0],
+            class_name=Path.get_file_name_from_path(class_path),
             interface_package=self.interface_info['package'],
             interface_name=self.interface_info['name']
         )
@@ -157,51 +182,34 @@ class InterfaceAdapter:
         all_paths = [factory_info['factory']['path']]
         for product_info in factory_info['products']['classes']:
             all_paths.append(product_info['path'])
-        print("path", Path.convert_str_paths_to_list_paths(set(all_paths)))
         path = Path.detect_path(Path.convert_str_paths_to_list_paths(set(all_paths)))
-        print("result", path)
         interface_info['path'] = path
-        print(path, all_paths)
         package = Path.get_default_package(base_dirs, path + '/' + name + '.java')
         interface_info['package'] = package
         interface_info['methods'] = factory_info['products']['methods']
         return interface_info
 
 
-def test_driver():
-    class_path_ = "benchmarks/simple_injection/src/calculator/Calculator.java"
-    class_path_ = "benchmarks/10_water-simulator/src/main/java/simulator/SA/GridGenerator.java"
-    stream = FileStream(class_path_, encoding='utf-8', errors='ignore')
-    lexer = JavaLexer(stream)
-    tokens = CommonTokenStream(lexer)
-    parser = JavaParserLabeled(tokens)
-    tree = parser.compilationUnit()
-    listener = InterfaceInfoListener()
-    walker = ParseTreeWalker()
-    walker.walk(listener=listener, t=tree)
-
-    interface_info_ = listener.get_interface_info()
-    interface_info_['name'] = 'I' + interface_info_['name']
-    path_list = Path.convert_str_paths_to_list_paths([class_path_])
-    interface_info_['path'] = '/'.join(path_list[0][:-1])
-
-    # print(interface_info_)
-    # quit()
-    ic = InterfaceCreator(interface_info_)
-    ic.save()
-    ic.add_implement_statement_to_class(class_path_)
-    # print(ic.get_import_text())
+def get_default_interface_info(class_long_name, index_dic, base_dirs):
+    if index_dic[class_long_name]['type'] == 'class':
+        class_path = index_dic[class_long_name]['path']
+        class_name = class_long_name.split('-')[-1]
+        parser = get_parser(class_path)
+        tree = parser.compilationUnit()
+        listener = InterfaceInfoListener(class_name, base_dirs, class_path)
+        walker = ParseTreeWalker()
+        walker.walk(listener=listener, t=tree)
+        return listener.get_interface_info()
 
 
 if __name__ == "__main__":
-    #test_driver()
-    all_paths = [
-        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java',
-        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java',
-        'benchmarks/xerces2j/src/org/apache/xerces/impl/xs/traversers/XSAttributeChecker.java'
-    ]
-    print(list(set(all_paths)))
-    all_paths = list(set(all_paths))
-    print(Path.convert_str_paths_to_list_paths(all_paths))
-    path = Path.detect_path(Path.convert_str_paths_to_list_paths(all_paths))
-    print(path)
+    java_project = "10_water-simulator"
+    java_project_address = config.projects_info[java_project]['path']
+    print('java_project_address', java_project_address)
+    base_dirs = config.projects_info[java_project]['base_dirs']
+    print('base_dirs', base_dirs)
+    files = File.find_all_file(java_project_address, 'java')
+    index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
+
+    print(get_default_interface_info('simulator.SA-GridGenerator-GridGenerator',
+                                     index_dic, base_dirs))
