@@ -8,6 +8,7 @@ from gen.JavaParserLabeled import JavaParserLabeled
 
 from interface import InterfaceAdapter, InterfaceCreator
 from utils import get_parser, get_parser_and_tokens
+from injector import Injector
 
 
 class FixCreatorListener(JavaParserLabeledListener):
@@ -217,7 +218,7 @@ class Factory:
                 method_list_help = self.__get_intersection_of_two_list(method_list, method_class_dic[c2])
                 if max(len_c1_methods, len_c2_methods) == 0:
                     continue
-                if len(method_list_help) / len(set(method_class_dic[c1] + method_class_dic[c2])) >= sensitivity:
+                if len(method_list_help) / len(set(list(method_class_dic[c1].keys()) + list(method_class_dic[c2].keys()))) >= sensitivity:
                     method_list = method_list_help.copy()
                     class_list.append(c2)
             # if len(class_list) > len(result['products']['classes']):
@@ -225,14 +226,18 @@ class Factory:
             #     for m in method_list:
             #         if method_class_dic[class_list[0]][m] != {}:
             #             result['products']['methods'].append(method_class_dic[class_list[0]][m])
-            common_methods = set.intersection(*[set(method_class_dic[c2]) for c in class_list])
-            union_methods = set.union(*[set(method_class_dic[c2]) for c in class_list])
-            if len(common_methods) / len(union_methods) > best_factory_quality:
-                best_factory_quality = len(common_methods) / len(union_methods)
-                result['products']['classes'] = class_list
-                for m in method_list:
-                    if method_class_dic[class_list[0]][m] != {}:
-                        result['products']['methods'].append(method_class_dic[class_list[0]][m])
+            # print('intersection', [set(method_class_dic[c2]) for c in class_list])
+            if len(class_list) > 1:
+                common_methods = set.intersection(*[set(method_class_dic[c]) for c in class_list])
+                union_methods = set.union(*[set(method_class_dic[c]) for c in class_list])
+                # for skip ZeroDivisionError
+                if len(union_methods) > 0:
+                    if len(common_methods) / len(union_methods) > best_factory_quality:
+                        best_factory_quality = len(common_methods) / len(union_methods)
+                        result['products']['classes'] = class_list
+                        for m in method_list:
+                            if method_class_dic[class_list[0]][m] != {}:
+                                result['products']['methods'].append(method_class_dic[class_list[0]][m])
         return result
 
     @staticmethod
@@ -267,58 +272,67 @@ class Factory:
     def refactor(self, sensitivity, index_dic, class_diagram, base_dirs, edit=True):
         reports = []
         index_dic_keys = list(index_dic.keys())
-        roots = list((v for v, d in class_diagram.in_degree() if d >= 0))
-        for r in roots:
-            root_dfs = list(nx.bfs_edges(class_diagram, source=r, depth_limit=1))
-            if len(root_dfs) > 1:
-                method_class_dic = {}
-                for child_index in root_dfs:
-                    child = index_dic_keys[int(child_index[1])]
-                    child_path = index_dic[child]['path']
-                    child_class_name = child.split('-')[1]
-                    print('child path: ', child_path)
-                    parser = get_parser(child_path)
+        creator_candidates = [v for v, d in class_diagram.out_degree() if d >= 2]
+        print("creator_candidates", creator_candidates)
+        for creator_candidate in creator_candidates:
+            products_candidates = []
+            for dependee in nx.bfs_edges(class_diagram, source=creator_candidate, depth_limit=1):
+                if class_diagram[dependee[0]][dependee[1]]['relation_type'] in ['create', 'use_def', 'use_consult']:
+                    products_candidates.append(dependee[1])
 
-                    tree = parser.compilationUnit()
-                    listener = ProductCreatorDetectorListener(child_class_name)
-                    walker = ParseTreeWalker()
-                    walker.walk(
-                        listener=listener,
-                        t=tree
-                    )
-                    method_class_dic[int(child_index[1])] = listener.methods
+            method_class_dic = {}
+            for product_candidate_index in products_candidates:
+                product_candidate = index_dic_keys[int(product_candidate_index)]
+                product_candidate_path = index_dic[product_candidate]['path']
+                product_candidate_class_name = product_candidate.split('-')[1]
+                print('child path: ', product_candidate_path)
+                parser = get_parser(product_candidate_path)
 
-                result = self.find_products(root_dfs[0][0], method_class_dic, sensitivity)
-                if len(result['products']['classes']) > 1:
-                    print('--------------------------------------------------')
-                    print(json.dumps(result, indent=4))
-                    reports.append(result)
+                tree = parser.compilationUnit()
+                listener = ProductCreatorDetectorListener(product_candidate_class_name)
+                walker = ParseTreeWalker()
+                walker.walk(
+                    listener=listener,
+                    t=tree
+                )
+                method_class_dic[int(product_candidate_index)] = listener.methods
 
-                    interface_name = 'Interface' + str(result['factory'])
-                    result = self.find_class_info_from_id(result, index_dic)
-                    # make interface for
-                    interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(result,
-                                                                                             base_dirs,
-                                                                                             interface_name
-                                                                                             )
-                    interface_creator = InterfaceCreator(interface_info)
-                    if edit:
-                        interface_creator.save()
-                    creator_path = result['factory']['path']
-                    creator_class_name = result['factory']['class_name']
-                    products_path = []
-                    products_class_name = []
-                    for product_info in result['products']['classes']:
-                        products_path.append(product_info['path'])
-                        products_class_name.append(product_info['class_name'])
+            result = self.find_products(creator_candidate, method_class_dic, sensitivity)
+            if len(result['products']['classes']) > 1:
+                print('--------------------------------------------------')
+                print(json.dumps(result, indent=4))
+                reports.append(result)
 
-                    interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
-                    if edit:
-                        self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
+                interface_name = 'Interface' + str(result['factory'])
+                result = self.find_class_info_from_id(result, index_dic)
+                # make interface for
+                interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(result,
+                                                                                         base_dirs,
+                                                                                         interface_name
+                                                                                         )
+                interface_creator = InterfaceCreator(interface_info)
+                if edit:
+                    interface_creator.save()
+                creator_path = result['factory']['path']
+                creator_class_name = result['factory']['class_name']
+                products_path = []
+                products_class_name = []
+                for product_info in result['products']['classes']:
+                    products_path.append(product_info['path'])
+                    products_class_name.append(product_info['class_name'])
+
+                interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
+                if edit:
+                    self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
+                                       products_class_name)
+                    for product_path in products_path:
+                        self.__fix_product(product_path, interface_import_text, interface_name,
+                                           creator_class_name,
                                            products_class_name)
-                        for product_path in products_path:
-                            self.__fix_product(product_path, interface_import_text, interface_name,
-                                               creator_class_name,
-                                               products_class_name)
-                    print('--------------------------------------------------')
+
+                    #todo: add injetor here
+                    # factory_ = Injector(name, path, base_dirs, index_dic)
+                    # factory_.create(product_path)
+                    # factory_.inject([creator_path])
+                print('--------------------------------------------------')
         return reports
