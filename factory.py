@@ -273,11 +273,11 @@ class Factory:
         reports = []
         index_dic_keys = list(index_dic.keys())
         creator_candidates = [v for v, d in class_diagram.out_degree() if d >= 2]
-        print("creator_candidates", creator_candidates)
         for creator_candidate in creator_candidates:
             products_candidates = []
             for dependee in nx.bfs_edges(class_diagram, source=creator_candidate, depth_limit=1):
-                if class_diagram[dependee[0]][dependee[1]]['relation_type'] in ['create', 'use_def', 'use_consult']:
+                if class_diagram[dependee[0]][dependee[1]]['relation_type'] in ['create', 'use_def', 'use_consult'] and \
+                        class_diagram.nodes[dependee[1]]['type'] == 'class':
                     products_candidates.append(dependee[1])
 
             method_class_dic = {}
