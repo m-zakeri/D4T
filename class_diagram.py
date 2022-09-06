@@ -84,8 +84,28 @@ class ClassDiagramListener(JavaParserLabeledListener):
         else:
             self.imports.append(ctx.qualifiedName().getText())
 
+    def enterExpression4(self, ctx:JavaParserLabeled.Expression4Context):
+        if ctx.creator() is not None:
+            ctx = ctx.creator().createdName()
+            if len(ctx.IDENTIFIER()) > 0 and self.current_class is not None:
+                text = ''
+                for t in ctx.IDENTIFIER():
+                    text += t.getText() + '.'
+
+                if self.has_extends:
+                    self.current_relationship = 'extends'
+                    self.has_extends = False
+                elif self.no_implements > 0:
+                    self.no_implements -= 1
+                    self.current_relationship = 'implements'
+                else:
+                    self.current_relationship = 'create'
+
+                dependee = text[:-1]
+                self.relations.append((self.current_class, dependee, self.current_relationship))
+
     def enterClassOrInterfaceType(self, ctx:JavaParserLabeled.ClassOrInterfaceTypeContext):
-        if len(ctx.IDENTIFIER()) > 0 and self.current_class != None:
+        if len(ctx.IDENTIFIER()) > 0 and self.current_class is not None:
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
@@ -709,7 +729,7 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project = "simple_injection"
+    java_project = "javaproject"
     java_project_address = config.projects_info[java_project]['path']
     print('java_project_addresssimple_injection', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
