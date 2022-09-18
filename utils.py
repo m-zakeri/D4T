@@ -145,23 +145,30 @@ class File:
 
 class Path:
     @staticmethod
-    def find_package_of_dependee(dependee, imports, imports_star, index_dic):
+    def find_package_of_dependee(dependee, imports, imports_star, index_dic, current_package=None, current_file=None):
         splitted_dependee = dependee.split('.')
         if len(splitted_dependee) == 1:
             # for normal import
             for i in imports:
                 splitted_import = i.split('.')
                 if splitted_dependee[0] == splitted_import[-1]:
-                    return '.'.join(i.split('.')[:-1])
+                    return '.'.join(i.split('.')[:-1]), dependee
 
             # for import star
             class_name = splitted_dependee[-1]
             for i in imports_star:
                 index_dic_dependee = i + '.'.join(splitted_dependee[:-1]) + '-' + class_name + '-' + class_name
                 if index_dic_dependee in index_dic.keys():
-                    return i
+                    return i + '.'.join(splitted_dependee[:-1]), dependee
+
+            long_name = f'{current_package}-{current_file}-{dependee}'
+            if long_name in index_dic:
+                return current_package, current_file
         elif len(splitted_dependee) > 1:
-            return '.'.join(splitted_dependee[:-1])
+            return '.'.join(splitted_dependee[:-1]), splitted_dependee[-1]
+
+        return None, None
+
 
 
     @staticmethod

@@ -138,10 +138,9 @@ class ClassDiagramListener(JavaParserLabeledListener):
                     file_name = self.file_name
                     package = self.__package
                 else:
-                    package = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+                    package, file_name = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
                     splitted_dependee = dependee.split('.')
                     dependee = splitted_dependee[-1]
-                    file_name = dependee
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
@@ -398,7 +397,7 @@ class StereotypeListener(JavaParserLabeledListener):
                     package = self.__package
                 else:
                     file_name = dependee
-                    package = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+                    package, _ = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
 
                 if package != None:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
@@ -730,7 +729,7 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project = "xerces2j"
+    java_project = "javaproject"
     java_project_address = config.projects_info[java_project]['path']
     print('java_project_address', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
