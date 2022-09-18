@@ -348,7 +348,7 @@ def modularity_testability_relation():
 
 def testability_complexity_relation():
     result_path = r'D:/Users/Morteza/OneDrive/Online2/_04_2o/o2_university/PhD/Project21/a160_design_testability/experiments/'
-    result_file = r'interaction_complexity_versus_testability.xlsx'
+    result_file = r'interaction_complexity_versus_testability_cleaned.xlsx'
     df = pd.read_excel(result_path + result_file, sheet_name='report_1')
     # print(df)
     df['1/complexity_avg_ranked'] = df['1/complexity_avg'].rank(ascending=True)
@@ -380,21 +380,27 @@ def testability_complexity_relation():
     df2 = pd.melt(df, id_vars=['Number of relationships', 'no_classes'], var_name='Measure',
                   value_vars=['1/Complexity ranks', 'Testability ranks'], value_name='Rank')
 
-
     g = sns.lmplot(data=df2, x='Number of relationships', y='Rank', hue='Measure',
-                   truncate=True, markers=['o', 'X'],
+                   x_ci='sd',
+                   # x_ci=None,
+                   # truncate=True,
+                   markers=['o', 'X'],
                    # line_kws={'ls': ['-', '--']},
-                   legend_out=True,
+                   # legend_out=True,
+                   # scatter=True,
+                   n_boot=5,
+                   # ci=None,
                    )
-
+    g.ax.set_ylim(1, 51)
+    g.ax.set(yticks=np.arange(1, 50, 3))
     g.ax.text(
-        0.5, 0.15, f'Spearman correlation: {round(r, 5)}',
+        0.5, 0.90, f'Spearman correlation: {round(r, 5)}',
         fontsize=12, fontweight='bold',
         horizontalalignment='center', verticalalignment='center', transform=g.ax.transAxes,
         color='saddlebrown',
     )
     g.ax.text(
-        0.5, 0.05, f'p-value: ({p:.5E})',
+        0.5, 0.80, f'p-value: ({p:.5E})',
         fontsize=12, fontweight='bold',
         horizontalalignment='center', verticalalignment='center', transform=g.ax.transAxes,
         color='saddlebrown',  # 'indigo'
