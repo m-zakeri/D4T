@@ -203,7 +203,7 @@ def get_default_interface_info(class_long_name, index_dic, base_dirs):
 
 
 if __name__ == "__main__":
-    java_project = "10_water-simulator"
+    java_project = "javaproject"
     java_project_address = config.projects_info[java_project]['path']
     print('java_project_address', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
@@ -211,5 +211,8 @@ if __name__ == "__main__":
     files = File.find_all_file(java_project_address, 'java')
     index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
 
-    print(get_default_interface_info('simulator.SA-GridGenerator-GridGenerator',
-                                     index_dic, base_dirs))
+    interface_info = get_default_interface_info('com.products-GifReader-GifReader',
+                                     index_dic, base_dirs)
+
+    ic = InterfaceCreator(interface_info)
+    print(ic.make_interface_body())

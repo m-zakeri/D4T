@@ -31,6 +31,8 @@ for project_name in SF110_projects:
     base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
     projects_info[project_name]['path'] = java_project_address
     projects_info[project_name]['base_dirs'] = base_dirs
+    projects_info[project_name]['db_path'] = f'{BASE_DIR}{project_name}/{project_name}.und'
+    projects_info[project_name]['log_path'] = f'{BASE_DIR}{project_name}/{project_name}_log.csv'
 
 # tabula-java
 projects_info['tabula-java'] = dict()

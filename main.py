@@ -21,7 +21,7 @@ if __name__ == "__main__":
         index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)
         cd = ClassDiagram(java_project_address, base_dirs, files, index_dic)
         cd.make_class_diagram()
-        #cd.save('class_diagram.gml')
+        cd.save('class_diagram.gml')
         #cd.load('class_diagram.gml')
         cd.show(cd.class_diagram_graph)
         # g = cd.class_diagram_graph
