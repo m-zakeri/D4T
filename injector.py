@@ -111,16 +111,18 @@ class InjectorListener(JavaParserLabeledListener):
     def enterExpression4(self, ctx:JavaParserLabeled.Expression4Context):
         dependee = ctx.creator().createdName().getText()
         package, file_name = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
-        injector_method_name = package.split('.') + [file_name, dependee.split('.')[-1]]
-        injector_method_name = 'get_' + '_'.join(injector_method_name)
-        print(dependee, package, file_name)
-        print(injector_method_name)
-        self.token_stream_rewriter.replace(
-            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
-            from_idx=ctx.start.tokenIndex,
-            to_idx=ctx.creator().createdName().stop.tokenIndex,
-            text=self.injector_object_statement + '.' + injector_method_name
-        )
+        dependee_long_name = f'{package}-{file_name}-{dependee.split(".")[-1]}'
+        if dependee_long_name in self.supported_classes:
+            injector_method_name = package.split('.') + [file_name, dependee.split('.')[-1]]
+            injector_method_name = 'get_' + '_'.join(injector_method_name)
+            print(dependee, package, file_name)
+            print(injector_method_name)
+            self.token_stream_rewriter.replace(
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
+                from_idx=ctx.start.tokenIndex,
+                to_idx=ctx.creator().createdName().stop.tokenIndex,
+                text=self.injector_object_statement + '.' + injector_method_name
+            )
 
 class Injector:
     def __init__(self, name, path, base_dirs, index_dic):

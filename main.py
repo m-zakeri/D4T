@@ -30,8 +30,8 @@ if __name__ == "__main__":
         #     print(i)
         #g = cd.class_diagram_graph
         #print(len(list(nx.weakly_connected_components(g))))
-        f = Factory()
-        report = f.refactor(0.1, index_dic, cd.class_diagram_graph, base_dirs)
+        f = Factory(index_dic, cd.class_diagram_graph, base_dirs)
+        report = f.refactor(0.1)
 
         files = File.find_all_file(java_project_address, 'java')
         index_dic = File.indexing_files_directory(files, 'class_index.json', base_dirs)

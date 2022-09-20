@@ -171,6 +171,11 @@ class ProductCreatorDetectorListener(JavaParserLabeledListener):
 
 
 class Factory:
+    def __init__(self, index_dic, class_diagram, base_dirs):
+        self.index_dic = index_dic
+        self.class_diagram = class_diagram
+        self.base_dirs = base_dirs
+
     def __fix_creator(self, creator_path, interface_import_text, interface_name, creator_identifier,
                       products_identifier):
         parser, token_stream = get_parser_and_tokens(creator_path)
@@ -186,7 +191,7 @@ class Factory:
         with open(creator_path, mode='w', newline='', encoding='utf8', errors='ignore') as f:
             f.write(my_listener.token_stream_rewriter.getDefaultText())
 
-    def __fix_product(self, product_path, interface_import_text, interface_name, creator_identifier,
+    def __fix_product(self, product_path, interface_import_text, interface_name,
                       products_identifier):
         parser, token_stream = get_parser_and_tokens(product_path)
         parse_tree = parser.compilationUnit()
@@ -240,50 +245,58 @@ class Factory:
                                 result['products']['methods'].append(method_class_dic[class_list[0]][m])
         return result
 
-    @staticmethod
-    def __get_class_info_from_index(index, index_dic, index_list):
+    def __get_class_info_from_index(self, index, index_list):
         class_info = dict()
         class_info['index'] = index
         key = index_list[class_info['index']]
-        class_info['path'] = index_dic[key]['path']
+        class_info['path'] = self.index_dic[key]['path']
         key = key.split("-")
         class_info['class_name'] = key[1]
         class_info['package'] = key[0]
         return class_info
 
-    def find_class_info_from_id(self, result, index_dic):
-        index_list = list(index_dic.keys())
-        result['factory'] = Factory.__get_class_info_from_index(
+    def __prepare_injector(self, factory_result, index_list):
+        injector_path = factory_result['factory']['path']
+        injector_path = injector_path.split('/')
+        injector_name = f'Injector{factory_result["factory"]["index"]}'
+        injector_path = f'{"/".join(injector_path[:-1])}/'
+        injector = Injector(injector_name, injector_path, self.base_dirs, self.index_dic)
+        product_classes = {index_list[c['index']]: [] for c in factory_result['products']['classes']}
+        factory_class = index_list[factory_result["factory"]["index"]]
+
+        injector.create(product_classes)
+        injector.inject([factory_class])
+
+    def find_class_info_from_id(self, result, index_list):
+        result['factory'] = self.__get_class_info_from_index(
             int(result['factory']),
-            index_dic,
             index_list
         )
         products_class_list = []
         for product_class in result['products']['classes']:
-            product_info = Factory.__get_class_info_from_index(
+            product_info = self.__get_class_info_from_index(
                 int(product_class),
-                index_dic,
                 index_list
             )
             products_class_list.append(product_info)
         result['products']['classes'] = products_class_list
         return result
 
-    def refactor(self, sensitivity, index_dic, class_diagram, base_dirs, edit=True):
+    def refactor(self, sensitivity, edit=True):
         reports = []
-        index_dic_keys = list(index_dic.keys())
-        creator_candidates = [v for v, d in class_diagram.out_degree() if d >= 2]
+        index_dic_keys = list(self.index_dic.keys())
+        creator_candidates = [v for v, d in self.class_diagram.out_degree() if d >= 2]
         for creator_candidate in creator_candidates:
             products_candidates = []
-            for dependee in nx.bfs_edges(class_diagram, source=creator_candidate, depth_limit=1):
-                if class_diagram[dependee[0]][dependee[1]]['relation_type'] in ['create', 'use_def', 'use_consult'] and \
-                        class_diagram.nodes[dependee[1]]['type'] == 'class':
+            for dependee in nx.bfs_edges(self.class_diagram, source=creator_candidate, depth_limit=1):
+                if self.class_diagram[dependee[0]][dependee[1]]['relation_type'] in ['create', 'use_def', 'use_consult'] and \
+                        self.class_diagram.nodes[dependee[1]]['type'] == 'class':
                     products_candidates.append(dependee[1])
 
             method_class_dic = {}
             for product_candidate_index in products_candidates:
                 product_candidate = index_dic_keys[int(product_candidate_index)]
-                product_candidate_path = index_dic[product_candidate]['path']
+                product_candidate_path = self.index_dic[product_candidate]['path']
                 product_candidate_class_name = product_candidate.split('-')[1]
                 print('child path: ', product_candidate_path)
                 parser = get_parser(product_candidate_path)
@@ -304,10 +317,11 @@ class Factory:
                 reports.append(result)
 
                 interface_name = 'Interface' + str(result['factory'])
-                result = self.find_class_info_from_id(result, index_dic)
+                result = self.find_class_info_from_id(result, index_dic_keys)
+                print(json.dumps(result, indent=4))
                 # make interface for
                 interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(result,
-                                                                                         base_dirs,
+                                                                                         self.base_dirs,
                                                                                          interface_name
                                                                                          )
                 interface_creator = InterfaceCreator(interface_info)
@@ -322,15 +336,17 @@ class Factory:
                     products_class_name.append(product_info['class_name'])
 
                 interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
+                print(creator_class_name)
+                print(products_class_name)
                 if edit:
                     self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
                                        products_class_name)
                     for product_path in products_path:
                         self.__fix_product(product_path, interface_import_text, interface_name,
-                                           creator_class_name,
                                            products_class_name)
 
                     #todo: add injetor here
+                    self.__prepare_injector(result, index_dic_keys)
                     # factory_ = Injector(name, path, base_dirs, index_dic)
                     # factory_.create(product_path)
                     # factory_.inject([creator_path])
