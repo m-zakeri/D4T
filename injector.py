@@ -115,8 +115,6 @@ class InjectorListener(JavaParserLabeledListener):
         if dependee_long_name in self.supported_classes:
             injector_method_name = package.split('.') + [file_name, dependee.split('.')[-1]]
             injector_method_name = 'get_' + '_'.join(injector_method_name)
-            print(dependee, package, file_name)
-            print(injector_method_name)
             self.token_stream_rewriter.replace(
                 program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME,
                 from_idx=ctx.start.tokenIndex,
@@ -151,13 +149,11 @@ class Injector:
             )
             walker = ParseTreeWalker()
             walker.walk(listener=listener, t=tree)
-            # print(listener.constructors_info)
             for c in listener.constructors_info:
                 classes_info[c] = []
                 if len(listener.constructors_info[c]) > 0:
                     for constructor in listener.constructors_info[c]:
                         classes_info[c].append({'params': constructor, 'dependencies': classes[c]})
-                        # print("classes_info[c]", classes_info[c])
                 else:
                     classes_info[c].append({'params': [], 'dependencies': classes[c]})
 
@@ -215,7 +211,6 @@ class Injector:
                 obj_params = [param['identifier'] for param in constructor['params']]
                 method_body += ', '.join(obj_params) + ');\n'
                 method_body += '\t\treturn obj;\n\t}'
-                # print(method_body)
                 class_body += method_body + '\n\n'
         class_body = class_body[:-2]
         text += f'public class {self.name}\n' + '{\n' + class_body + '\n}'

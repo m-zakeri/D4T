@@ -466,10 +466,9 @@ class StereotypeListener(JavaParserLabeledListener):
             current_type = self.dependee_dic[current_type]
 
             if len(list_of_objects) > 1:
-                for object in list_of_objects[1:]:
+                for object_ in list_of_objects[1:]:
                     if current_type in self.index_dic:
-                        # print(current_type, object)
-                        current_type = self.methods_information[current_type]['attributes'][object]
+                        current_type = self.methods_information[current_type]['attributes'][object_]
 
             # detect use type
             if current_type in self.index_dic:
@@ -591,8 +590,8 @@ class ClassDiagram:
                     roots.remove(s)
         return roots
 
-    def __add_extends_attributes_and_methods(self, parent, child, method_info, index_list):
-        # print((parent, child))
+    @staticmethod
+    def __add_extends_attributes_and_methods(parent, child, method_info, index_list):
         for attribute in method_info[index_list[parent]]['attributes']:
             if not(attribute in method_info[index_list[child]]['attributes']):
                 method_info[index_list[child]]['attributes'][attribute] = \
@@ -612,8 +611,6 @@ class ClassDiagram:
         extends_graph = self.__get_extend_graph()
         roots = self.__find_extend_roots(extends_graph)
         index_list = list(self.index_dic.keys())
-        # print(extends_graph)
-        # print(roots)
         q = queue.Queue()
         for root in roots:
             q.put(root)

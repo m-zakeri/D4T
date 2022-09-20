@@ -298,7 +298,6 @@ class Factory:
                 product_candidate = index_dic_keys[int(product_candidate_index)]
                 product_candidate_path = self.index_dic[product_candidate]['path']
                 product_candidate_class_name = product_candidate.split('-')[1]
-                print('child path: ', product_candidate_path)
                 parser = get_parser(product_candidate_path)
 
                 tree = parser.compilationUnit()
@@ -318,7 +317,6 @@ class Factory:
 
                 interface_name = 'Interface' + str(result['factory'])
                 result = self.find_class_info_from_id(result, index_dic_keys)
-                print(json.dumps(result, indent=4))
                 # make interface for
                 interface_info = InterfaceAdapter.convert_factory_info_to_interface_info(result,
                                                                                          self.base_dirs,
@@ -336,8 +334,6 @@ class Factory:
                     products_class_name.append(product_info['class_name'])
 
                 interface_import_text = 'import ' + interface_creator.get_import_text() + ';'
-                print(creator_class_name)
-                print(products_class_name)
                 if edit:
                     self.__fix_creator(creator_path, interface_import_text, interface_name, creator_class_name,
                                        products_class_name)
