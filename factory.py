@@ -341,10 +341,6 @@ class Factory:
                         self.__fix_product(product_path, interface_import_text, interface_name,
                                            products_class_name)
 
-                    #todo: add injetor here
                     self.__prepare_injector(result, index_dic_keys)
-                    # factory_ = Injector(name, path, base_dirs, index_dic)
-                    # factory_.create(product_path)
-                    # factory_.inject([creator_path])
                 print('--------------------------------------------------')
         return reports
