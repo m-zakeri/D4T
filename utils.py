@@ -161,9 +161,10 @@ class Path:
                 if index_dic_dependee in index_dic.keys():
                     return i + '.'.join(splitted_dependee[:-1]), dependee
 
-            long_name = f'{current_package}-{current_file}-{dependee}'
-            if long_name in index_dic:
-                return current_package, current_file
+            if current_package and current_file:
+                long_name = f'{current_package}-{current_file}-{dependee}'
+                if long_name in index_dic:
+                    return current_package, current_file
         elif len(splitted_dependee) > 1:
             return '.'.join(splitted_dependee[:-1]), splitted_dependee[-1]
 
