@@ -18,7 +18,7 @@ from gen.JavaLexer import JavaLexer
 from gen.JavaParserLabeled import JavaParserLabeled
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 
-from utils import Path, File, Struct
+from utils import Path, File, Struct, get_parser_and_tokens
 from interface import InterfaceCreator, InterfaceInfoListener
 import config
 from class_diagram import ClassDiagram
@@ -66,6 +66,7 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             'declaration_location': None,
             'initiation_location': None,
             'initiation_place': None,
+            'dependencies': list(),
             'constructors_info': list()
         }
         return Struct(**field_variable)
@@ -166,6 +167,10 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                 self.__check_modifiers(field_variable.modifiers) and \
                 field_variable.type in self.dependees and \
                 field_variable.initiation_location:
+            #todo: dependencies are empty
+            for dependency in field_variable.dependencies:
+                if dependency['type'] == 'method_call':
+                    return False
             return True
         return False
 
@@ -237,12 +242,13 @@ class ConstructorEditorListener(JavaParserLabeledListener):
         formal_variable_text = formal_variable_text[:-1]
         assign_text = '{' + assign_text + '\n\t}'
 
-        text += f"{self.currentClass} ({formal_variable_text})\n\t{assign_text}\n\n\t"
-        self.token_stream_rewriter.insertAfter(
-            self.generate_constructor_location,
-            text,
-            program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
-        )
+        if assign_text == '':
+            text += f"{self.currentClass} ({formal_variable_text})\n\t{assign_text}\n\n\t"
+            self.token_stream_rewriter.insertAfter(
+                self.generate_constructor_location,
+                text,
+                program_name=self.token_stream_rewriter.DEFAULT_PROGRAM_NAME
+            )
 
     @staticmethod
     def __find_constructor_info_from_constructor(variable_info, constructor):
@@ -257,8 +263,8 @@ class ConstructorEditorListener(JavaParserLabeledListener):
 
             for v in self.field_variables:
                 v_info = self.field_variables[v]
-                # print(v_info.__dict__)
-                if self.__check_constructor_injection_case1(v_info) and False:
+                if self.__check_constructor_injection_case1(v_info):
+                    print(v_info.__dict__)
                     self.__delete_new(v_info.initiation_location[0], v_info.initiation_location[1])
                     variable_type = v_info.type
                     if self.dependees[v_info.type].type == 'class':
@@ -270,15 +276,23 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                     formal_parameters_text.append(f"{variable_type} {v}")
 
                 if self.__check_constructor_injection_case2(v_info, c):
+                    print(v_info.__dict__)
                     constructor_info = self.__find_constructor_info_from_constructor(v_info, c)
-                    self.__edit_new(v, v_info.initiation_location[0], v_info.initiation_location[1])
-                    variable_type = v_info.type
-                    if self.dependees[v_info.type].type == 'class':
-                        variable_type = 'I' + v_info.type
-                        location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
-                        self.__edit_variable_type(variable_type, location)
+                    print(constructor_info.__dict__)
+                    if constructor_info:
+                        if constructor_info.initiation_location:
+                            self.__edit_new(
+                                v,
+                                constructor_info.initiation_location[0],
+                                constructor_info.initiation_location[1]
+                            )
+                            variable_type = v_info.type
+                            if self.dependees[v_info.type].type == 'class':
+                                variable_type = 'I' + v_info.type
+                                location = v_info.declaration_location[0] + len(v_info.modifiers) - 1
+                                self.__edit_variable_type(variable_type, location)
 
-                    formal_parameters_text.append(f"{variable_type} {v}")
+                            formal_parameters_text.append(f"{variable_type} {v}")
 
             if assignments_text != '':
                 assignment_location = c.stop_location - 2
@@ -367,10 +381,30 @@ class ConstructorEditorListener(JavaParserLabeledListener):
             if ctx.children[0].children[0].getText() == 'new':
                 for child in ctx.parentCtx.parentCtx.children:
                     if type(child).__name__ == 'VariableDeclaratorContext':
-                        if child.variableDeclaratorId().getText() in self.field_variables:
-                            self.field_variables[child.variableDeclaratorId().getText()].initiation_location = \
+                        identifier = child.variableDeclaratorId().getText()
+                        if identifier in self.field_variables:
+                            self.field_variables[identifier].initiation_location = \
                                 (ctx.start.tokenIndex - 2, ctx.stop.tokenIndex)
-                            self.field_variables[child.variableDeclaratorId().getText()].initiation_place = 'fieldDeclaration'
+                            self.field_variables[identifier].initiation_place = 'fieldDeclaration'
+
+                            if ctx.expression().creator().classCreatorRest() is not None:
+                                if ctx.expression().creator().classCreatorRest().arguments().expressionList() is not None:
+                                    for dependency in ctx.expression().creator().classCreatorRest().arguments().expressionList().expression():
+                                        if 'primary' in dir(dependency):
+                                            if 'IDENTIFIER' in dir(dependency.primary()):
+                                                if dependency.primary().IDENTIFIER():
+                                                    self.field_variables[identifier].dependencies.append(
+                                                        {'type': 'identifier', 'value': dependency.getText()}
+                                                    )
+                                            elif 'literal' in dir(dependency.primary()):
+                                                if dependency.primary().literal():
+                                                    self.field_variables[identifier].dependencies.append(
+                                                        {'type': 'literal', 'value': dependency.getText()}
+                                                    )
+                                        else:
+                                            self.field_variables[identifier].dependencies.append(
+                                                {'type': 'method_call', 'value': dependency.getText()}
+                                            )
 
     def enterExpression4(self, ctx:JavaParserLabeled.Expression4Context):
         if self.__class_depth == 1:
@@ -391,31 +425,49 @@ class ConstructorEditorListener(JavaParserLabeledListener):
                         self.field_variables[identifier].initiation_place = 'constructor'
                         if len(self.field_variables[identifier].constructors_info) == 0:
                             constructor_info = self.__get_constructor_info_struct(
-                                constructor=self.current_constructor
+                                constructor=self.current_constructor,
+                                initiation_location=(ctx.start.tokenIndex, ctx.stop.tokenIndex)
                             )
                             self.field_variables[identifier].constructors_info.append(constructor_info)
                         elif self.field_variables[identifier].constructors_info[-1].constructor != self.current_constructor:
                             constructor_info = self.__get_constructor_info_struct(
-                                constructor=self.current_constructor
+                                constructor=self.current_constructor,
+                                initiation_location=(ctx.start.tokenIndex, ctx.stop.tokenIndex)
                             )
                             self.field_variables[identifier].constructors_info.append(constructor_info)
+                        elif self.field_variables[identifier].constructors_info[-1].constructor == self.current_constructor and \
+                                self.field_variables[identifier].constructors_info[-1].initiation_location is None:
+                            self.field_variables[identifier].constructors_info[-1].initiation_location = \
+                                (ctx.start.tokenIndex, ctx.stop.tokenIndex)
 
-                        for dependency in ctx.creator().classCreatorRest().arguments().expressionList().expression():
-                            if 'primary' in dir(dependency):
-                                if 'IDENTIFIER' in dir(dependency.primary()):
-                                    if dependency.primary().IDENTIFIER():
+                        print(ctx.getText())
+                        if ctx.creator().classCreatorRest() is not None:
+                            if ctx.creator().classCreatorRest().arguments().expressionList() is not None:
+                                for dependency in ctx.creator().classCreatorRest().arguments().expressionList().expression():
+                                    if 'primary' in dir(dependency):
+                                        if 'IDENTIFIER' in dir(dependency.primary()):
+                                            if dependency.primary().IDENTIFIER():
+                                                self.field_variables[identifier].constructors_info[-1].dependencies.append(
+                                                    {'type': 'identifier', 'value': dependency.getText()}
+                                                )
+                                                self.field_variables[identifier].dependencies.append(
+                                                    {'type': 'identifier', 'value': dependency.getText()}
+                                                )
+                                        elif 'literal' in dir(dependency.primary()):
+                                            if dependency.primary().literal():
+                                                self.field_variables[identifier].constructors_info[-1].dependencies.append(
+                                                    {'type': 'literal', 'value': dependency.getText()}
+                                                )
+                                                self.field_variables[identifier].dependencies.append(
+                                                    {'type': 'literal', 'value': dependency.getText()}
+                                                )
+                                    else:
                                         self.field_variables[identifier].constructors_info[-1].dependencies.append(
-                                            {'type': 'identifier', 'value': dependency.getText()}
+                                            {'type': 'method_call', 'value': dependency.getText()}
                                         )
-                                elif 'literal' in dir(dependency.primary()):
-                                    if dependency.primary().literal():
-                                        self.field_variables[identifier].constructors_info[-1].dependencies.append(
-                                            {'type': 'literal', 'value': dependency.getText()}
+                                        self.field_variables[identifier].dependencies.append(
+                                            {'type': 'method_call', 'value': dependency.getText()}
                                         )
-                            else:
-                                self.field_variables[identifier].constructors_info[-1].dependencies.append(
-                                    {'type': 'method_call', 'value': dependency.getText()}
-                                )
 
     def enterConstructorDeclaration(self, ctx: JavaParserLabeled.ConstructorDeclarationContext):
         if self.__class_depth == 1:
@@ -492,10 +544,7 @@ class Injection:
         roots_long_name = [self.index_dic_keys[n] for n,d in self.class_diagram.in_degree() if d==0]
 
         for f in files:
-            stream = FileStream(f, encoding='utf-8', errors='ignore')
-            lexer = JavaLexer(stream)
-            tokens = CommonTokenStream(lexer)
-            parser = JavaParserLabeled(tokens)
+            parser, tokens = get_parser_and_tokens(f)
             tree = parser.compilationUnit()
             listener = ConstructorEditorListener(
                 base_dirs,
@@ -534,8 +583,9 @@ class Injection:
 
 
 if __name__ == "__main__":
-    java_project_address = config.projects_info['javaproject']['path']
-    base_dirs = config.projects_info['javaproject']['base_dirs']
+    project_name = 'javaproject'
+    java_project_address = config.projects_info[project_name]['path']
+    base_dirs = config.projects_info[project_name]['base_dirs']
     files = File.find_all_file(java_project_address, 'java')
     index_dic_ = File.indexing_files_directory(files, 'class_index.json', base_dirs)
     #with open('class_index.json') as f:

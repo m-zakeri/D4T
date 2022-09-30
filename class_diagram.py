@@ -520,7 +520,6 @@ class ClassDiagram:
         print('Start making class diagram . . .')
         for f in self.files:
             file_name = Path.get_file_name_from_path(f)
-            print('\t' + f)
             parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = ClassDiagramListener(self.base_dirs, self.index_dic, file_name, f)
@@ -630,7 +629,6 @@ class ClassDiagram:
         print('start finding methods information . . .')
         methods_info = {}
         for f in self.files:
-            print('\t' + f)
             parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = MethodModificationTypeListener(self.base_dirs, f)
@@ -678,7 +676,6 @@ class ClassDiagram:
         print('Start setting stereotype . . .')
         for f in self.files:
             file_name = Path.get_file_name_from_path(f)
-            print('\t' + f)
             parser = get_parser(f)
             tree = parser.compilationUnit()
             listener = StereotypeListener(methods_information, self.base_dirs, self.index_dic, file_name, f)

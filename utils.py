@@ -212,6 +212,7 @@ class List:
 
 
 def get_parser(path):
+    print(f'\t{path}')
     stream = FileStream(path, encoding='utf8', errors='ignore')
     lexer = JavaLexer(stream)
     tokens = CommonTokenStream(lexer)
@@ -220,6 +221,7 @@ def get_parser(path):
 
 
 def get_parser_and_tokens(path):
+    print(f'\t{path}')
     stream = FileStream(path, encoding='utf8', errors='ignore')
     lexer = JavaLexer(stream)
     tokens = CommonTokenStream(lexer)
