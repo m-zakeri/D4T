@@ -100,10 +100,11 @@ class ClassDiagramListener(JavaParserLabeledListener):
                         self.no_implements -= 1
                         self.current_relationship = 'implements'
                     else:
-                        self.current_relationship = 'create'
+                        self.current_relationship = 'runtime'
 
                     dependee = text[:-1]
-                    self.relations.append((self.current_class, dependee, self.current_relationship))
+                    if (self.current_class, dependee, 'create') not in self.relations:
+                        self.relations.append((self.current_class, dependee, self.current_relationship))
 
     def enterClassOrInterfaceType(self, ctx:JavaParserLabeled.ClassOrInterfaceTypeContext):
         if len(ctx.IDENTIFIER()) > 0 and self.current_class is not None:
@@ -184,7 +185,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.__class_depth += 1
         if self.__class_depth == 1:
             self.current_class = ctx.IDENTIFIER().getText()
-            self.file_info[self.current_class] = {'is_class':False, 'attributes':{}, 'methods':{}}
+            self.file_info[self.current_class] = {'is_class': False, 'attributes': {}, 'methods': {}}
 
     def exitInterfaceDeclaration(self, ctx:JavaParserLabeled.InterfaceMethodDeclarationContext):
         self.__class_depth -= 1
@@ -196,8 +197,7 @@ class MethodModificationTypeListener(JavaParserLabeledListener):
         self.__class_depth += 1
         if self.__class_depth == 1:
             self.current_class = ctx.IDENTIFIER().getText()
-            self.file_info[self.current_class] = {'is_class':True, 'attributes':{}, 'methods':{}}
-
+            self.file_info[self.current_class] = {'is_class': True, 'attributes': {}, 'methods': {}}
 
     def exitClassDeclaration(self, ctx:JavaParserLabeled.ClassDeclarationContext):
         self.__class_depth -= 1
@@ -478,7 +478,6 @@ class StereotypeListener(JavaParserLabeledListener):
                     else:
                         return 'use_consult'
 
-
     def __get_object_type(self, object):
         current_type = None
         if object in self.field_variables.keys():
@@ -508,6 +507,7 @@ class ClassDiagram:
         self.class_diagram_graph = nx.DiGraph()
         self.relationships_name = ['implements', 'extends', 'create', 'use_consult', 'use_def']
         nx.set_edge_attributes(self.class_diagram_graph, self.relationships_name, "relation_type")
+        nx.set_node_attributes(self.class_diagram_graph, [], 'name')
         nx.set_node_attributes(self.class_diagram_graph, ['class', 'abstract class', 'interface', 'enum'], "type")
 
     def make_class_diagram(self):
@@ -540,6 +540,8 @@ class ClassDiagram:
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph.add_edge(n1, n2)
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
+                        self.class_diagram_graph.nodes[n1]['name'] = c
+                        self.class_diagram_graph.nodes[n2]['name'] = i
         print('End making class diagram !')
 
     def save(self, address):
@@ -556,15 +558,22 @@ class ClassDiagram:
         pos = nx.spring_layout(graph)
         
         pos_with_type = {}
+        pos_with_name = {}
         y_off = 0.1  # offset on the y axis
         for k, v in pos.items():
             pos_with_type[k] = (v[0], v[1] + y_off)
+            pos_with_name[k] = (v[0], v[1] - y_off)
+
 
         nx.draw_networkx(graph, pos)
-        edge_labels = nx.get_edge_attributes(graph, 'relation_type')
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels)
-        node_labels = nx.get_node_attributes(graph, 'type')
-        nx.draw_networkx_labels(graph, pos_with_type, node_labels)
+        edges_label = nx.get_edge_attributes(graph, 'relation_type')
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edges_label)
+        nodes_label = nx.get_node_attributes(graph, 'type')
+        nx.draw_networkx_labels(graph, pos_with_type, nodes_label)
+        nodes_name = nx.get_node_attributes(graph, 'name')
+        for i in range(len(nodes_name)):
+            nodes_name[i] = nodes_name[i].split('-')[-1]
+        nx.draw_networkx_labels(graph, pos_with_name, nodes_name)
         plt.show()
 
     def dfs(self):
@@ -579,7 +588,6 @@ class ClassDiagram:
                 else:
                     graph[edge[1]] = [edge[0]]
         return graph
-
 
     def __find_extend_roots(self, extends_graph):
         roots = list(extends_graph.keys())
@@ -703,6 +711,7 @@ class ClassDiagram:
         for n in self.class_diagram_graph.nodes:
             CDG.add_node(n)
             CDG.nodes[n]['type'] = self.class_diagram_graph.nodes[n]['type']
+            CDG.nodes[n]['name'] = self.class_diagram_graph.nodes[n]['name']
 
         for edge in self.class_diagram_graph.edges:
             edge_info = self.class_diagram_graph.edges[edge]

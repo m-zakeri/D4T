@@ -207,7 +207,8 @@ class Factory:
         with open(product_path, mode='w', newline='', encoding='utf8', errors='ignore') as f:
             f.write(my_listener.token_stream_rewriter.getDefaultText())
 
-    def __get_intersection_of_two_list(self, list1, list2):
+    @staticmethod
+    def __get_intersection_of_two_list(list1, list2):
         return list(set(list1) & set(list2))
 
     def find_products(self, parent_class, method_class_dic, sensitivity):
