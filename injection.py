@@ -586,17 +586,17 @@ class Injection:
 
     def refactor(self):
         print('Start injection refactoring . . .')
-        reports = []
+        reports = {'case1': 0, 'case2': 0}
         interfaces = set()
         classes = dict()
         token_stream_rewriter_dict = dict()
         roots_long_name = [self.index_dic_keys[n] for n, d in self.class_diagram.in_degree() if d == 0]
 
-        for f in files:
+        for f in self.files:
             parser, tokens = get_parser_and_tokens(f)
             tree = parser.compilationUnit()
             listener = ConstructorEditorListener(
-                base_dirs,
+                self.base_dirs,
                 f,
                 self.index_dic,
                 roots_long_name,
@@ -609,6 +609,8 @@ class Injection:
             all_cases = 0
             for class_ in listener.statistics:
                 all_cases += listener.statistics[class_]['case1'] + listener.statistics[class_]['case2']
+                reports['case1'] += listener.statistics[class_]['case1']
+                reports['case2'] += listener.statistics[class_]['case2']
             if all_cases > 0:
                 for class_ in listener.result['classes']:
                     total_case = listener.statistics[class_]['case1'] + listener.statistics[class_]['case2']
@@ -631,14 +633,15 @@ class Injection:
                 f.write(token_stream_rewriter_dict[path])
 
         print('End injection refactoring !')
+        return reports
 
-    @staticmethod
-    def __create_injection_interface(path, class_name):
+
+    def __create_injection_interface(self, path, class_name):
         parser = get_parser(path)
         tree = parser.compilationUnit()
         listener = InterfaceInfoListener(
             class_name,
-            base_dirs,
+            self.base_dirs,
             path
         )
         walker = ParseTreeWalker()

@@ -6,6 +6,7 @@ import understand as und
 from metrics.metrics_coverability import UnderstandUtility
 from class_diagram import ClassDiagram
 from factory import Factory
+from injection import Injection
 from complexity import Complexity
 from testability.design_testability_prediction2 import main as evaluate_testability
 from testability.directory_utils import update_understand_database
@@ -49,7 +50,7 @@ class Report:
         path = os.path.abspath(os.path.join(path, os.pardir))
         os.chdir(path)
         if len(tmp) > 0:
-            return {"insertion":int(tmp[3]), "deletion":int(tmp[5])}
+            return {"insertion": int(tmp[3]), "deletion": int(tmp[5])}
         else:
             return {"insertion": 0, "deletion": 0}
 
@@ -68,7 +69,7 @@ class FactoryReport(Report):
             "testability": {"before": int(), "before_time": int(),
                             "after": int(), "after_time": int()},
             "complexity": {"before": int(), "before_time": int(),
-                            "after": int(), "after_time": int()},
+                           "after": int(), "after_time": int()},
             "no_classes": {"before": int(), "after": int()},
             "no_relationships": {"before": int(), "after": int()},
             "code_changes_rate": int(),
@@ -93,12 +94,9 @@ class FactoryReport(Report):
         )
         report["testability"]["before_time"] = testability_time
 
-        f = Factory()
+        f = Factory(self.index_dic, self.cd.class_diagram_graph, self.base_dirs)
         report["cases"] = f.refactor(
             sensitivity,
-            self.index_dic,
-            self.cd.class_diagram_graph,
-            self.base_dirs,
             edit=edit
         )
 
@@ -268,18 +266,75 @@ class FactoryReport(Report):
             return round(a / b, 2)
 
 
+class InjectionReport(Report):
+    def get_single_report(self, edit=True, save=True):
+        report = {
+            "java_project": self.java_project,
+            "testability": {"before": int(), "before_time": int(),
+                            "after": int(), "after_time": int()},
+            "no_classes": {"before": int(), "after": int()},
+            "no_relationships": {"before": int(), "after": int()},
+            "code_changes_rate": int(),
+            "cases": dict()
+            }
+
+        update_understand_database(self.db_path_)
+
+        report["no_classes"]["before"] = len(self.cd.class_diagram_graph.nodes)
+        report["no_relationships"]["before"] = len(self.cd.class_diagram_graph.edges)
+
+        report["testability"]["before"], testability_time = evaluate_testability(
+            self.db_path_,
+            initial_value=1.0,
+            verbose=False,
+            log_path=self.log_path_
+        )
+        report["testability"]["before_time"] = testability_time
+
+        injection = Injection(self.base_dirs, self.index_dic, self.files, self.cd.class_diagram_graph)
+        report['cases'] = injection.refactor()
+
+        if edit:
+            self.reload_from_disk()
+
+            update_understand_database(self.db_path_)
+
+            report["no_classes"]["after"] = len(self.cd.class_diagram_graph.nodes)
+            report["no_relationships"]["after"] = len(self.cd.class_diagram_graph.edges)
+
+            report["testability"]["after"], testability_time = evaluate_testability(
+                self.db_path_,
+                initial_value=1.0,
+                verbose=False,
+                log_path=self.log_path_
+            )
+            report["testability"]["after_time"] = testability_time
+
+            code_changes_rate = self.get_code_changes_rate()
+            report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
+
+        if save:
+            with open(f"{config.BASE_DIR}/{self.java_project}/{self.java_project}_injection_report.json", 'w') as f:
+                json.dump(report, f, indent=4)
+
+        return report
+
 if __name__ == "__main__":
-    java_projects = config.SF110_projects
-    for java_project in java_projects:
-        fr = FactoryReport(java_project, True)
-        factory_report = fr.get_list_of_report(5)
+    # java_projects = config.SF110_projects
+    # for java_project in java_projects:
+        # fr = FactoryReport(java_project, True)
+        # factory_report = fr.get_list_of_report(5)
 
         # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
         #     factory_report = json.load(f)
 
         # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
-        fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
+        # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
         # fr.show_complexity_vs_sensitivity_chart(json_report)
         # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
+
+    java_project = '10_water-simulator'
+    ir = InjectionReport(java_project)
+    ir.get_single_report()
