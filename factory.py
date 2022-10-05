@@ -262,7 +262,7 @@ class Factory:
         injector_name = f'Injector{factory_result["factory"]["index"]}'
         injector_path = f'{"/".join(injector_path[:-1])}/'
         injector = Injector(injector_name, injector_path, self.base_dirs, self.index_dic)
-        product_classes = {index_list[c['index']]: [] for c in factory_result['products']['classes']}
+        product_classes = {index_list[c['index']]: [list() for i in range(10)] for c in factory_result['products']['classes']}
         factory_class = index_list[factory_result["factory"]["index"]]
 
         injector.create(product_classes)

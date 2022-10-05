@@ -29,7 +29,7 @@ class Report:
         self.index_dic = File.indexing_files_directory(self.files, 'class_index.json', self.base_dirs)
         self.cd = ClassDiagram(self.java_project_address, self.base_dirs, self.files, self.index_dic)
         self.cd.make_class_diagram()
-        self.cd.set_stereotypes()
+        # self.cd.set_stereotypes()
         self.cdg = self.cd.get_CDG()
 
     def restore_java_project(self):
@@ -319,6 +319,9 @@ class InjectionReport(Report):
 
         return report
 
+
+
+
 if __name__ == "__main__":
     # java_projects = config.SF110_projects
     # for java_project in java_projects:
@@ -336,5 +339,10 @@ if __name__ == "__main__":
         # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
 
     java_project = '10_water-simulator'
+    fr = FactoryReport(java_project)
+    factory_report = fr.get_single_report(0.1)
     ir = InjectionReport(java_project)
-    ir.get_single_report()
+    injection_report = ir.get_single_report(save=False)
+    report = {'factory': factory_report, 'injection': injection_report}
+    with open(f"{config.BASE_DIR}/{java_project}/{java_project}_final_report.json", 'w') as f:
+        json.dump(report, f, indent=4)
