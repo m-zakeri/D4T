@@ -27,7 +27,7 @@ class InterfaceInfoListener(JavaParserLabeledListener):
         self.__package = None
         self.interface_info = {
             'package': str(),
-            'name': f'I{self.file_name}_{class_name}',
+            'name': f'I{class_name}',
             'path': f'{self.class_path[:-(len(self.file_name) + 5)]}I{self.file_name}_{class_name}.java',
             'methods': list()
         }

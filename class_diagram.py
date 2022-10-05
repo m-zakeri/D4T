@@ -516,6 +516,7 @@ class ClassDiagram:
             index = self.index_dic[c]['index']
             self.class_diagram_graph.add_node(index)
             self.class_diagram_graph.nodes[index]['type'] = self.index_dic[c]['type']
+            self.class_diagram_graph.nodes[index]['name'] = c
 
         print('Start making class diagram . . .')
         for f in self.files:
@@ -540,8 +541,6 @@ class ClassDiagram:
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph.add_edge(n1, n2)
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
-                        self.class_diagram_graph.nodes[n1]['name'] = c
-                        self.class_diagram_graph.nodes[n2]['name'] = i
         print('End making class diagram !')
 
     def save(self, address):

@@ -122,6 +122,7 @@ class InjectorListener(JavaParserLabeledListener):
                 text=self.injector_object_statement + '.' + injector_method_name
             )
 
+
 class Injector:
     def __init__(self, name, path, base_dirs, index_dic):
         self.name = name
@@ -152,10 +153,12 @@ class Injector:
             for c in listener.constructors_info:
                 classes_info[c] = []
                 if len(listener.constructors_info[c]) > 0:
+                    i = 0
                     for constructor in listener.constructors_info[c]:
-                        classes_info[c].append({'params': constructor, 'dependencies': classes[c]})
+                        classes_info[c].append({'params': constructor, 'dependencies': classes[c][i]})
+                        i += 1
                 else:
-                    classes_info[c].append({'params': [], 'dependencies': classes[c]})
+                    classes_info[c].append({'params': [], 'dependencies': classes[c][0]})
 
         self.__make_injector_body(classes_info)
         self.supported_classes = list(classes)
@@ -196,20 +199,27 @@ class Injector:
                 splitted_class = class_.split('-')
                 class_name = class_.replace('-', '_').replace('.', '_')
                 method_params_statement = ''
-                for param in constructor['params'][:len(constructor['params']) - len(constructor['dependencies'])]:
+                for param in constructor['params']:
                     method_params_statement += f'{param["type"]} {param["identifier"]},'
                 method_params_statement = method_params_statement[:-1]
-                method_body = f'\t public static {splitted_class[0]}.{splitted_class[2]} get_{class_name}({method_params_statement})' + '{' + '\n\t'
+                method_body = f'\t public static {splitted_class[0]}.{splitted_class[2]} get_{class_name}({method_params_statement})' + '{' + '\n'
 
-                #todo: handle this part for injection pattern
+                dependee_number = 0
+                dependees_params = []
                 for dependee in constructor['dependencies']:
-                    pass
+                    dependee_number += 1
+                    splitted_dependee = dependee['type'].split('-')
+                    dependee_name = f'dependee{dependee_number}'
+                    dependees_params.append(dependee_name)
+                    method_body += f'\t\t{".".join(splitted_dependee[:-1])} {dependee_name}'
+                    method_body += f' = new {splitted_dependee[0]}.{splitted_dependee[2]}('
+                    method_body += ', '.join(dependee["arguments"]) + ');\n'
 
                 # write method return statement
-                method_body += f'\t{".".join(splitted_class[:-1])} obj'
+                method_body += f'\t\t{".".join(splitted_class[:-1])} obj'
                 method_body += f' = new {splitted_class[0]}.{splitted_class[2]}('
                 obj_params = [param['identifier'] for param in constructor['params']]
-                method_body += ', '.join(obj_params) + ');\n'
+                method_body += ', '.join(dependees_params + obj_params) + ');\n'
                 method_body += '\t\treturn obj;\n\t}'
                 class_body += method_body + '\n\n'
         class_body = class_body[:-2]
@@ -234,7 +244,8 @@ if __name__ == '__main__':
     injector = Injector('Injector', injector_path, base_dirs, index_dic)
     classes = dict()
     for c in index_dic:
-        classes[c] = [1, 2]
+        classes[c] = [[{''}]]
 
+    print('classes', classes)
     injector.create(classes)
     injector.inject(['com.creator-Creator-Creator'])
