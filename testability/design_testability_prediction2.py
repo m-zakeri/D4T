@@ -87,7 +87,8 @@ class TestabilityMetrics:
 
     @classmethod
     def get_all_primary_metrics_names(cls) -> list:
-        primary_metrics_names = ['AbstractOrInterface', 'DIT', 'NOC', 'NOP', 'NIM', 'NMO', 'NOII', 'FANIN', 'FANOUT', 'CBO', 'NOI', ]
+        primary_metrics_names = ['AbstractOrInterface', 'DIT', 'NOC', 'NOP', 'NIM', 'NMO', 'NOII', 'FANIN', 'FANOUT',
+                                 'CBO', 'NOI', ]
         return primary_metrics_names
 
     @classmethod
@@ -373,15 +374,20 @@ class TestabilityModel:
         X_test = self.scaler.transform(X_test1)
         y_pred = self.model.predict(X_test)
 
-        df_predict_data2['Testability'] = list(y_pred)
+        # df_predict_data2.loc[:, 'Testability'] = list(y_pred)
+        df_predict_data2 = df_predict_data2.assign(Testability=y_pred)
 
-        df_predict_data1['Testability'] = [1] * len(df_predict_data1)
+        # df_predict_data1.loc[:, 'Testability'] = [1] * len(df_predict_data1)
+
+        df_predict_data1 = df_predict_data1.assign(Testability=[1] * len(df_predict_data1))
+
         df_new = pd.concat([df_predict_data2, df_predict_data1], ignore_index=True)
         print(df_new)
 
         df_new.to_csv(log_path, index=False)
         print(f'Design testability = {df_new["Testability"].mean()}')
         return df_new["Testability"].mean()
+
 
 # API
 def main(project_db_path, initial_value=1.0, verbose=False, log_path=None):
