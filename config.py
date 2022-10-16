@@ -6,22 +6,25 @@ The configuration module
 import networkx as nx
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
 
-BASE_DIR = 'benchmarks/'
+BASE_DIR = 'E:/LSSDS/CodART/Experimental1/prj_src/'
+UBD_DIR = 'E:/LSSDS/CodART/Experimental1/udbs/'
+D4T_LOG_DIR = 'E:/LSSDS/CodART/Experimental1/d4t_log/'
 projects_info = dict()
 
 
 # SF110 projects
 SF110_projects = [
-    "1_tullibee",
-    "2_a4j",
-    "5_templateit",
-    "8_gfarcegestionfa",
-    "10_water-simulator",
-    "13_jdbacl"
+    # "1_tullibee",
+    # "2_a4j",
+    # "5_templateit",
+    # "8_gfarcegestionfa",
+    # "10_water-simulator",
+    # "13_jdbacl"
+    "commons-codec"
 ]
 
 for project_name in SF110_projects:
@@ -31,9 +34,10 @@ for project_name in SF110_projects:
     base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
     projects_info[project_name]['path'] = java_project_address
     projects_info[project_name]['base_dirs'] = base_dirs
-    projects_info[project_name]['db_path'] = f'{BASE_DIR}{project_name}/{project_name}.und'
-    projects_info[project_name]['log_path'] = f'{BASE_DIR}{project_name}/{project_name}_log.csv'
+    projects_info[project_name]['db_path'] = f'{UBD_DIR}{project_name}.und'
+    projects_info[project_name]['log_path'] = f'{D4T_LOG_DIR}{project_name}/{project_name}_log.csv'
 
+# -----------------------------------------------
 # tabula-java
 projects_info['tabula-java'] = dict()
 java_project_address = BASE_DIR + 'tabula-java/src/main/java'
@@ -43,7 +47,7 @@ projects_info['tabula-java']['path'] = java_project_address
 projects_info['tabula-java']['base_dirs'] = base_dirs
 
 # commons-codec
-projects_info['commons-codec'] = dict()
+projects_info['commons-codec2'] = dict()
 java_project_address = BASE_DIR + 'commons-codec/src/main/java'
 base_dirs = list()
 base_dirs.append(BASE_DIR + 'commons-codec/src/main/java/')
