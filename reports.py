@@ -135,7 +135,7 @@ class FactoryReport(Report):
                 self.reload_from_disk()
 
             if save:
-                with open(f"{config.BASE_DIR}/{self.java_project}/{self.java_project}_factory_report.json", 'w') as f:
+                with open(f"{config.D4T_LOG_DIR}{self.java_project}/{self.java_project}_factory_report.json", 'w') as f:
                     json.dump(reports, f, indent=4)
         return reports
 
@@ -152,7 +152,7 @@ class FactoryReport(Report):
         plt.ylabel('number of cases')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/cases_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/cases_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -169,7 +169,7 @@ class FactoryReport(Report):
         plt.ylabel('average number of common methods')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_of_common_methods_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/avg_of_common_methods_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -186,7 +186,7 @@ class FactoryReport(Report):
         plt.ylabel('average number of products')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/avg_number_of_products_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/avg_number_of_products_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -203,7 +203,7 @@ class FactoryReport(Report):
         plt.ylabel('The rate of change of complexity')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/complexity_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/complexity_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -220,7 +220,7 @@ class FactoryReport(Report):
         plt.ylabel('The rate of change of testability')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/testability_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/testability_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -237,7 +237,7 @@ class FactoryReport(Report):
         plt.ylabel('code changes rate')
 
         if save:
-            plt.savefig(f"{config.BASE_DIR}/{self.java_project}/code_changed_rate_vs_sensitivity_chart.png")
+            plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/code_changed_rate_vs_sensitivity_chart.png")
         if show:
             plt.show()
 
@@ -314,19 +314,27 @@ class InjectionReport(Report):
             report["code_changes_rate"] = code_changes_rate["insertion"] + code_changes_rate["deletion"]
 
         if save:
-            with open(f"{config.BASE_DIR}/{self.java_project}/{self.java_project}_injection_report.json", 'w') as f:
+            with open(f"{config.D4T_LOG_DIR}{self.java_project}/{self.java_project}_injection_report.json", 'w') as f:
                 json.dump(report, f, indent=4)
 
         return report
 
 
+def find_best_sensitivity(factory_report):
+    sensitivity = -1
+    testability = 0
+    for report in factory_report:
+        if report['testability']['after'] > testability:
+            sensitivity = report['sensitivity']
+            testability = report['testability']['after']
+    return sensitivity
 
 
 if __name__ == "__main__":
-    # java_projects = config.SF110_projects
-    # for java_project in java_projects:
-        # fr = FactoryReport(java_project, True)
-        # factory_report = fr.get_list_of_report(5)
+    java_projects = config.SF110_projects
+    for java_project in java_projects:
+        fr = FactoryReport(java_project, True)
+        factory_report = fr.get_list_of_report(5)
 
         # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
         #     factory_report = json.load(f)
@@ -338,11 +346,13 @@ if __name__ == "__main__":
         # fr.show_complexity_vs_sensitivity_chart(json_report)
         # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
 
-    java_project = '10_water-simulator'
-    fr = FactoryReport(java_project)
-    factory_report = fr.get_single_report(0.1)
-    ir = InjectionReport(java_project)
-    injection_report = ir.get_single_report(save=False)
-    report = {'factory': factory_report, 'injection': injection_report}
-    with open(f"{config.BASE_DIR}/{java_project}/{java_project}_final_report.json", 'w') as f:
-        json.dump(report, f, indent=4)
+        # java_project = '10_water-simulator'
+        sensitivity = find_best_sensitivity(factory_report)
+        # fr = FactoryReport(java_project)
+        factory_report = fr.get_single_report(sensitivity)
+
+        ir = InjectionReport(java_project)
+        injection_report = ir.get_single_report(save=False)
+        report = {'factory': factory_report, 'injection': injection_report}
+        with open(f"{config.D4T_LOG_DIR}{java_project}/{java_project}_final_report.json", 'w') as f:
+            json.dump(report, f, indent=4)
