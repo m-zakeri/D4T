@@ -1,7 +1,6 @@
 *.pyc
 *.gml
 *.json
-gen/*
 
 # IDEs
 /venv/
@@ -10,7 +9,6 @@ gen/*
 
 benchmarks/*/
 reports/
-experiment_script.py
 
 testability/exclude/
 testability/mdg_production_code_experiments/

@@ -98,6 +98,7 @@ def update_understand_database2(udb_path):
         understand_6_cmd,
         stdout=open(os.devnull, 'wb')
     ).wait()
+    print('Updating (2) understand database was finished.')
 
 
 def update_understand_database(udb_path):
@@ -151,6 +152,8 @@ def update_understand_database(udb_path):
             print('The und.exe process is not running')
         else:
             print('The und.exe process killed manually')
+
+    print('Updating understand database was finished.')
 
 
 def export_understand_dependencies_csv2(csv_path: str, db_path: str):

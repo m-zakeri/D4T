@@ -2,26 +2,31 @@
 The configuration module
 
 """
+import os
 
 import networkx as nx
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
 
-BASE_DIR = 'benchmarks/'
+BASE_DIR = 'C:/Users/Zakeri/Desktop/SF110/'
+UBD_DIR = 'C:/Users/Zakeri/Desktop/SF110/'
+D4T_LOG_DIR = 'C:/Users/Zakeri/Desktop/d4t_log/'
 projects_info = dict()
 
 
 # SF110 projects
 SF110_projects = [
-    "1_tullibee",
-    "2_a4j",
-    "5_templateit",
-    "8_gfarcegestionfa",
-    "10_water-simulator",
-    "13_jdbacl"
+    # "1_tullibee",
+    # "2_a4j",
+    # "5_templateit",
+    # "8_gfarcegestionfa",
+    # "10_water-simulator",
+    # "13_jdbacl"
+    #"commons-codec"
+    "61_noen"
 ]
 
 for project_name in SF110_projects:
@@ -31,9 +36,12 @@ for project_name in SF110_projects:
     base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
     projects_info[project_name]['path'] = java_project_address
     projects_info[project_name]['base_dirs'] = base_dirs
-    projects_info[project_name]['db_path'] = f'{BASE_DIR}{project_name}/{project_name}.und'
-    projects_info[project_name]['log_path'] = f'{BASE_DIR}{project_name}/{project_name}_log.csv'
+    projects_info[project_name]['db_path'] = f'{UBD_DIR}{project_name}.und'
+    projects_info[project_name]['log_path'] = f'{D4T_LOG_DIR}{project_name}/{project_name}_log.csv'
+    if not os.path.exists(f'{D4T_LOG_DIR}{project_name}'):
+        os.mkdir(f'{D4T_LOG_DIR}{project_name}')
 
+# -----------------------------------------------
 # tabula-java
 projects_info['tabula-java'] = dict()
 java_project_address = BASE_DIR + 'tabula-java/src/main/java'
@@ -43,12 +51,12 @@ projects_info['tabula-java']['path'] = java_project_address
 projects_info['tabula-java']['base_dirs'] = base_dirs
 
 # commons-codec
-projects_info['commons-codec'] = dict()
+projects_info['commons-codec2'] = dict()
 java_project_address = BASE_DIR + 'commons-codec/src/main/java'
 base_dirs = list()
 base_dirs.append(BASE_DIR + 'commons-codec/src/main/java/')
-projects_info['commons-codec']['path'] = java_project_address
-projects_info['commons-codec']['base_dirs'] = base_dirs
+projects_info['commons-codec2']['path'] = java_project_address
+projects_info['commons-codec2']['base_dirs'] = base_dirs
 
 # jfreechart
 projects_info['jfreechart'] = dict()
@@ -117,12 +125,12 @@ projects_info['nest_project']['path'] = java_project_address
 projects_info['nest_project']['base_dirs'] = base_dirs
 
 # 61_noen does not work
-projects_info['61_noen'] = {}
+projects_info['61_noen2'] = {}
 java_project_address = BASE_DIR + '61_noen/src/main/java/fi/'
 base_dirs = []
 base_dirs.append(BASE_DIR + '61_noen/src/main/java/fi/')
-projects_info['61_noen']['path'] = java_project_address
-projects_info['61_noen']['base_dirs'] = base_dirs
+projects_info['61_noen2']['path'] = java_project_address
+projects_info['61_noen2']['base_dirs'] = base_dirs
 
 
 # 88_jopenchart does not work
