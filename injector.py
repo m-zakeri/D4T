@@ -224,9 +224,9 @@ class Injector:
                 class_body += method_body + '\n\n'
         class_body = class_body[:-2]
         text += f'public class {self.name}\n' + '{\n' + class_body + '\n}'
-
-        with open(f'{self.path}{self.name}.java', mode='w', newline='', encoding='utf8', errors='ignore') as f:
-            f.write(text)
+        if class_body != '':
+            with open(f'{self.path}{self.name}.java', mode='w', newline='', encoding='utf8', errors='ignore') as f:
+                f.write(text)
 
 
 from utils import File
