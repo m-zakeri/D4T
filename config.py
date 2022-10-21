@@ -88,15 +88,6 @@ projects_info['xerces2j']['path'] = java_project_address
 projects_info['xerces2j']['base_dirs'] = base_dirs
 
 
-# xerces2j packages
-for package in ["dom", "impl", "jaxp", "parsers"]:
-    projects_info[f'xerces2j-{package}'] = {}
-    java_project_address = BASE_DIR + f'xerces2j-{package}/src/org/apache/xerces/{package}'
-    base_dirs = []
-    base_dirs.append(BASE_DIR + f'xerces2j-{package}/src/')
-    projects_info[f'xerces2j-{package}']['path'] = java_project_address
-    projects_info[f'xerces2j-{package}']['base_dirs'] = base_dirs
-
 # simple_injection
 projects_info['simple_injection'] = {}
 java_project_address = BASE_DIR + 'simple_injection'
@@ -120,23 +111,6 @@ base_dirs = []
 base_dirs.append(BASE_DIR + 'nest_project/')
 projects_info['nest_project']['path'] = java_project_address
 projects_info['nest_project']['base_dirs'] = base_dirs
-
-# 61_noen does not work
-projects_info['61_noen2'] = {}
-java_project_address = BASE_DIR + '61_noen/src/main/java/fi/'
-base_dirs = []
-base_dirs.append(BASE_DIR + '61_noen/src/main/java/fi/')
-projects_info['61_noen2']['path'] = java_project_address
-projects_info['61_noen2']['base_dirs'] = base_dirs
-
-
-# 88_jopenchart does not work
-projects_info['88_jopenchart'] = {}
-java_project_address = BASE_DIR + '88_jopenchart/src/main/java'
-base_dirs = []
-base_dirs.append(BASE_DIR + '88_jopenchart/src/main/java/')
-projects_info['88_jopenchart']['path'] = java_project_address
-projects_info['88_jopenchart']['base_dirs'] = base_dirs
 
 # JSON
 projects_info['JSON'] = {}
