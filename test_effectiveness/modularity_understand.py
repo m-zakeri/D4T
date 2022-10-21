@@ -168,11 +168,11 @@ def compute_modularity(root_path, project_name=None, make_db=False, make_mdg=Fal
 
 
 def make_benchmark():
-    benchmark_path = r'E:/LSSDS/QualCode1/SF110-20130704-src/'
+    benchmark_path = r'C:/Users/Zakeri/Desktop/SF110'
     df = pd.read_csv(r'data/data_modularity_QualCode_Understand3.csv')
     modularity_sf110_list = []
     for project_ in df['Project']:
-        q = compute_modularity(root_path=benchmark_path, project_name=str(project_))
+        q = compute_modularity(root_path=benchmark_path, project_name=str(project_), make_db=True, make_mdg=False)
         modularity_sf110_list.append(q)
     df['ModularityRawValueUnderstandWithoutTestClasses'] = modularity_sf110_list
     df.to_csv(r'data/data_modularity_QualCode_Understand3.csv', index=False)

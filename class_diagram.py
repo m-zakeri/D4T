@@ -554,8 +554,12 @@ class ClassDiagram:
         self.class_diagram_graph = nx.read_gml(address)
 
     def show(self, graph):
+        source = 35
+        nodes = list(graph.predecessors(source)) + dict(nx.bfs_successors(graph, source=source, depth_limit=1))[source]
+        for node in list(graph.nodes):
+            if node not in nodes:
+                graph.remove_node(node)
         pos = nx.spring_layout(graph)
-        
         pos_with_type = {}
         pos_with_name = {}
         y_off = 0.1  # offset on the y axis
@@ -570,8 +574,10 @@ class ClassDiagram:
         nodes_label = nx.get_node_attributes(graph, 'type')
         nx.draw_networkx_labels(graph, pos_with_type, nodes_label)
         nodes_name = nx.get_node_attributes(graph, 'name')
-        for i in range(len(nodes_name)):
+        # for i in range(len(nodes_name)):
+        for i in nodes:
             nodes_name[i] = nodes_name[i].split('-')[-1]
+
         nx.draw_networkx_labels(graph, pos_with_name, nodes_name)
         plt.show()
 
@@ -731,7 +737,7 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project = "javaproject"
+    java_project = "10_water-simulator"
     java_project_address = config.projects_info[java_project]['path']
     print('java_project_address', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
@@ -739,13 +745,14 @@ if __name__ == "__main__":
     cd = ClassDiagram(java_project_address, base_dirs)
     cd.make_class_diagram()
 
-    cd.show(cd.class_diagram_graph)
+    # cd.show(cd.class_diagram_graph)
     #cd.load('class_diagram.gml')
     cd.save('class_diagram.gml')
 
-    cd.set_stereotypes()
-    cd.save('class_diagram.gml')
+    # cd.set_stereotypes()
+    # cd.save('class_diagram.gml')
     cd.show(cd.class_diagram_graph)
 
-    CDG = cd.get_CDG()
-    cd.show(CDG)
+
+    # CDG = cd.get_CDG()
+    # cd.show(CDG)

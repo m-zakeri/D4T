@@ -40,6 +40,7 @@ class Report:
         path = os.path.abspath(os.path.join(path, os.pardir))
         path = os.path.abspath(os.path.join(path, os.pardir))
         os.chdir(path)
+        update_understand_database(self.db_path_)
 
     def get_code_changes_rate(self):
         os.chdir(f"{config.BASE_DIR}{self.java_project}")
@@ -76,10 +77,10 @@ class FactoryReport(Report):
             "cases": list()
             }
 
-        c = Complexity(self.cd)
-        matrix, complexity_time = c.get_matrix()
-        report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
-        report["complexity"]["before_time"] = complexity_time
+        # c = Complexity(self.cd)
+        # matrix, complexity_time = c.get_matrix()
+        # report["complexity"]["before"] = Complexity.get_sum_of_matrix(matrix)
+        # report["complexity"]["before_time"] = complexity_time
 
         update_understand_database(self.db_path_)
 
@@ -103,10 +104,10 @@ class FactoryReport(Report):
         if edit:
             self.reload_from_disk()
 
-            c = Complexity(self.cd)
-            matrix, complexity_time = c.get_matrix()
-            report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
-            report["complexity"]["after_time"] = complexity_time
+            # c = Complexity(self.cd)
+            # matrix, complexity_time = c.get_matrix()
+            # report["complexity"]["after"] = Complexity.get_sum_of_matrix(matrix)
+            # report["complexity"]["after_time"] = complexity_time
 
             update_understand_database(self.db_path_)
 
@@ -128,8 +129,8 @@ class FactoryReport(Report):
 
     def get_list_of_report(self, no_of_samples, save=True, edit=True):
         reports = list()
-        for sensitivity in range(no_of_samples):
-            reports.append(self.get_single_report(sensitivity / (no_of_samples - 1), edit=edit))
+        for sensitivity in range(1, no_of_samples + 1):
+            reports.append(self.get_single_report(sensitivity / no_of_samples, edit=edit))
             if edit:
                 self.restore_java_project()
                 self.reload_from_disk()
@@ -155,6 +156,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/cases_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     def show_avg_of_common_methods_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
@@ -172,6 +174,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/avg_of_common_methods_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     def show_avg_no_of_products_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
@@ -189,6 +192,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/avg_number_of_products_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     def show_complexity_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
@@ -206,6 +210,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/complexity_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     def show_testability_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
@@ -223,6 +228,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/testability_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     def show_code_changed_rate_vs_sensitivity_chart(self, json_report, show=True, save=True):
         sensitivity_list = list()
@@ -240,6 +246,7 @@ class FactoryReport(Report):
             plt.savefig(f"{config.D4T_LOG_DIR}{self.java_project}/code_changed_rate_vs_sensitivity_chart.png")
         if show:
             plt.show()
+        plt.clf()
 
     @staticmethod
     def __get_avg_no_methods(json_report):
@@ -329,30 +336,43 @@ def find_best_sensitivity(factory_report):
             testability = report['testability']['after']
     return sensitivity
 
+import logging
+logging.basicConfig(filename='errors.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    java_projects = config.SF110_projects
-    for java_project in java_projects:
-        fr = FactoryReport(java_project, True)
-        factory_report = fr.get_list_of_report(5)
+    do = False
+    for java_project in config.projects_info:
+        if java_project == '6_jnfe':
+            do = True
+        if do:
+            try:
+                fr = Report(java_project, False)
+                fr.restore_java_project()
+                fr = FactoryReport(java_project, True)
+                factory_report = fr.get_list_of_report(10)
 
-        # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-        #     factory_report = json.load(f)
+                # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+                #     factory_report = json.load(f)
 
-        # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_complexity_vs_sensitivity_chart(json_report)
-        # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
+                # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
+                # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
+                # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
+                # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
+                # # fr.show_complexity_vs_sensitivity_chart(factory_report)
+                # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
 
-        # java_project = '10_water-simulator'
-        sensitivity = find_best_sensitivity(factory_report)
-        # fr = FactoryReport(java_project)
-        factory_report = fr.get_single_report(sensitivity)
+                sensitivity = find_best_sensitivity(factory_report)
+                factory_report = fr.get_single_report(sensitivity)
 
-        ir = InjectionReport(java_project)
-        injection_report = ir.get_single_report(save=False)
-        report = {'factory': factory_report, 'injection': injection_report}
-        with open(f"{config.D4T_LOG_DIR}{java_project}/{java_project}_final_report.json", 'w') as f:
-            json.dump(report, f, indent=4)
+                ir = InjectionReport(java_project)
+                injection_report = ir.get_single_report(save=False)
+                report = {'factory': factory_report, 'injection': injection_report}
+                with open(f"{config.D4T_LOG_DIR}{java_project}/{java_project}_final_report.json", 'w') as f:
+                    json.dump(report, f, indent=4)
+            except Exception as e:
+                logger.error(java_project)
+                logger.error(str(e))
+                logger.error('-'*20)
+# Process finished with exit code -1073741571 (0xC00000FD)

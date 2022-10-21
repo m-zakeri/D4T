@@ -5,35 +5,27 @@ The configuration module
 import os
 
 import networkx as nx
+from utils import dir_total_size
 
 
 __version__ = '0.1.2'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
-
-BASE_DIR = 'C:/Users/Zakeri/Desktop/SF110/'
-UBD_DIR = 'C:/Users/Zakeri/Desktop/SF110/'
-D4T_LOG_DIR = 'C:/Users/Zakeri/Desktop/d4t_log/'
+BASE_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/SF110/'
+UBD_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/SF110_UDB/'
+D4T_LOG_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/d4t_log/'
 projects_info = dict()
 
 
 # SF110 projects
-SF110_projects = [
-    # "1_tullibee",
-    # "2_a4j",
-    # "5_templateit",
-    # "8_gfarcegestionfa",
-    # "10_water-simulator",
-    # "13_jdbacl"
-    #"commons-codec"
-    "61_noen"
-]
+SF110_projects = [f for f in os.listdir(BASE_DIR) if not os.path.isfile(os.path.join(BASE_DIR, f))]
 
 for project_name in SF110_projects:
     projects_info[project_name] = dict()
     java_project_address = f'{BASE_DIR}{project_name}/src/main/java'
     base_dirs = list()
     base_dirs.append(f'{BASE_DIR}{project_name}/src/main/java/')
+    projects_info[project_name]['size'] = dir_total_size(java_project_address)
     projects_info[project_name]['path'] = java_project_address
     projects_info[project_name]['base_dirs'] = base_dirs
     projects_info[project_name]['db_path'] = f'{UBD_DIR}{project_name}.und'
@@ -41,6 +33,11 @@ for project_name in SF110_projects:
     if not os.path.exists(f'{D4T_LOG_DIR}{project_name}'):
         os.mkdir(f'{D4T_LOG_DIR}{project_name}')
 
+projects_info = dict(sorted(projects_info.items(), key=lambda item: item[1]['size']))
+# for project_name in projects_info:
+#     print(project_name)
+#     if project_name == '6_jnfe':
+#         quit()
 # -----------------------------------------------
 # tabula-java
 projects_info['tabula-java'] = dict()
