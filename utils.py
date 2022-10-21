@@ -240,6 +240,18 @@ def get_parser_and_tokens(path):
     return parser, tokens
 
 
+def create_git_for_project(path):
+    if path[-4:] != '.und':
+        os.chdir(path)
+        os.popen("git init").close()
+        os.popen("git add .").close()
+        os.popen('git commit -m "first commit"').close()
+        path = os.getcwd()
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        path = os.path.abspath(os.path.join(path, os.pardir))
+        os.chdir(path)
+
+
 if __name__ == "__main__":
     File.indexing_files_directory(
         File.find_all_file('E:/sadegh/iust/compiler/compiler projects/java_projects/javaproject', 'java'),
