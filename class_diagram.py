@@ -31,6 +31,7 @@ class ClassDiagramListener(JavaParserLabeledListener):
         self.file = file
         self.__depth = 0
         self.relations = []
+        self.number_of_constructor_params = 0
 
     def get_package(self):
         return self.__package
@@ -155,6 +156,16 @@ class ClassDiagramListener(JavaParserLabeledListener):
                 if dependee in self.dependee_dic.keys():
                     dependee_dic[self.dependee_dic[dependee]] = self.class_dic[current_class][dependee]
             self.class_dic[current_class] = dependee_dic
+
+
+    def enterConstructorDeclaration(self, ctx:JavaParserLabeled.ConstructorDeclarationContext):
+        if ctx.formalParameters().formalParameterList():
+            for parameter in ctx.formalParameters().formalParameterList().formalParameter():
+                parameter_type = parameter.typeType().getText()
+                package, file_name = Path.find_package_of_dependee(parameter_type, self.imports, self.imports_star,
+                                                                   self.index_dic)
+                if package:
+                    self.number_of_constructor_params += 1
 
 
 class MethodModificationTypeListener(JavaParserLabeledListener):
@@ -512,6 +523,7 @@ class ClassDiagram:
 
     def make_class_diagram(self):
         # add nodes to class_diagram
+        total_number_of_constructor_params = 0
         for c in self.index_dic:
             index = self.index_dic[c]['index']
             self.class_diagram_graph.add_node(index)
@@ -530,6 +542,7 @@ class ClassDiagram:
                 listener=listener,
                 t=tree
             )
+            total_number_of_constructor_params += listener.number_of_constructor_params
             graph = listener.class_dic
             # print('graph:', graph)
             # add edges to class_diagram
@@ -541,6 +554,7 @@ class ClassDiagram:
                         relation_type = listener.class_dic[c][i]
                         self.class_diagram_graph.add_edge(n1, n2)
                         self.class_diagram_graph[n1][n2]['relation_type'] = relation_type
+        print('total_number_of_constructor_params: ', total_number_of_constructor_params)
         print('End making class diagram !')
 
     def save(self, address):
@@ -554,7 +568,12 @@ class ClassDiagram:
         self.class_diagram_graph = nx.read_gml(address)
 
     def show(self, graph):
-        source = 35
+        source = 15
+        predecessors = list(graph.predecessors(source))
+        edges = [(graph.nodes[dest], graph.nodes[source], graph.edges[(source, dest)]) for dest in predecessors]
+        bfs_successors = dict(nx.bfs_successors(graph, source=source, depth_limit=1))
+
+        edges += [(graph.nodes[key], graph.nodes[dest], graph.edges[(key, dest)]) for key in bfs_successors.keys() for dest in bfs_successors[key]]
         nodes = list(graph.predecessors(source)) + dict(nx.bfs_successors(graph, source=source, depth_limit=1))[source]
         for node in list(graph.nodes):
             if node not in nodes:
@@ -737,7 +756,7 @@ class ClassDiagram:
         return CDG
 
 if __name__ == "__main__":
-    java_project = "10_water-simulator"
+    java_project = "85_shop"
     java_project_address = config.projects_info[java_project]['path']
     print('java_project_address', java_project_address)
     base_dirs = config.projects_info[java_project]['base_dirs']
@@ -751,7 +770,7 @@ if __name__ == "__main__":
 
     # cd.set_stereotypes()
     # cd.save('class_diagram.gml')
-    cd.show(cd.class_diagram_graph)
+    # cd.show(cd.class_diagram_graph)
 
 
     # CDG = cd.get_CDG()

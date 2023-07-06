@@ -11,9 +11,10 @@ from utils import dir_total_size
 __version__ = '0.1.2'
 __author__ = 'Sadegh Jafari, Morteza Zakeri'
 
-BASE_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/SF110/'
+# BASE_DIR = 'benchmarks/SF110/projects/'
+BASE_DIR = '/media/sadegh/Data/sadegh/iust/Bachlour/compiler/SF110/'
 UBD_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/SF110_UDB/'
-D4T_LOG_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/d4t_log/'
+D4T_LOG_DIR = 'benchmarks/SF110/results/'
 projects_info = dict()
 
 
@@ -34,107 +35,6 @@ for project_name in SF110_projects:
         os.mkdir(f'{D4T_LOG_DIR}{project_name}')
 
 projects_info = dict(sorted(projects_info.items(), key=lambda item: item[1]['size']))
-# for project_name in projects_info:
-#     print(project_name)
-#     if project_name == '6_jnfe':
-#         quit()
-# -----------------------------------------------
-# tabula-java
-projects_info['tabula-java'] = dict()
-java_project_address = BASE_DIR + 'tabula-java/src/main/java'
-base_dirs = list()
-base_dirs.append(BASE_DIR + 'tabula-java/src/main/java/')
-projects_info['tabula-java']['path'] = java_project_address
-projects_info['tabula-java']['base_dirs'] = base_dirs
-
-# commons-codec
-projects_info['commons-codec2'] = dict()
-java_project_address = BASE_DIR + 'commons-codec/src/main/java'
-base_dirs = list()
-base_dirs.append(BASE_DIR + 'commons-codec/src/main/java/')
-projects_info['commons-codec2']['path'] = java_project_address
-projects_info['commons-codec2']['base_dirs'] = base_dirs
-
-# jfreechart
-projects_info['jfreechart'] = dict()
-java_project_address = BASE_DIR + 'jfreechart/src/main/java/org'
-base_dirs = list()
-base_dirs.append(BASE_DIR + 'jfreechart/src/main/java/org/')
-projects_info['jfreechart']['path'] = java_project_address
-projects_info['jfreechart']['base_dirs'] = base_dirs
-
-#ant
-projects_info['ant'] = {}
-java_project_address = BASE_DIR + 'ant/src/main'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'ant/src/main/')
-projects_info['ant']['path'] = java_project_address
-projects_info['ant']['base_dirs'] = base_dirs
-
-# factory-pattern-example
-projects_info['factory-pattern-example'] = {}
-java_project_address = BASE_DIR + 'factory-pattern-example/'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'factory-pattern-example/')
-projects_info['factory-pattern-example']['path'] = java_project_address
-projects_info['factory-pattern-example']['base_dirs'] = base_dirs
-
-# xerces2j
-projects_info['xerces2j'] = {}
-java_project_address = BASE_DIR + 'xerces2j/'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'xerces2j/src/')
-projects_info['xerces2j']['path'] = java_project_address
-projects_info['xerces2j']['base_dirs'] = base_dirs
-
-
-# simple_injection
-projects_info['simple_injection'] = {}
-java_project_address = BASE_DIR + 'simple_injection'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'simple_injection/')
-projects_info['simple_injection']['path'] = java_project_address
-projects_info['simple_injection']['base_dirs'] = base_dirs
-
-# javaproject
-projects_info['javaproject'] = {}
-java_project_address = BASE_DIR + 'javaproject'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'javaproject/')
-projects_info['javaproject']['path'] = java_project_address
-projects_info['javaproject']['base_dirs'] = base_dirs
-
-# nest_project
-projects_info['nest_project'] = {}
-java_project_address = BASE_DIR + 'nest_project'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'nest_project/')
-projects_info['nest_project']['path'] = java_project_address
-projects_info['nest_project']['base_dirs'] = base_dirs
-
-# JSON
-projects_info['JSON'] = {}
-java_project_address = BASE_DIR + 'JSON/src/main/java'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'JSON/src/main/java/')
-projects_info['JSON']['path'] = java_project_address
-projects_info['JSON']['base_dirs'] = base_dirs
-
-# rhino-Rhino1_7_12_Release
-projects_info['rhino-Rhino1_7_12_Release'] = {}
-java_project_address = BASE_DIR + 'rhino-Rhino1_7_12_Release/src/'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'rhino-Rhino1_7_12_Release/src/')
-projects_info['rhino-Rhino1_7_12_Release']['path'] = java_project_address
-projects_info['rhino-Rhino1_7_12_Release']['base_dirs'] = base_dirs
-
-# crona warn up project 1
-projects_info['crona_warn_up1'] = {}
-java_project_address = BASE_DIR + 'cwa-server/common/persistence/src/main/java'
-base_dirs = []
-base_dirs.append(BASE_DIR + 'cwa-server/common/persistence/src/main/java/')
-projects_info['crona_warn_up1']['path'] = java_project_address
-projects_info['crona_warn_up1']['base_dirs'] = base_dirs
 
 # ======================================
 # Complexity

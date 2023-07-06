@@ -1,12 +1,8 @@
-import json
-import networkx as nx
-
 from antlr4 import *
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from gen.JavaParserLabeledListener import JavaParserLabeledListener
 from gen.JavaParserLabeled import JavaParserLabeled
 
-from interface import InterfaceAdapter, InterfaceCreator
 from utils import get_parser, get_parser_and_tokens, Path
 import config
 
@@ -191,6 +187,9 @@ class Injector:
         # write package statement
         self.package = Path.get_default_package(self.base_dirs, self.path)
         text += f'package {self.package};\n'
+        for class_ in classes_info:
+            package, class_name, _ = class_.split('-')
+            text += f'import {package}.{class_name};\n'
 
         class_body = ''
         # write methods statement
@@ -202,7 +201,8 @@ class Injector:
                 for param in constructor['params']:
                     method_params_statement += f'{param["type"]} {param["identifier"]},'
                 method_params_statement = method_params_statement[:-1]
-                method_body = f'\t public static {splitted_class[0]}.{splitted_class[2]} get_{class_name}({method_params_statement})' + '{' + '\n'
+                # method_body = f'\t public static {splitted_class[0]}.{splitted_class[2]} get_{class_name}({method_params_statement})' + '{' + '\n'
+                method_body = f'\t public static {splitted_class[2]} get_{class_name}({method_params_statement})' + '{' + '\n'
 
                 dependee_number = 0
                 dependees_params = []
@@ -212,7 +212,8 @@ class Injector:
                     dependee_name = f'dependee{dependee_number}'
                     dependees_params.append(dependee_name)
                     method_body += f'\t\t{".".join(splitted_dependee[:-1])} {dependee_name}'
-                    method_body += f' = new {splitted_dependee[0]}.{splitted_dependee[2]}('
+                    # method_body += f' = new {splitted_dependee[0]}.{splitted_dependee[2]}('
+                    method_body += f' = new {splitted_dependee[2]}('
                     method_body += ', '.join(dependee["arguments"]) + ');\n'
 
                 # write method return statement
