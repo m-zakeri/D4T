@@ -140,7 +140,12 @@ class ClassDiagramListener(JavaParserLabeledListener):
                     file_name = self.file_name
                     package = self.__package
                 else:
-                    package, file_name = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+                    package, file_name = Path.find_package_of_dependee(
+                        dependee,
+                        self.imports,
+                        self.imports_star,
+                        self.index_dic,
+                    )
                     splitted_dependee = dependee.split('.')
                     dependee = splitted_dependee[-1]
 
@@ -396,7 +401,7 @@ class StereotypeListener(JavaParserLabeledListener):
             self.imports.append(ctx.qualifiedName().getText())
 
     def enterClassOrInterfaceType(self, ctx:JavaParserLabeled.ClassOrInterfaceTypeContext):
-        if len(ctx.IDENTIFIER()) > 0 and self.current_class != None:
+        if len(ctx.IDENTIFIER()) > 0 and self.current_class:
             text = ''
             for t in ctx.IDENTIFIER():
                 text += t.getText() + '.'
@@ -408,27 +413,32 @@ class StereotypeListener(JavaParserLabeledListener):
                     package = self.__package
                 else:
                     file_name = dependee
-                    package, _ = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+                    package, _ = Path.find_package_of_dependee(
+                        dependee,
+                        self.imports,
+                        self.imports_star,
+                        self.index_dic,
+                    )
 
-                if package != None:
+                if package:
                     self.dependee_dic[dependee] = package + '-' + file_name + '-' + dependee
 
 
     def enterFormalParameter(self, ctx:JavaParserLabeled.FormalParameterContext):
-        if ctx.typeType().classOrInterfaceType() != None:
+        if ctx.typeType().classOrInterfaceType():
             _type = ctx.typeType().classOrInterfaceType().getText()
             identifier = ctx.variableDeclaratorId().getText()
             self.formal_parameters[identifier] = _type
 
     def enterFieldDeclaration(self, ctx:JavaParserLabeled.FieldDeclarationContext):
-        if ctx.typeType().classOrInterfaceType() != None:
+        if ctx.typeType().classOrInterfaceType():
             _type = ctx.typeType().classOrInterfaceType().getText()
             for i in ctx.variableDeclarators().variableDeclarator():
                 identifier = i.variableDeclaratorId().getText()
                 self.field_variables[identifier] = _type
 
     def enterLocalVariableDeclaration(self, ctx:JavaParserLabeled.LocalVariableDeclarationContext):
-        if ctx.typeType().classOrInterfaceType() != None:
+        if ctx.typeType().classOrInterfaceType():
             _type = ctx.typeType().classOrInterfaceType().getText()
             for i in ctx.variableDeclarators().variableDeclarator():
                 identifier = i.variableDeclaratorId().getText()
@@ -450,9 +460,9 @@ class StereotypeListener(JavaParserLabeledListener):
         list_of_objects = []
         current_exp1 = ctx.parentCtx
         if "expression" in dir(current_exp1):
-            while current_exp1.expression() != None:
+            while current_exp1.expression():
                 current_exp1 = current_exp1.expression()
-                if ('IDENTIFIER' in dir(current_exp1)) and (current_exp1.IDENTIFIER() != None):
+                if ('IDENTIFIER' in dir(current_exp1)) and current_exp1.IDENTIFIER():
                     list_of_objects.append(current_exp1.IDENTIFIER().getText())
                 else:
                     break
@@ -460,7 +470,7 @@ class StereotypeListener(JavaParserLabeledListener):
             list_of_objects.reverse()
             stereotype = self.__get_use_type(method_name, list_of_objects)
 
-            if stereotype != None:
+            if stereotype:
                 dependee = self.__get_object_type(list_of_objects[0])
                 if self.current_class in self.class_dic:
                     if dependee in self.class_dic[self.current_class]:
@@ -473,7 +483,7 @@ class StereotypeListener(JavaParserLabeledListener):
     def __get_use_type(self, method_name, list_of_objects):
         # detect last object type
         current_type = self.__get_object_type(list_of_objects[0])
-        if (current_type != None) and (current_type in self.dependee_dic.keys()):
+        if current_type and (current_type in self.dependee_dic.keys()):
             current_type = self.dependee_dic[current_type]
 
             if len(list_of_objects) > 1:
@@ -613,7 +623,8 @@ class ClassDiagram:
                     graph[edge[1]] = [edge[0]]
         return graph
 
-    def __find_extend_roots(self, extends_graph):
+    @staticmethod
+    def find_extend_roots(extends_graph):
         roots = list(extends_graph.keys())
         for d in extends_graph:
             for s in extends_graph[d]:
@@ -628,7 +639,7 @@ class ClassDiagram:
                 method_info[index_list[child]]['attributes'][attribute] = \
                     method_info[index_list[parent]]['attributes'][attribute]
             else:
-                if method_info[index_list[child]]['attributes'][attribute] == None:
+                if method_info[index_list[child]]['attributes'][attribute] is None:
                     method_info[index_list[child]]['attributes'][attribute] = \
                     method_info[index_list[parent]]['attributes'][attribute]
 
@@ -640,7 +651,7 @@ class ClassDiagram:
 
     def __handle_extends_methods_information(self, method_information):
         extends_graph = self.__get_extend_graph()
-        roots = self.__find_extend_roots(extends_graph)
+        roots = self.find_extend_roots(extends_graph)
         index_list = list(self.index_dic.keys())
         q = queue.Queue()
         for root in roots:

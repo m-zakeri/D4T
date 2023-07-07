@@ -14,7 +14,7 @@ __author__ = 'Sadegh Jafari, Morteza Zakeri'
 # BASE_DIR = 'benchmarks/SF110/projects/'
 BASE_DIR = '/media/sadegh/Data/sadegh/iust/Bachlour/compiler/SF110/'
 UBD_DIR = 'C:/Users/Zakeri/Desktop/SadeghJafari/SF110_UDB/'
-D4T_LOG_DIR = 'benchmarks/SF110/results/'
+D4T_LOG_DIR = 'reports/'
 projects_info = dict()
 
 

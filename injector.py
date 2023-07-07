@@ -51,7 +51,12 @@ class CreatorListener(JavaParserLabeledListener):
             if ctx.formalParameters().formalParameterList() is not None:
                 for f in ctx.formalParameters().formalParameterList().formalParameter():
                     type_ = f.typeType().getText()
-                    type_package, _ = Path.find_package_of_dependee(type_, self.imports, self.imports_star, self.index_dic)
+                    type_package, _ = Path.find_package_of_dependee(
+                        type_,
+                        self.imports,
+                        self.imports_star,
+                        self.index_dic,
+                    )
                     if type_package:
                         type_ = f'{type_package}.{type_}'
                     identifier = f.variableDeclaratorId().getText()
@@ -106,7 +111,12 @@ class InjectorListener(JavaParserLabeledListener):
 
     def enterExpression4(self, ctx:JavaParserLabeled.Expression4Context):
         dependee = ctx.creator().createdName().getText()
-        package, file_name = Path.find_package_of_dependee(dependee, self.imports, self.imports_star, self.index_dic)
+        package, file_name = Path.find_package_of_dependee(
+            dependee,
+            self.imports,
+            self.imports_star,
+            self.index_dic,
+        )
         dependee_long_name = f'{package}-{file_name}-{dependee.split(".")[-1]}'
         if dependee_long_name in self.supported_classes:
             injector_method_name = package.split('.') + [file_name, dependee.split('.')[-1]]
