@@ -397,30 +397,31 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     for java_project in config.projects_info:
-        fr = Report(java_project, False)
-        fr.restore_java_project()
-        fr = FactoryReport(java_project, True)
-        factory_report = fr.get_list_of_report(10)
+        try:
+            fr = Report(java_project, False)
+            fr.restore_java_project()
+            fr = FactoryReport(java_project, True)
+            factory_report = fr.get_list_of_report(10)
 
-        # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
-        #     factory_report = json.load(f)
+            # with open(f"{config.BASE_DIR}/{java_project}/factory_report.json") as f:
+            #     factory_report = json.load(f)
 
-        # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
-        # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
-        # # fr.show_complexity_vs_sensitivity_chart(factory_report)
-        # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
+            # fr.show_testability_vs_sensitivity_chart(factory_report, show=False)
+            # fr.show_cases_vs_sensitivity_chart(factory_report, show=False)
+            # fr.show_avg_of_common_methods_vs_sensitivity_chart(factory_report, show=False)
+            # fr.show_avg_no_of_products_vs_sensitivity_chart(factory_report, show=False)
+            # # fr.show_complexity_vs_sensitivity_chart(factory_report)
+            # fr.show_code_changed_rate_vs_sensitivity_chart(factory_report, show=False)
 
-        sensitivity = find_best_sensitivity(factory_report)
-        factory_report = fr.get_single_report(sensitivity)
+            sensitivity = find_best_sensitivity(factory_report)
+            factory_report = fr.get_single_report(sensitivity)
 
-        ir = InjectionReport(java_project)
-        injection_report = ir.get_single_report(save=False)
-        report = {'factory': factory_report, 'injection': injection_report}
-        with open(f"{config.D4T_LOG_DIR}{java_project}/{java_project}_final_report.json", 'w') as f:
-            json.dump(report, f, indent=4)
-    except Exception as e:
-        logger.error(java_project)
-        logger.error(str(e))
-        logger.error('-'*20)
+            ir = InjectionReport(java_project)
+            injection_report = ir.get_single_report(save=False)
+            report = {'factory': factory_report, 'injection': injection_report}
+            with open(f"{config.D4T_LOG_DIR}{java_project}/{java_project}_final_report.json", 'w') as f:
+                json.dump(report, f, indent=4)
+        except Exception as e:
+            logger.error(java_project)
+            logger.error(str(e))
+            logger.error('-'*20)
