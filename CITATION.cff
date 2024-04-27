@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software tool, please cite it as below."
+authors:
+- family-names: "Zakeri-Nasrabadi"
+  given-names: "Morteza"
+  orcid: "https://orcid.org/0000-0003-4289-0606"
+- family-names: "Parsa"
+  given-names: "Saeed"
+- family-names: "Jafari"
+  given-names: "Sadegh"
+title: "Design for testability"
+version: 0.2.0
+doi: https://doi.org/10.5281/zenodo.11076642
+date-released: 2024-04-30
+url: "https://m-zakeri.github.io/D4T"
