@@ -2,6 +2,7 @@
 
 This repository contains the source code and replication package for our creative learning-based ‘design for testability’ approach in software systems. More information is available at [https://m-zakeri.github.io/D4T](https://m-zakeri.github.io/D4T).
 
+'
 @article{ZAKERINASRABADI2024107511,
 title = {Measuring and improving software testability at the design level},
 journal = {Information and Software Technology},
@@ -24,3 +25,4 @@ The proposed design testability model demonstrates its effectiveness by satisfac
 Conclusion
 The proposed automated approach offers software developers the means to continuously evaluate and enhance design testability throughout the entire software development life cycle, mitigating the risk of testability issues stemming from design-to-implementation discrepancies.}
 }
+'
